@@ -2,7 +2,8 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_page">
+    android:background="@drawable/bg_page"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -10,22 +11,33 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <LinearLayout
+        <TextView
+            android:id="@+id/mineTitle"
             android:layout_width="match_parent"
-            android:layout_height="120dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:text="我的"
+            android:textColor="@color/text_primary"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:id="@+id/profileCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:background="@drawable/bg_surface"
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:padding="16dp">
 
             <TextView
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                android:background="@drawable/bg_chip"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:background="@drawable/bg_avatar"
                 android:gravity="center"
-                android:text="壹"
+                android:text="游"
                 android:textColor="@color/accent"
-                android:textSize="28sp"
+                android:textSize="22sp"
                 android:textStyle="bold" />
 
             <LinearLayout
@@ -47,45 +59,99 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:text="登录后可同步收藏"
+                    android:layout_marginTop="5dp"
+                    android:text="登录后可同步收藏与历史记录"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
             </LinearLayout>
 
             <Button
                 android:id="@+id/loginButton"
-                android:layout_width="80dp"
+                android:layout_width="72dp"
                 android:layout_height="40dp"
                 android:background="@drawable/bg_button_primary"
                 android:text="登录"
                 android:textColor="@color/white" />
         </LinearLayout>
 
-        <Button
-            android:id="@+id/historyButton"
+        <TextView
             android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="18dp"
-            android:background="@drawable/bg_surface"
-            android:text="观看记录"
-            android:textColor="@color/text_primary" />
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="8dp"
+            android:text="内容与数据"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp" />
 
-        <Button
-            android:id="@+id/collectionButton"
+        <LinearLayout
+            android:id="@+id/contentGroup"
             android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="10dp"
+            android:layout_height="wrap_content"
             android:background="@drawable/bg_surface"
-            android:text="我的收藏"
-            android:textColor="@color/text_primary" />
-        <Button
-            android:id="@+id/proxySettingsButton"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/historyButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingEnd="14dp">
+
+                <ImageView android:layout_width="24dp" android:layout_height="24dp" android:contentDescription="观看记录" android:src="@drawable/ic_history" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="14dp" android:layout_weight="1" android:text="观看记录" android:textColor="@color/text_primary" android:textSize="16sp" />
+                <ImageView android:layout_width="20dp" android:layout_height="20dp" android:contentDescription="进入观看记录" android:src="@drawable/ic_chevron_right" />
+            </LinearLayout>
+
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="54dp" android:background="@color/outline" />
+
+            <LinearLayout
+                android:id="@+id/collectionButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingEnd="14dp">
+
+                <ImageView android:layout_width="24dp" android:layout_height="24dp" android:contentDescription="我的收藏" android:src="@drawable/ic_favorite" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="14dp" android:layout_weight="1" android:text="我的收藏" android:textColor="@color/text_primary" android:textSize="16sp" />
+                <ImageView android:layout_width="20dp" android:layout_height="20dp" android:contentDescription="进入我的收藏" android:src="@drawable/ic_chevron_right" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <TextView
             android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="10dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="8dp"
+            android:text="应用设置"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp" />
+
+        <LinearLayout
+            android:id="@+id/settingsGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:background="@drawable/bg_surface"
-            android:text="&#x7F51;&#x7EDC;&#x4EE3;&#x7406;"
-            android:textColor="@color/text_primary" />
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/proxySettingsButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingEnd="14dp">
+
+                <ImageView android:layout_width="24dp" android:layout_height="24dp" android:contentDescription="网络代理" android:src="@drawable/ic_network" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="14dp" android:layout_weight="1" android:text="网络代理" android:textColor="@color/text_primary" android:textSize="16sp" />
+                <ImageView android:layout_width="20dp" android:layout_height="20dp" android:contentDescription="进入网络代理" android:src="@drawable/ic_chevron_right" />
+            </LinearLayout>
+        </LinearLayout>
     </LinearLayout>
 </ScrollView>

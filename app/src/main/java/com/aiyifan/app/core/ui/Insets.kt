@@ -9,7 +9,8 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
 
-fun Activity.setupEdgeToEdge(lightSystemBars: Boolean = true) {
+fun Activity.setupEdgeToEdge() {
+    val lightSystemBars = usesLightSystemBarIcons(resources.configuration.uiMode)
     WindowCompat.setDecorFitsSystemWindows(window, false)
     window.statusBarColor = Color.TRANSPARENT
     window.navigationBarColor = Color.TRANSPARENT

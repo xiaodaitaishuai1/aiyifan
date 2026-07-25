@@ -56,7 +56,7 @@ private val requiredNames = setOf(
 
 - [ ] **Step 2: 运行测试并确认缺少 `values-night/colors.xml`**
 
-Run: `./gradlew.bat test --tests com.aiyifan.app.core.ui.ThemeResourceContractTest`
+Run: `./gradlew.bat :app:testDebugUnitTest --tests com.aiyifan.app.core.ui.ThemeResourceContractTest`
 
 Expected: FAIL，找不到夜间 `colors.xml`。
 
@@ -66,7 +66,7 @@ Expected: FAIL，找不到夜间 `colors.xml`。
 
 - [ ] **Step 4: 重新运行资源契约测试**
 
-Run: `./gradlew.bat test --tests com.aiyifan.app.core.ui.ThemeResourceContractTest`
+Run: `./gradlew.bat :app:testDebugUnitTest --tests com.aiyifan.app.core.ui.ThemeResourceContractTest`
 
 Expected: PASS，日间与夜间均定义十二个资源。
 
@@ -105,7 +105,7 @@ class SystemBarAppearanceTest {
 
 - [ ] **Step 2: 运行测试确认函数尚不存在**
 
-Run: `./gradlew.bat test --tests com.aiyifan.app.core.ui.SystemBarAppearanceTest`
+Run: `./gradlew.bat :app:testDebugUnitTest --tests com.aiyifan.app.core.ui.SystemBarAppearanceTest`
 
 Expected: FAIL，`usesLightSystemBarIcons` 未解析。
 
@@ -120,7 +120,7 @@ fun usesLightSystemBarIcons(uiMode: Int): Boolean =
 
 - [ ] **Step 4: 运行测试和资源构建**
 
-Run: `./gradlew.bat test --tests com.aiyifan.app.core.ui.SystemBarAppearanceTest`
+Run: `./gradlew.bat :app:testDebugUnitTest --tests com.aiyifan.app.core.ui.SystemBarAppearanceTest`
 
 Expected: PASS，日间为 `true`，夜间为 `false`。
 
@@ -166,7 +166,7 @@ fun `mine screen presents profile and grouped navigation`() {
 
 - [ ] **Step 2: 运行测试并确认缺少 `mineTitle`**
 
-Run: `./gradlew.bat test --tests com.aiyifan.app.feature.mine.MineLayoutTest`
+Run: `./gradlew.bat :app:testDebugUnitTest --tests com.aiyifan.app.feature.mine.MineLayoutTest`
 
 Expected: FAIL，页面尚未定义 `mineTitle`。
 
@@ -178,7 +178,7 @@ Expected: FAIL，页面尚未定义 `mineTitle`。
 
 - [ ] **Step 4: 运行页面和主导航回归测试**
 
-Run: `./gradlew.bat test --tests com.aiyifan.app.feature.mine.MineLayoutTest --tests com.aiyifan.app.feature.main.MainNavigationLayoutTest`
+Run: `./gradlew.bat :app:testDebugUnitTest --tests com.aiyifan.app.feature.mine.MineLayoutTest --tests com.aiyifan.app.feature.main.MainNavigationLayoutTest`
 
 Expected: PASS，资料卡、两个分组及三项入口存在，主导航仍固定三项。
 

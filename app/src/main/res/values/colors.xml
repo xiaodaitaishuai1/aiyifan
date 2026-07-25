@@ -8,4 +8,8 @@
     <color name="accent">#FF7A1A</color>
     <color name="black">#000000</color>
     <color name="white">#FFFFFF</color>
+    <color name="outline">#D6D9DE</color>
+    <color name="field_bg">#F0F2F5</color>
+    <color name="chip_bg">#EEF0F4</color>
+    <color name="poster_placeholder">#D9DEE7</color>
 </resources>
