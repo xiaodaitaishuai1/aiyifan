@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary">#1D2025</color>
+    <color name="page_bg">#121417</color>
+    <color name="surface">#1D2025</color>
+    <color name="text_primary">#F2F4F7</color>
+    <color name="text_secondary">#AAB2BD</color>
+    <color name="accent">#FF8D3A</color>
+    <color name="black">#000000</color>
+    <color name="white">#FFFFFF</color>
+    <color name="outline">#3A404A</color>
+    <color name="field_bg">#292D34</color>
+    <color name="chip_bg">#2E333C</color>
+    <color name="poster_placeholder">#3A404A</color>
+</resources>
