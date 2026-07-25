@@ -25,7 +25,6 @@ class SingBoxConfigurationBuilder : SingBoxConfigProvider {
             .put("server", node.host)
             .put("server_port", node.port)
             .put("uuid", uri.userInfo)
-            .put("encryption", query["encryption"] ?: "none")
 
         query["flow"]?.takeIf(String::isNotBlank)?.let { outbound.put("flow", it) }
         addTransport(outbound, query)
@@ -49,7 +48,23 @@ class SingBoxConfigurationBuilder : SingBoxConfigProvider {
                     .put(outbound)
                     .put(JSONObject().put("type", "direct").put("tag", "direct")),
             )
-            .put("route", JSONObject().put("final", PROXY_TAG))
+            .put(
+                "dns",
+                JSONObject().put(
+                    "servers",
+                    JSONArray().put(
+                        JSONObject()
+                            .put("type", "local")
+                            .put("tag", SYSTEM_DNS_TAG),
+                    ),
+                ),
+            )
+            .put(
+                "route",
+                JSONObject()
+                    .put("final", PROXY_TAG)
+                    .put("default_domain_resolver", SYSTEM_DNS_TAG),
+            )
             .toString()
     }
 
@@ -85,15 +100,24 @@ class SingBoxConfigurationBuilder : SingBoxConfigProvider {
 
         val tls = JSONObject()
             .put("enabled", true)
-            .put("server_name", query["sni"]?.takeIf(String::isNotBlank) ?: host)
+            .put("server_name", query.firstNonBlank("sni", "serverName", "server_name") ?: host)
+        if (query["insecure"].asBoolean()) tls.put("insecure", true)
         query["alpn"]?.split(',')?.filter(String::isNotBlank)?.takeIf(List<String>::isNotEmpty)?.let { protocols ->
             tls.put("alpn", JSONArray(protocols))
         }
         if (security == "reality") {
             val reality = JSONObject().put("enabled", true)
-            query["pbk"]?.takeIf(String::isNotBlank)?.let { reality.put("public_key", it) }
-            query["sid"]?.takeIf(String::isNotBlank)?.let { reality.put("short_id", it) }
+            query.firstNonBlank("pbk", "publicKey", "public_key")?.let { reality.put("public_key", it) }
+            query.firstNonBlank("sid", "shortId", "short_id")?.let { reality.put("short_id", it) }
             tls.put("reality", reality)
+        }
+        query["fp"]?.takeIf(String::isNotBlank)?.let { fingerprint ->
+            tls.put(
+                "utls",
+                JSONObject()
+                    .put("enabled", true)
+                    .put("fingerprint", fingerprint),
+            )
         }
         outbound.put("tls", tls)
     }
@@ -112,10 +136,17 @@ class SingBoxConfigurationBuilder : SingBoxConfigProvider {
             ?.toMap()
             .orEmpty()
 
-    private fun decode(value: String): String = URLDecoder.decode(value, Charsets.UTF_8.name())
+    private fun Map<String, String>.firstNonBlank(vararg names: String): String? =
+        names.firstNotNullOfOrNull { name -> get(name)?.takeIf(String::isNotBlank) }
+
+    private fun String?.asBoolean(): Boolean = this == "1" || equals("true", ignoreCase = true)
+
+    // VLESS URIs commonly contain standard Base64 values. A literal '+' is data, not form encoding.
+    private fun decode(value: String): String = URLDecoder.decode(value.replace("+", "%2B"), Charsets.UTF_8.name())
 
     private companion object {
         const val LOOPBACK_ADDRESS = "127.0.0.1"
         const val PROXY_TAG = "proxy"
+        const val SYSTEM_DNS_TAG = "system"
     }
 }

@@ -61,6 +61,22 @@ class ProxyManagerTest {
         assertEquals(null, manager.activeEndpoint)
     }
 
+    @Test
+    fun `records a safe failure stage when the local proxy cannot start`() = runBlocking {
+        val manager = ProxyManager(
+            parser = ProxySubscriptionParser(::decodeWithJvmBase64),
+            settingsStore = FakeSettingsStore(),
+            subscriptionLoader = FakeSubscriptionLoader(encodedSubscription()),
+            runtime = SingBoxRuntime(FailingEngine(), HostConfigProvider()),
+        )
+        manager.refresh("https://subscription.example.com/one")
+
+        val endpoint = manager.connect()
+
+        assertEquals(null, endpoint)
+        assertEquals(ProxyConnectionFailure.UNKNOWN, manager.lastConnectionFailure)
+    }
+
     private fun encodedSubscription(): String = Base64.getEncoder().encodeToString(
         "vless://123e4567-e89b-12d3-a456-426614174000@edge.example.com:443?encryption=none#Edge".toByteArray(),
     )
@@ -106,6 +122,14 @@ class ProxyManagerTest {
         override fun stop() {
             stopCalls += 1
         }
+    }
+
+    private class FailingEngine : SingBoxEngine {
+        override fun start(config: String) {
+            error("start failed")
+        }
+
+        override fun stop() = Unit
     }
 
     private class RecordingConnectionListener : ProxyConnectionListener {

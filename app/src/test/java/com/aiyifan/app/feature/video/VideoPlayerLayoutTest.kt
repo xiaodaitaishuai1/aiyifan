@@ -37,7 +37,7 @@ class VideoPlayerLayoutTest {
         val playerContainer = viewWithId(document, "playerContainer")!!
 
         assertEquals("@color/surface", topBar.getAttribute("android:background"))
-        assertEquals("@color/text_primary", viewWithId(topBar, "backButton")!!.getAttribute("android:textColor"))
+        assertEquals("@drawable/ic_back", viewWithId(topBar, "backButton")!!.getAttribute("android:src"))
         assertEquals("fullscreenExitButton", viewWithId(playerContainer, "fullscreenExitButton")!!.idName())
     }
 

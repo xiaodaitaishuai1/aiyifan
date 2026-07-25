@@ -8,6 +8,8 @@ import com.aiyifan.app.feature.proxy.domain.ProxyProtocol
 import com.aiyifan.app.feature.proxy.domain.ProxySubscriptionParser
 import com.aiyifan.app.feature.proxy.domain.SubscriptionImportResult
 import com.aiyifan.app.feature.proxy.runtime.SingBoxRuntime
+import com.aiyifan.app.feature.proxy.runtime.SingBoxStartupException
+import com.aiyifan.app.feature.proxy.runtime.SingBoxStartupStage
 
 interface ProxySettingsStore {
     fun readSubscriptionUrl(): String?
@@ -21,6 +23,13 @@ interface ProxySettingsStore {
 
 fun interface SubscriptionContentLoader {
     suspend fun loadDirect(url: String): String
+}
+
+enum class ProxyConnectionFailure {
+    CONFIGURATION,
+    SERVICE_CREATION,
+    SERVICE_START,
+    UNKNOWN,
 }
 
 interface ProxyConnectionListener {
@@ -46,6 +55,8 @@ class ProxyManager(
     var nodes: List<ProxyNode> = emptyList()
         private set
     var selectedNode: ProxyNode? = null
+        private set
+    var lastConnectionFailure: ProxyConnectionFailure? = null
         private set
 
     val state: ProxyConnectionState
@@ -80,6 +91,7 @@ class ProxyManager(
     fun connect(): LocalProxyEndpoint? {
         val node = selectedNode ?: return null
         if (state is ProxyConnectionState.Connected && activeEndpoint != null) return activeEndpoint
+        lastConnectionFailure = null
         stateMachine.connect(node)
         val attempt = stateMachine.activeAttempt() ?: return activeEndpoint
         return try {
@@ -87,8 +99,9 @@ class ProxyManager(
                 stateMachine.completeConnection(attempt)
                 connectionListener.onConnected()
             }
-        } catch (_: Throwable) {
+        } catch (error: Throwable) {
             stateMachine.failConnection(attempt)
+            lastConnectionFailure = error.toConnectionFailure()
             connectionListener.onDisconnected()
             null
         }
@@ -97,6 +110,16 @@ class ProxyManager(
     fun disconnect() {
         runtime.disconnect()
         stateMachine.disconnect()
+        lastConnectionFailure = null
         connectionListener.onDisconnected()
+    }
+
+    private fun Throwable.toConnectionFailure(): ProxyConnectionFailure = when (
+        (this as? SingBoxStartupException)?.stage
+    ) {
+        SingBoxStartupStage.CONFIGURATION -> ProxyConnectionFailure.CONFIGURATION
+        SingBoxStartupStage.SERVICE_CREATION -> ProxyConnectionFailure.SERVICE_CREATION
+        SingBoxStartupStage.SERVICE_START -> ProxyConnectionFailure.SERVICE_START
+        null -> ProxyConnectionFailure.UNKNOWN
     }
 }

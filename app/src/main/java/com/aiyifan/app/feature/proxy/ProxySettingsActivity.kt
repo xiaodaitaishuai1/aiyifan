@@ -87,6 +87,7 @@ class ProxySettingsActivity : AppCompatActivity() {
     }
 
     private fun restoreSavedSubscription() {
+        if (!ProxySubscriptionRestorePolicy.shouldRestore(proxyManager.nodes.size, proxyManager.activeEndpoint)) return
         val subscriptionUrl = proxyManager.storedSubscriptionUrl()?.trim().orEmpty()
         if (subscriptionUrl.isEmpty()) return
 
@@ -115,7 +116,12 @@ class ProxySettingsActivity : AppCompatActivity() {
             val endpoint = withContext(Dispatchers.IO) { proxyManager.connect() }
             setLoading(false)
             if (endpoint == null) {
-                binding.statusView.text = "\u8FDE\u63A5\u5931\u8D25\uFF0C\u8BF7\u66F4\u6362\u8282\u70B9\u540E\u91CD\u8BD5"
+                binding.statusView.text = when (proxyManager.lastConnectionFailure) {
+                    ProxyConnectionFailure.CONFIGURATION -> "\u8282\u70B9\u914D\u7F6E\u4E0D\u517C\u5BB9\uFF0C\u8BF7\u66F4\u6362\u8282\u70B9"
+                    ProxyConnectionFailure.SERVICE_CREATION -> "\u4EE3\u7406\u670D\u52A1\u521B\u5EFA\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5"
+                    ProxyConnectionFailure.SERVICE_START -> "\u4EE3\u7406\u670D\u52A1\u542F\u52A8\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5"
+                    else -> "\u8FDE\u63A5\u5931\u8D25\uFF0C\u8BF7\u66F4\u6362\u8282\u70B9\u540E\u91CD\u8BD5"
+                }
             } else {
                 renderStatus()
             }

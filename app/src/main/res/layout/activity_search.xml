@@ -15,15 +15,15 @@
         android:paddingStart="8dp"
         android:paddingEnd="12dp">
 
-        <TextView
+        <ImageButton
             android:id="@+id/backButton"
             android:layout_width="48dp"
             android:layout_height="match_parent"
+            android:background="@android:color/transparent"
             android:contentDescription="返回"
             android:gravity="center"
-            android:text="返回"
-            android:textColor="@color/text_primary"
-            android:textSize="13sp" />
+            android:padding="12dp"
+            android:src="@drawable/ic_back" />
 
         <EditText
             android:id="@+id/searchEdit"

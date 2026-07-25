@@ -14,14 +14,15 @@
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
-        <TextView
+        <ImageButton
             android:id="@+id/backButton"
-            android:layout_width="64dp"
+            android:layout_width="56dp"
             android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:contentDescription="返回"
             android:gravity="center"
-            android:text="&#x8FD4;&#x56DE;"
-            android:textColor="@color/text_primary"
-            android:textSize="13sp" />
+            android:padding="16dp"
+            android:src="@drawable/ic_back" />
 
         <TextView
             android:layout_width="0dp"
@@ -75,6 +76,7 @@
                 android:layout_height="48dp"
                 android:layout_marginTop="12dp"
                 android:background="@drawable/bg_button_primary"
+                android:backgroundTint="@null"
                 android:text="&#x66F4;&#x65B0;&#x8BA2;&#x9605;"
                 android:textColor="@color/white" />
 
@@ -125,6 +127,7 @@
                     android:layout_height="48dp"
                     android:layout_weight="1"
                     android:background="@drawable/bg_button_primary"
+                    android:backgroundTint="@null"
                     android:text="&#x8FDE;&#x63A5;"
                     android:textColor="@color/white" />
 
@@ -135,6 +138,7 @@
                     android:layout_marginStart="10dp"
                     android:layout_weight="1"
                     android:background="@drawable/bg_surface"
+                    android:backgroundTint="@null"
                     android:text="&#x65AD;&#x5F00;"
                     android:textColor="@color/text_primary" />
             </LinearLayout>
