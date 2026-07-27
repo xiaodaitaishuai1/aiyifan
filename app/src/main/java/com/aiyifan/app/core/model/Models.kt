@@ -49,6 +49,11 @@ data class PlaybackQuality(
     val isDefault: Boolean = false,
 )
 
+data class ResolvedPlayback(
+    val episode: Episode,
+    val qualities: List<PlaybackQuality> = emptyList(),
+)
+
 data class PlaybackLanguage(
     val mediaKey: String,
     val name: String,

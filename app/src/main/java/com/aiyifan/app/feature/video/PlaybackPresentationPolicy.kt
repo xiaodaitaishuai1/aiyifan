@@ -48,5 +48,5 @@ object FullScreenControlVisibility {
         isFullScreen: Boolean,
         controllerVisibility: Int,
         availableQualityCount: Int,
-    ): Boolean = isFullScreen && controllerVisibility == View.VISIBLE && availableQualityCount > 1
+    ): Boolean = isFullScreen && controllerVisibility == View.VISIBLE && availableQualityCount > 0
 }

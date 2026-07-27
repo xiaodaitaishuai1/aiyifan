@@ -2,6 +2,7 @@ package com.aiyifan.app.core.data.remote
 
 import com.aiyifan.app.core.data.FakeCatalogRepository
 import com.aiyifan.app.core.model.Episode
+import com.aiyifan.app.core.model.PlaybackQuality
 import com.aiyifan.app.core.model.VideoDetail
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -26,8 +27,9 @@ class RemoteCatalogRepositoryPlaybackTest {
         )
 
         assertEquals("720P", fetcher.requestedResolution)
-        assertEquals("720P", result.resolution)
-        assertEquals("https://example.com/720.m3u8", result.mediaUrl)
+        assertEquals("720P", result.episode.resolution)
+        assertEquals("https://example.com/720.m3u8", result.episode.mediaUrl)
+        assertEquals(listOf("720P", "1080P"), result.qualities.map(PlaybackQuality::resolution))
     }
 
     @Test
@@ -38,7 +40,7 @@ class RemoteCatalogRepositoryPlaybackTest {
             forceRefresh = true,
         )
 
-        assertNull(result.mediaUrl)
+        assertNull(result.episode.mediaUrl)
     }
 
     private fun repository(fetcher: HttpFetcher) = RemoteCatalogRepository(

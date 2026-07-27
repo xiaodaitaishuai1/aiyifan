@@ -8,6 +8,7 @@ import com.aiyifan.app.core.model.Episode
 import com.aiyifan.app.core.model.FavoriteVideo
 import com.aiyifan.app.core.model.PlaybackLanguage
 import com.aiyifan.app.core.model.PlaybackQuality
+import com.aiyifan.app.core.model.ResolvedPlayback
 import com.aiyifan.app.core.model.SearchSuggestion
 import com.aiyifan.app.core.model.VideoDetail
 import com.aiyifan.app.core.model.VideoSummary
@@ -122,9 +123,9 @@ class RemoteCatalogRepository(
         detail: VideoDetail,
         episode: Episode,
         forceRefresh: Boolean,
-    ): Episode {
+    ): ResolvedPlayback {
         if (!forceRefresh && !episode.mediaUrl.isNullOrBlank()) {
-            return episode
+            return ResolvedPlayback(episode, detail.qualities)
         }
         return try {
             val baseUrl = configResolver.resolveBaseUrl()
@@ -145,9 +146,12 @@ class RemoteCatalogRepository(
             if (response.code !in 200..299) {
                 throw IllegalStateException("getPlayData failed: ${response.code}")
             }
-            parsePlayableEpisode(response.body, episode, episode.resolution)
+            parseResolvedPlayback(response.body, episode, episode.resolution)
         } catch (_: Throwable) {
-            if (forceRefresh) episode.copy(mediaUrl = null) else episode
+            ResolvedPlayback(
+                episode = if (forceRefresh) episode.copy(mediaUrl = null) else episode,
+                qualities = detail.qualities,
+            )
         }
     }
 
@@ -270,32 +274,40 @@ class RemoteCatalogRepository(
             }
         }
 
-    private fun parsePlayableEpisode(
+    private fun parseResolvedPlayback(
         payload: String,
         fallbackEpisode: Episode,
         requestedResolution: String?,
-    ): Episode {
+    ): ResolvedPlayback {
         val items = JSONObject(payload)
             .optJSONObject("data")
             ?.optJSONArray("list")
             ?: JSONArray()
-        val playable = mutableListOf<JSONObject>()
+        val playable = mutableListOf<Pair<JSONObject, PlaybackQuality>>()
         for (index in 0 until items.length()) {
             val item = items.optJSONObject(index) ?: continue
-            if (item.optionalRemoteText("mediaUrl") == null) continue
-            playable += item
+            val resolution = item.optionalRemoteText("resolution") ?: continue
+            val mediaUrl = item.optionalRemoteText("mediaUrl") ?: continue
+            playable += item to PlaybackQuality(
+                resolution = resolution,
+                description = "${resolution}P",
+                mediaUrl = mediaUrl,
+                isDefault = item.optBoolean("isDefault"),
+            )
         }
-        val chosen = playable.firstOrNull {
-            it.optionalRemoteText("resolution") == requestedResolution
-        } ?: playable.firstOrNull { it.optBoolean("isDefault") }
+        val chosen = playable.firstOrNull { it.second.resolution == requestedResolution }
+            ?: playable.firstOrNull { it.second.isDefault }
             ?: playable.firstOrNull()
-            ?: return fallbackEpisode
-        return fallbackEpisode.copy(
-            episodeKey = chosen.optionalRemoteText("episodeKey") ?: fallbackEpisode.episodeKey,
-            uniqueId = chosen.optInt("episodeId", fallbackEpisode.uniqueId),
-            mediaUrl = chosen.optionalRemoteText("mediaUrl") ?: fallbackEpisode.mediaUrl,
-            resolution = chosen.optionalRemoteText("resolution") ?: fallbackEpisode.resolution,
-            lang = chosen.optionalRemoteText("lang") ?: fallbackEpisode.lang,
+            ?: return ResolvedPlayback(fallbackEpisode)
+        return ResolvedPlayback(
+            episode = fallbackEpisode.copy(
+                episodeKey = chosen.first.optionalRemoteText("episodeKey") ?: fallbackEpisode.episodeKey,
+                uniqueId = chosen.first.optInt("episodeId", fallbackEpisode.uniqueId),
+                mediaUrl = chosen.second.mediaUrl,
+                resolution = chosen.second.resolution,
+                lang = chosen.first.optionalRemoteText("lang") ?: fallbackEpisode.lang,
+            ),
+            qualities = playable.map { it.second }.distinctBy(PlaybackQuality::resolution),
         )
     }
 

@@ -31,6 +31,7 @@ import com.aiyifan.app.R
 import com.aiyifan.app.core.data.AppGraph
 import com.aiyifan.app.core.model.Episode
 import com.aiyifan.app.core.model.PlaybackQuality
+import com.aiyifan.app.core.model.ResolvedPlayback
 import com.aiyifan.app.core.model.VideoDetail
 import com.aiyifan.app.core.ui.CommentAdapter
 import com.aiyifan.app.core.ui.EpisodeAdapter
@@ -194,7 +195,11 @@ class VideoPlayerActivity : AppCompatActivity() {
         ).joinToString(" / ")
         lifecycleScope.launch {
             runCatching { resolvePlaybackForSession(detail, episode) }
-                .onSuccess { playableEpisode ->
+                .onSuccess { result ->
+                    this@VideoPlayerActivity.detail = detail.copy(
+                        qualities = result.qualities.ifEmpty { detail.qualities },
+                    )
+                    val playableEpisode = result.episode
                     playingEpisode = playableEpisode
                     val resumePositionMs = pendingFloatingRecoveryPositionMs ?: 0L
                     if (playbackController.prepare(detail, playableEpisode, resumePositionMs)) {
@@ -219,7 +224,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         }
     }
 
-    private suspend fun resolvePlaybackForSession(detail: VideoDetail, episode: Episode): Episode {
+    private suspend fun resolvePlaybackForSession(detail: VideoDetail, episode: Episode): ResolvedPlayback {
         val quality = PlaybackQualitySelector.select(
             qualities = detail.qualities,
             sessionResolution = selectedQualityResolution,
@@ -234,7 +239,7 @@ class VideoPlayerActivity : AppCompatActivity() {
             episode = requestedEpisode,
             forceRefresh = quality.resolution != episode.resolution,
         )
-        if (!resolvedEpisode.mediaUrl.isNullOrBlank()) return resolvedEpisode
+        if (!resolvedEpisode.episode.mediaUrl.isNullOrBlank()) return resolvedEpisode
 
         val fallback = PlaybackQualitySelector.select(
             qualities = detail.qualities,
@@ -252,7 +257,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     private fun showQualityMenu() {
         val activeDetail = detail ?: return
         val qualities = activeDetail.qualities.filter { it.resolution.isNotBlank() }
-        if (isQualitySwitching || qualities.size < 2) return
+        if (isQualitySwitching || qualities.isEmpty()) return
 
         PopupMenu(this, binding.fullScreenQualityButton).apply {
             qualities.forEachIndexed { index, quality ->
@@ -288,15 +293,16 @@ class VideoPlayerActivity : AppCompatActivity() {
                     episode = previousEpisode.copy(mediaUrl = null, resolution = quality.resolution),
                     forceRefresh = true,
                 )
-                val prepared = !resolvedEpisode.mediaUrl.isNullOrBlank() && playbackController.prepare(
+                val prepared = !resolvedEpisode.episode.mediaUrl.isNullOrBlank() && playbackController.prepare(
                     detail = activeDetail,
-                    episode = resolvedEpisode,
+                    episode = resolvedEpisode.episode,
                     startPositionMs = positionMs,
                     shouldPlay = wasPlaying,
                 )
                 if (prepared) {
-                    playingEpisode = resolvedEpisode
-                    selectedQualityResolution = resolvedEpisode.resolution ?: quality.resolution
+                    detail = activeDetail.copy(qualities = resolvedEpisode.qualities.ifEmpty { activeDetail.qualities })
+                    playingEpisode = resolvedEpisode.episode
+                    selectedQualityResolution = resolvedEpisode.episode.resolution ?: quality.resolution
                     Toast.makeText(
                         this@VideoPlayerActivity,
                         getString(R.string.video_quality_switched, selectedQualityResolution),
