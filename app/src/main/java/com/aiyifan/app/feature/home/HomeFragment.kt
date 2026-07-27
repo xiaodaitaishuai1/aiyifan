@@ -60,7 +60,7 @@ class HomeFragment : Fragment() {
                 adapter.submitList(repository.getHomeVideos(category.id))
             } catch (exception: Throwable) {
                 if (exception is CancellationException) throw exception
-                Toast.makeText(requireContext(), "首页刷新失败", Toast.LENGTH_SHORT).show()
+                context?.let { Toast.makeText(it, "首页刷新失败", Toast.LENGTH_SHORT).show() }
                 if (!refresh) {
                     adapter.submitList(emptyList())
                 }

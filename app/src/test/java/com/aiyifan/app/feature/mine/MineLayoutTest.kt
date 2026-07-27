@@ -16,6 +16,8 @@ class MineLayoutTest {
         assertEquals("LinearLayout", viewWithId(root, "profileCard").tagName)
         assertEquals("LinearLayout", viewWithId(root, "contentGroup").tagName)
         assertEquals("LinearLayout", viewWithId(root, "settingsGroup").tagName)
+        assertEquals("LinearLayout", viewWithId(root, "themeSettingsButton").tagName)
+        assertEquals("TextView", viewWithId(root, "themeSettingsSummary").tagName)
         listOf("historyButton", "collectionButton", "proxySettingsButton").forEach { id ->
             assertEquals("LinearLayout", viewWithId(root, id).tagName)
         }
