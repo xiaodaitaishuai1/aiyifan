@@ -41,6 +41,14 @@ class VideoPlayerLayoutTest {
         assertEquals("fullscreenExitButton", viewWithId(playerContainer, "fullscreenExitButton")!!.idName())
     }
 
+    @Test
+    fun `quality button overlays player and starts hidden`() {
+        val button = viewWithId(viewWithId(videoPlayerLayout(), "playerContainer")!!, "fullScreenQualityButton")!!
+
+        assertEquals("gone", button.getAttribute("android:visibility"))
+        assertEquals("bottom|end", button.getAttribute("android:layout_gravity"))
+    }
+
     private fun videoPlayerLayout() = DocumentBuilderFactory.newInstance()
         .newDocumentBuilder()
         .parse(layoutFile())

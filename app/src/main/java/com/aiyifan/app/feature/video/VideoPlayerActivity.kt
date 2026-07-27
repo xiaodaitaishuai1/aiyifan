@@ -14,6 +14,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
@@ -29,6 +30,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.aiyifan.app.R
 import com.aiyifan.app.core.data.AppGraph
 import com.aiyifan.app.core.model.Episode
+import com.aiyifan.app.core.model.PlaybackQuality
 import com.aiyifan.app.core.model.VideoDetail
 import com.aiyifan.app.core.ui.CommentAdapter
 import com.aiyifan.app.core.ui.EpisodeAdapter
@@ -51,6 +53,8 @@ class VideoPlayerActivity : AppCompatActivity() {
     private var restoreMiniPlayerOnStart = false
     private var pendingFloatingRecoveryPositionMs: Long? = null
     private var controllerVisibility = View.GONE
+    private var selectedQualityResolution: String? = null
+    private var isQualitySwitching = false
 
     @UnstableApi
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,10 +68,12 @@ class VideoPlayerActivity : AppCompatActivity() {
         binding.backButton.setOnClickListener { handleBack() }
         binding.fullScreenButton.setOnClickListener { setFullScreen(!isFullScreen) }
         binding.fullscreenExitButton.setOnClickListener { setFullScreen(false) }
+        binding.fullScreenQualityButton.setOnClickListener { showQualityMenu() }
         binding.playerView.setControllerVisibilityListener(
             PlayerView.ControllerVisibilityListener { controllerVisibility ->
                 this.controllerVisibility = controllerVisibility
                 updateFullScreenExitButton()
+                updateFullScreenQualityButton()
             },
         )
         binding.floatingWindowButton.setOnClickListener { showFloatingPresentation() }
@@ -187,16 +193,18 @@ class VideoPlayerActivity : AppCompatActivity() {
             getString(R.string.video_stream_loading),
         ).joinToString(" / ")
         lifecycleScope.launch {
-            runCatching { AppGraph.catalogRepository.resolvePlayback(detail, episode) }
+            runCatching { resolvePlaybackForSession(detail, episode) }
                 .onSuccess { playableEpisode ->
                     playingEpisode = playableEpisode
                     val resumePositionMs = pendingFloatingRecoveryPositionMs ?: 0L
                     if (playbackController.prepare(detail, playableEpisode, resumePositionMs)) {
                         pendingFloatingRecoveryPositionMs = null
                         attachPlayerToCurrentSurface()
+                        selectedQualityResolution = playableEpisode.resolution ?: selectedQualityResolution
                     } else {
                         Toast.makeText(this@VideoPlayerActivity, R.string.video_no_playable_stream, Toast.LENGTH_SHORT).show()
                     }
+                    updateFullScreenQualityButton()
                     binding.meta.text = listOfNotNull(
                         detail.typeName,
                         detail.publishTime,
@@ -209,6 +217,114 @@ class VideoPlayerActivity : AppCompatActivity() {
                     Toast.makeText(this@VideoPlayerActivity, R.string.video_stream_load_failed, Toast.LENGTH_SHORT).show()
                 }
         }
+    }
+
+    private suspend fun resolvePlaybackForSession(detail: VideoDetail, episode: Episode): Episode {
+        val quality = PlaybackQualitySelector.select(
+            qualities = detail.qualities,
+            sessionResolution = selectedQualityResolution,
+            episodeResolution = episode.resolution,
+        ) ?: return AppGraph.catalogRepository.resolvePlayback(detail, episode)
+        val requestedEpisode = episode.copy(
+            mediaUrl = if (quality.resolution == episode.resolution) episode.mediaUrl else null,
+            resolution = quality.resolution,
+        )
+        val resolvedEpisode = AppGraph.catalogRepository.resolvePlayback(
+            detail = detail,
+            episode = requestedEpisode,
+            forceRefresh = quality.resolution != episode.resolution,
+        )
+        if (!resolvedEpisode.mediaUrl.isNullOrBlank()) return resolvedEpisode
+
+        val fallback = PlaybackQualitySelector.select(
+            qualities = detail.qualities,
+            sessionResolution = null,
+            episodeResolution = episode.resolution,
+        ) ?: return resolvedEpisode
+        if (fallback.resolution == quality.resolution) return resolvedEpisode
+        return AppGraph.catalogRepository.resolvePlayback(
+            detail = detail,
+            episode = episode.copy(mediaUrl = null, resolution = fallback.resolution),
+            forceRefresh = true,
+        )
+    }
+
+    private fun showQualityMenu() {
+        val activeDetail = detail ?: return
+        val qualities = activeDetail.qualities.filter { it.resolution.isNotBlank() }
+        if (isQualitySwitching || qualities.size < 2) return
+
+        PopupMenu(this, binding.fullScreenQualityButton).apply {
+            qualities.forEachIndexed { index, quality ->
+                menu.add(QUALITY_MENU_GROUP_ID, index, index, quality.description)
+                    .apply {
+                        isCheckable = true
+                        isChecked = quality.resolution == selectedQualityResolution
+                    }
+            }
+            menu.setGroupCheckable(QUALITY_MENU_GROUP_ID, true, true)
+            setOnMenuItemClickListener { item ->
+                val quality = qualities.getOrNull(item.itemId) ?: return@setOnMenuItemClickListener false
+                if (quality.resolution != selectedQualityResolution) switchQuality(quality)
+                true
+            }
+            show()
+        }
+    }
+
+    private fun switchQuality(quality: PlaybackQuality) {
+        val activeDetail = detail ?: return
+        val previousEpisode = playingEpisode ?: return
+        val previousResolution = selectedQualityResolution
+        val positionMs = playbackController.currentPositionMs
+        val wasPlaying = playbackController.isPlaying
+        isQualitySwitching = true
+        binding.fullScreenQualityButton.isEnabled = false
+
+        lifecycleScope.launch {
+            try {
+                val resolvedEpisode = AppGraph.catalogRepository.resolvePlayback(
+                    detail = activeDetail,
+                    episode = previousEpisode.copy(mediaUrl = null, resolution = quality.resolution),
+                    forceRefresh = true,
+                )
+                val prepared = !resolvedEpisode.mediaUrl.isNullOrBlank() && playbackController.prepare(
+                    detail = activeDetail,
+                    episode = resolvedEpisode,
+                    startPositionMs = positionMs,
+                    shouldPlay = wasPlaying,
+                )
+                if (prepared) {
+                    playingEpisode = resolvedEpisode
+                    selectedQualityResolution = resolvedEpisode.resolution ?: quality.resolution
+                    Toast.makeText(
+                        this@VideoPlayerActivity,
+                        getString(R.string.video_quality_switched, selectedQualityResolution),
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                } else {
+                    restoreQualityPlayback(activeDetail, previousEpisode, previousResolution, positionMs, wasPlaying)
+                }
+            } catch (_: Throwable) {
+                restoreQualityPlayback(activeDetail, previousEpisode, previousResolution, positionMs, wasPlaying)
+            } finally {
+                isQualitySwitching = false
+                binding.fullScreenQualityButton.isEnabled = true
+                updateFullScreenQualityButton()
+            }
+        }
+    }
+
+    private fun restoreQualityPlayback(
+        detail: VideoDetail,
+        episode: Episode,
+        resolution: String?,
+        positionMs: Long,
+        wasPlaying: Boolean,
+    ) {
+        playbackController.prepare(detail, episode, positionMs, wasPlaying)
+        selectedQualityResolution = resolution
+        Toast.makeText(this, R.string.video_quality_switch_failed, Toast.LENGTH_SHORT).show()
     }
 
     private fun attachPlayerToCurrentSurface() {
@@ -249,6 +365,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         }
         binding.playerTopBar.isVisible = !enabled
         updateFullScreenExitButton()
+        updateFullScreenQualityButton()
         binding.contentScroll.isVisible = !enabled && !isInAppMiniPlayerVisible
         (binding.playerContainer.layoutParams as LinearLayout.LayoutParams).apply {
             height = if (enabled) 0 else dpToPx(NORMAL_PLAYER_HEIGHT_DP)
@@ -262,6 +379,18 @@ class VideoPlayerActivity : AppCompatActivity() {
             isFullScreen = isFullScreen,
             controllerVisibility = controllerVisibility,
         )
+    }
+
+    private fun updateFullScreenQualityButton() {
+        val qualities = detail?.qualities.orEmpty().filter { it.resolution.isNotBlank() }
+        binding.fullScreenQualityButton.isVisible = FullScreenControlVisibility.shouldShowQualityButton(
+            isFullScreen = isFullScreen,
+            controllerVisibility = controllerVisibility,
+            availableQualityCount = qualities.size,
+        )
+        binding.fullScreenQualityButton.text = selectedQualityResolution
+            ?: qualities.firstOrNull(PlaybackQuality::isDefault)?.resolution
+            ?: qualities.firstOrNull()?.resolution.orEmpty()
     }
 
     override fun onUserLeaveHint() {
@@ -435,6 +564,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         private const val NORMAL_PLAYER_HEIGHT_DP = 211
         private const val IN_APP_MINI_MIN_WIDTH_DP = 180
         private const val IN_APP_MINI_MARGIN_DP = 16
+        private const val QUALITY_MENU_GROUP_ID = 1
 
         fun intent(context: Context, mediaKey: String): Intent =
             Intent(context, VideoPlayerActivity::class.java).putExtra(EXTRA_MEDIA_KEY, mediaKey)

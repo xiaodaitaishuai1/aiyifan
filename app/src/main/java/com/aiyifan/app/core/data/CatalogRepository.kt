@@ -24,7 +24,11 @@ interface CatalogRepository {
 
     suspend fun getVideoDetail(mediaKey: String): VideoDetail
 
-    suspend fun resolvePlayback(detail: VideoDetail, episode: Episode): Episode
+    suspend fun resolvePlayback(
+        detail: VideoDetail,
+        episode: Episode,
+        forceRefresh: Boolean = false,
+    ): Episode
 
     fun getComments(mediaKey: String): List<Comment>
 

@@ -13,4 +13,12 @@ class FullScreenControlVisibilityTest {
         assertFalse(FullScreenControlVisibility.shouldShowExitButton(isFullScreen = true, controllerVisibility = View.GONE))
         assertFalse(FullScreenControlVisibility.shouldShowExitButton(isFullScreen = false, controllerVisibility = View.VISIBLE))
     }
+
+    @Test
+    fun `quality button is visible only for visible full screen controls with choices`() {
+        assertTrue(FullScreenControlVisibility.shouldShowQualityButton(true, View.VISIBLE, 2))
+        assertFalse(FullScreenControlVisibility.shouldShowQualityButton(true, View.GONE, 2))
+        assertFalse(FullScreenControlVisibility.shouldShowQualityButton(false, View.VISIBLE, 2))
+        assertFalse(FullScreenControlVisibility.shouldShowQualityButton(true, View.VISIBLE, 1))
+    }
 }

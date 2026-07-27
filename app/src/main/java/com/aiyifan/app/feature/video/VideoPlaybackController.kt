@@ -64,14 +64,19 @@ class VideoPlaybackController(
     val currentPositionMs: Long
         get() = if (released) 0L else engine.currentPosition.coerceAtLeast(0L)
 
-    fun prepare(detail: VideoDetail, episode: Episode, startPositionMs: Long = 0L): Boolean {
+    fun prepare(
+        detail: VideoDetail,
+        episode: Episode,
+        startPositionMs: Long = 0L,
+        shouldPlay: Boolean = true,
+    ): Boolean {
         val mediaUrl = episode.mediaUrl?.trim().orEmpty()
         if (released || mediaUrl.isBlank()) return false
 
         engine.setMediaUrl(mediaUrl)
         engine.prepare()
         if (startPositionMs > 0L) engine.seekTo(startPositionMs)
-        engine.play()
+        if (shouldPlay) engine.play() else engine.pause()
         activeDetail = detail
         activeEpisode = episode
         return true
