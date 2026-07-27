@@ -118,8 +118,12 @@ class RemoteCatalogRepository(
         }
     }
 
-    override suspend fun resolvePlayback(detail: VideoDetail, episode: Episode): Episode {
-        if (!episode.mediaUrl.isNullOrBlank()) {
+    override suspend fun resolvePlayback(
+        detail: VideoDetail,
+        episode: Episode,
+        forceRefresh: Boolean,
+    ): Episode {
+        if (!forceRefresh && !episode.mediaUrl.isNullOrBlank()) {
             return episode
         }
         return try {
@@ -141,9 +145,9 @@ class RemoteCatalogRepository(
             if (response.code !in 200..299) {
                 throw IllegalStateException("getPlayData failed: ${response.code}")
             }
-            parsePlayableEpisode(response.body, episode)
+            parsePlayableEpisode(response.body, episode, episode.resolution)
         } catch (_: Throwable) {
-            episode
+            if (forceRefresh) episode.copy(mediaUrl = null) else episode
         }
     }
 
@@ -266,24 +270,26 @@ class RemoteCatalogRepository(
             }
         }
 
-    private fun parsePlayableEpisode(payload: String, fallbackEpisode: Episode): Episode {
+    private fun parsePlayableEpisode(
+        payload: String,
+        fallbackEpisode: Episode,
+        requestedResolution: String?,
+    ): Episode {
         val items = JSONObject(payload)
             .optJSONObject("data")
             ?.optJSONArray("list")
             ?: JSONArray()
-        var best: JSONObject? = null
+        val playable = mutableListOf<JSONObject>()
         for (index in 0 until items.length()) {
             val item = items.optJSONObject(index) ?: continue
             if (item.optionalRemoteText("mediaUrl") == null) continue
-            if (item.optBoolean("isDefault")) {
-                best = item
-                break
-            }
-            if (best == null) {
-                best = item
-            }
+            playable += item
         }
-        val chosen = best ?: return fallbackEpisode
+        val chosen = playable.firstOrNull {
+            it.optionalRemoteText("resolution") == requestedResolution
+        } ?: playable.firstOrNull { it.optBoolean("isDefault") }
+            ?: playable.firstOrNull()
+            ?: return fallbackEpisode
         return fallbackEpisode.copy(
             episodeKey = chosen.optionalRemoteText("episodeKey") ?: fallbackEpisode.episodeKey,
             uniqueId = chosen.optInt("episodeId", fallbackEpisode.uniqueId),

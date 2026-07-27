@@ -158,7 +158,11 @@ class FakeCatalogRepository(
         )
     }
 
-    override suspend fun resolvePlayback(detail: VideoDetail, episode: Episode): Episode = episode
+    override suspend fun resolvePlayback(
+        detail: VideoDetail,
+        episode: Episode,
+        forceRefresh: Boolean,
+    ): Episode = episode
 
     override fun getComments(mediaKey: String): List<Comment> =
         listOf(
