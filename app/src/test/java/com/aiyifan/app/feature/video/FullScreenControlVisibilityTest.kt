@@ -15,10 +15,11 @@ class FullScreenControlVisibilityTest {
     }
 
     @Test
-    fun `quality button is visible only for visible full screen controls with choices`() {
+    fun `quality button is visible for visible full screen controls with a quality`() {
         assertTrue(FullScreenControlVisibility.shouldShowQualityButton(true, View.VISIBLE, 2))
         assertFalse(FullScreenControlVisibility.shouldShowQualityButton(true, View.GONE, 2))
         assertFalse(FullScreenControlVisibility.shouldShowQualityButton(false, View.VISIBLE, 2))
-        assertFalse(FullScreenControlVisibility.shouldShowQualityButton(true, View.VISIBLE, 1))
+        assertTrue(FullScreenControlVisibility.shouldShowQualityButton(true, View.VISIBLE, 1))
+        assertFalse(FullScreenControlVisibility.shouldShowQualityButton(true, View.VISIBLE, 0))
     }
 }

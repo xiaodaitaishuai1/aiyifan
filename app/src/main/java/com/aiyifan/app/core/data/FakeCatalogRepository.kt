@@ -6,6 +6,7 @@ import com.aiyifan.app.core.model.Episode
 import com.aiyifan.app.core.model.FavoriteVideo
 import com.aiyifan.app.core.model.PlaybackLanguage
 import com.aiyifan.app.core.model.PlaybackQuality
+import com.aiyifan.app.core.model.ResolvedPlayback
 import com.aiyifan.app.core.model.SearchSuggestion
 import com.aiyifan.app.core.model.VideoDetail
 import com.aiyifan.app.core.model.VideoSummary
@@ -162,7 +163,7 @@ class FakeCatalogRepository(
         detail: VideoDetail,
         episode: Episode,
         forceRefresh: Boolean,
-    ): Episode = episode
+    ): ResolvedPlayback = ResolvedPlayback(episode, detail.qualities)
 
     override fun getComments(mediaKey: String): List<Comment> =
         listOf(
