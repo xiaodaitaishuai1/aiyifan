@@ -5,7 +5,6 @@ import com.aiyifan.app.core.model.Comment
 import com.aiyifan.app.core.model.Episode
 import com.aiyifan.app.core.model.FavoriteVideo
 import com.aiyifan.app.core.model.SearchSuggestion
-import com.aiyifan.app.core.model.ResolvedPlayback
 import com.aiyifan.app.core.model.VideoDetail
 import com.aiyifan.app.core.model.VideoSummary
 import com.aiyifan.app.core.model.WatchHistory
@@ -29,7 +28,7 @@ interface CatalogRepository {
         detail: VideoDetail,
         episode: Episode,
         forceRefresh: Boolean = false,
-    ): ResolvedPlayback
+    ): Episode
 
     fun getComments(mediaKey: String): List<Comment>
 

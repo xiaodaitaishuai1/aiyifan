@@ -19,7 +19,4 @@
     <string name="video_favorite_added">已加入收藏</string>
     <string name="video_favorite_removed">已取消收藏</string>
     <string name="video_share_chooser">分享</string>
-    <string name="video_quality">清晰度</string>
-    <string name="video_quality_switched">已切换至 %1$s</string>
-    <string name="video_quality_switch_failed">清晰度切换失败，请重试</string>
 </resources>

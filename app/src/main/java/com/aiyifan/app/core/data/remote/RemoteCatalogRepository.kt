@@ -7,8 +7,6 @@ import com.aiyifan.app.core.model.Comment
 import com.aiyifan.app.core.model.Episode
 import com.aiyifan.app.core.model.FavoriteVideo
 import com.aiyifan.app.core.model.PlaybackLanguage
-import com.aiyifan.app.core.model.PlaybackQuality
-import com.aiyifan.app.core.model.ResolvedPlayback
 import com.aiyifan.app.core.model.SearchSuggestion
 import com.aiyifan.app.core.model.VideoDetail
 import com.aiyifan.app.core.model.VideoSummary
@@ -123,9 +121,9 @@ class RemoteCatalogRepository(
         detail: VideoDetail,
         episode: Episode,
         forceRefresh: Boolean,
-    ): ResolvedPlayback {
+    ): Episode {
         if (!forceRefresh && !episode.mediaUrl.isNullOrBlank()) {
-            return ResolvedPlayback(episode, detail.qualities)
+            return episode
         }
         return try {
             val baseUrl = configResolver.resolveBaseUrl()
@@ -146,12 +144,9 @@ class RemoteCatalogRepository(
             if (response.code !in 200..299) {
                 throw IllegalStateException("getPlayData failed: ${response.code}")
             }
-            parseResolvedPlayback(response.body, episode, episode.resolution)
+            parsePlayableEpisode(response.body, episode, episode.resolution)
         } catch (_: Throwable) {
-            ResolvedPlayback(
-                episode = if (forceRefresh) episode.copy(mediaUrl = null) else episode,
-                qualities = detail.qualities,
-            )
+            if (forceRefresh) episode.copy(mediaUrl = null) else episode
         }
     }
 
@@ -206,17 +201,6 @@ class RemoteCatalogRepository(
             ?.distinctBy { it.mediaKey }
             ?.take(12)
             .orEmpty()
-        val qualities = episodes
-            .mapNotNull { it.resolution }
-            .distinct()
-            .map { resolution ->
-                PlaybackQuality(
-                    resolution = resolution,
-                    description = "${resolution}P",
-                    mediaUrl = "",
-                    isDefault = resolution == detailInfo.optionalRemoteText("resolution"),
-                )
-            }
         val languages = buildList {
             val languageList = JSONObject(payload)
                 .optJSONObject("data")
@@ -247,7 +231,6 @@ class RemoteCatalogRepository(
             updateMsg = detailInfo.optionalRemoteText("updateStatus"),
             commentEnabled = detailInfo.optInt("commentStatus", 0) == 0,
             episodes = episodes,
-            qualities = qualities,
             languages = languages,
             related = related,
         )
@@ -274,40 +257,32 @@ class RemoteCatalogRepository(
             }
         }
 
-    private fun parseResolvedPlayback(
+    private fun parsePlayableEpisode(
         payload: String,
         fallbackEpisode: Episode,
         requestedResolution: String?,
-    ): ResolvedPlayback {
+    ): Episode {
         val items = JSONObject(payload)
             .optJSONObject("data")
             ?.optJSONArray("list")
             ?: JSONArray()
-        val playable = mutableListOf<Pair<JSONObject, PlaybackQuality>>()
+        val playable = mutableListOf<JSONObject>()
         for (index in 0 until items.length()) {
             val item = items.optJSONObject(index) ?: continue
-            val resolution = item.optionalRemoteText("resolution") ?: continue
-            val mediaUrl = item.optionalRemoteText("mediaUrl") ?: continue
-            playable += item to PlaybackQuality(
-                resolution = resolution,
-                description = "${resolution}P",
-                mediaUrl = mediaUrl,
-                isDefault = item.optBoolean("isDefault"),
-            )
+            if (item.optionalRemoteText("resolution") != null && item.optionalRemoteText("mediaUrl") != null) {
+                playable += item
+            }
         }
-        val chosen = playable.firstOrNull { it.second.resolution == requestedResolution }
-            ?: playable.firstOrNull { it.second.isDefault }
+        val chosen = playable.firstOrNull { it.optionalRemoteText("resolution") == requestedResolution }
+            ?: playable.firstOrNull { it.optBoolean("isDefault") }
             ?: playable.firstOrNull()
-            ?: return ResolvedPlayback(fallbackEpisode)
-        return ResolvedPlayback(
-            episode = fallbackEpisode.copy(
-                episodeKey = chosen.first.optionalRemoteText("episodeKey") ?: fallbackEpisode.episodeKey,
-                uniqueId = chosen.first.optInt("episodeId", fallbackEpisode.uniqueId),
-                mediaUrl = chosen.second.mediaUrl,
-                resolution = chosen.second.resolution,
-                lang = chosen.first.optionalRemoteText("lang") ?: fallbackEpisode.lang,
-            ),
-            qualities = playable.map { it.second }.distinctBy(PlaybackQuality::resolution),
+            ?: return fallbackEpisode
+        return fallbackEpisode.copy(
+            episodeKey = chosen.optionalRemoteText("episodeKey") ?: fallbackEpisode.episodeKey,
+            uniqueId = chosen.optInt("episodeId", fallbackEpisode.uniqueId),
+            mediaUrl = chosen.optionalRemoteText("mediaUrl"),
+            resolution = chosen.optionalRemoteText("resolution"),
+            lang = chosen.optionalRemoteText("lang") ?: fallbackEpisode.lang,
         )
     }
 

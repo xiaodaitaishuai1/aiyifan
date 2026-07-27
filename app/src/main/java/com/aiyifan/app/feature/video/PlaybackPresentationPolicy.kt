@@ -43,10 +43,4 @@ object VideoPlayerBackBehavior {
 object FullScreenControlVisibility {
     fun shouldShowExitButton(isFullScreen: Boolean, controllerVisibility: Int): Boolean =
         isFullScreen && controllerVisibility == View.VISIBLE
-
-    fun shouldShowQualityButton(
-        isFullScreen: Boolean,
-        controllerVisibility: Int,
-        availableQualityCount: Int,
-    ): Boolean = isFullScreen && controllerVisibility == View.VISIBLE && availableQualityCount > 0
 }

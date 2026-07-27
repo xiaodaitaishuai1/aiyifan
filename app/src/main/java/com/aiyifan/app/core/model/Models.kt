@@ -42,18 +42,6 @@ data class Episode(
     val watchProgressMs: Long = 0L,
 )
 
-data class PlaybackQuality(
-    val resolution: String,
-    val description: String,
-    val mediaUrl: String,
-    val isDefault: Boolean = false,
-)
-
-data class ResolvedPlayback(
-    val episode: Episode,
-    val qualities: List<PlaybackQuality> = emptyList(),
-)
-
 data class PlaybackLanguage(
     val mediaKey: String,
     val name: String,
@@ -86,7 +74,6 @@ data class VideoDetail(
     val updateMsg: String? = null,
     val commentEnabled: Boolean = true,
     val episodes: List<Episode> = emptyList(),
-    val qualities: List<PlaybackQuality> = emptyList(),
     val languages: List<PlaybackLanguage> = emptyList(),
     val related: List<VideoSummary> = emptyList(),
 ) {

@@ -26,6 +26,7 @@ fun View.applySystemBarsPadding(
     right: Boolean = false,
     bottom: Boolean = false,
     growHeight: Boolean = false,
+    shouldApply: () -> Boolean = { true },
 ) {
     val initialLeft = paddingLeft
     val initialTop = paddingTop
@@ -40,12 +41,16 @@ fun View.applySystemBarsPadding(
         val extraTop = if (top) bars.top else 0
         val extraBottom = if (bottom) bars.bottom else 0
 
-        view.updatePadding(
-            left = initialLeft + if (left) bars.left else 0,
-            top = initialTop + extraTop,
-            right = initialRight + if (right) bars.right else 0,
-            bottom = initialBottom + extraBottom,
-        )
+        if (shouldApply()) {
+            view.updatePadding(
+                left = initialLeft + if (left) bars.left else 0,
+                top = initialTop + extraTop,
+                right = initialRight + if (right) bars.right else 0,
+                bottom = initialBottom + extraBottom,
+            )
+        } else {
+            view.setPadding(initialLeft, initialTop, initialRight, initialBottom)
+        }
         if (growHeight && initialHeight > 0) {
             view.updateLayoutParams {
                 height = initialHeight + extraTop + extraBottom

@@ -42,11 +42,8 @@ class VideoPlayerLayoutTest {
     }
 
     @Test
-    fun `quality button overlays player and starts hidden`() {
-        val button = viewWithId(viewWithId(videoPlayerLayout(), "playerContainer")!!, "fullScreenQualityButton")!!
-
-        assertEquals("gone", button.getAttribute("android:visibility"))
-        assertEquals("bottom|end", button.getAttribute("android:layout_gravity"))
+    fun `player has no quality selection button`() {
+        assertEquals(null, viewWithId(videoPlayerLayout(), "fullScreenQualityButton"))
     }
 
     private fun videoPlayerLayout() = DocumentBuilderFactory.newInstance()

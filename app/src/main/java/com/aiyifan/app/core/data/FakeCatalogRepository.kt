@@ -5,8 +5,6 @@ import com.aiyifan.app.core.model.Comment
 import com.aiyifan.app.core.model.Episode
 import com.aiyifan.app.core.model.FavoriteVideo
 import com.aiyifan.app.core.model.PlaybackLanguage
-import com.aiyifan.app.core.model.PlaybackQuality
-import com.aiyifan.app.core.model.ResolvedPlayback
 import com.aiyifan.app.core.model.SearchSuggestion
 import com.aiyifan.app.core.model.VideoDetail
 import com.aiyifan.app.core.model.VideoSummary
@@ -150,10 +148,6 @@ class FakeCatalogRepository(
             updateMsg = summary.updateStatus,
             commentEnabled = true,
             episodes = episodes,
-            qualities = listOf(
-                PlaybackQuality("720P", "高清 720P", mediaUrl),
-                PlaybackQuality("1080P", "超清 1080P", mediaUrl, isDefault = true),
-            ),
             languages = listOf(PlaybackLanguage(summary.mediaKey, "国语")),
             related = summaries.filterNot { it.mediaKey == summary.mediaKey },
         )
@@ -163,7 +157,7 @@ class FakeCatalogRepository(
         detail: VideoDetail,
         episode: Episode,
         forceRefresh: Boolean,
-    ): ResolvedPlayback = ResolvedPlayback(episode, detail.qualities)
+    ): Episode = episode
 
     override fun getComments(mediaKey: String): List<Comment> =
         listOf(
