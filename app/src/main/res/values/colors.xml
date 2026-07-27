@@ -5,6 +5,7 @@
     <color name="surface">#FFFFFF</color>
     <color name="text_primary">#202124</color>
     <color name="text_secondary">#6B7280</color>
+    <color name="text_on_accent">#FFFFFF</color>
     <color name="accent">#FF7A1A</color>
     <color name="black">#000000</color>
     <color name="white">#FFFFFF</color>

@@ -10,7 +10,6 @@ import com.aiyifan.app.R
 import com.aiyifan.app.core.ui.ThemeMode
 import com.aiyifan.app.core.ui.ThemePreferenceStore
 import com.aiyifan.app.databinding.FragmentMineBinding
-import com.aiyifan.app.feature.auth.LoginActivity
 import com.aiyifan.app.feature.collection.CollectionActivity
 import com.aiyifan.app.feature.history.HistoryActivity
 import com.aiyifan.app.feature.proxy.ProxySettingsActivity
@@ -28,7 +27,6 @@ class MineFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val themePreferenceStore = ThemePreferenceStore(requireContext())
         binding.themeSettingsSummary.setText(themePreferenceStore.currentMode().labelRes)
-        binding.loginButton.setOnClickListener { startActivity(Intent(requireContext(), LoginActivity::class.java)) }
         binding.historyButton.setOnClickListener { startActivity(Intent(requireContext(), HistoryActivity::class.java)) }
         binding.collectionButton.setOnClickListener { startActivity(Intent(requireContext(), CollectionActivity::class.java)) }
         binding.proxySettingsButton.setOnClickListener {

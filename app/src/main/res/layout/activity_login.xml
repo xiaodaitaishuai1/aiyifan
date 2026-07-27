@@ -62,5 +62,5 @@
         android:layout_marginTop="20dp"
         android:background="@drawable/bg_button_primary"
         android:text="登录"
-        android:textColor="@color/white" />
+        android:textColor="@color/text_on_accent" />
 </LinearLayout>

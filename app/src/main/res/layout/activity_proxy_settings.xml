@@ -78,7 +78,7 @@
                 android:background="@drawable/bg_button_primary"
                 android:backgroundTint="@null"
                 android:text="&#x66F4;&#x65B0;&#x8BA2;&#x9605;"
-                android:textColor="@color/white" />
+                android:textColor="@color/text_on_accent" />
 
             <TextView
                 android:layout_width="match_parent"
@@ -129,7 +129,7 @@
                     android:background="@drawable/bg_button_primary"
                     android:backgroundTint="@null"
                     android:text="&#x8FDE;&#x63A5;"
-                    android:textColor="@color/white" />
+                    android:textColor="@color/text_on_accent" />
 
                 <Button
                     android:id="@+id/disconnectButton"

@@ -14,6 +14,7 @@ import com.aiyifan.app.core.model.VideoSummary
 import com.aiyifan.app.databinding.ItemSearchResultBinding
 import com.aiyifan.app.databinding.ItemSearchSuggestionBinding
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 
 class SearchSuggestionAdapter(
     private val onClick: (SearchSuggestion) -> Unit,
@@ -93,7 +94,11 @@ class SearchResultAdapter(
             if (item.coverUrl.isBlank()) {
                 binding.poster.setImageDrawable(null)
             } else {
-                Glide.with(binding.poster).load(item.coverUrl).centerCrop().into(binding.poster)
+                Glide.with(binding.poster)
+                    .load(item.coverUrl)
+                    .centerCrop()
+                    .transform(RoundedCorners(binding.poster.resources.displayMetrics.density.times(8).toInt()))
+                    .into(binding.poster)
             }
             binding.root.setOnClickListener { onClick(item) }
             binding.playButton.setOnClickListener { onClick(item) }

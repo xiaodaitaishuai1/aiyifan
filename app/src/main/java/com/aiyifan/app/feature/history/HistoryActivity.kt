@@ -40,7 +40,7 @@ class HistoryActivity : AppCompatActivity() {
     private fun render() {
         val items = AppGraph.catalogRepository.getHistory().map { it.toVideoSummary() }
         adapter.submitList(items)
-        binding.emptyView.visibility = if (items.isEmpty()) android.view.View.VISIBLE else android.view.View.GONE
+        binding.emptyState.visibility = if (items.isEmpty()) android.view.View.VISIBLE else android.view.View.GONE
         binding.emptyView.text = "暂无观看记录"
     }
 }

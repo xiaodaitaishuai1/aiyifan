@@ -8,6 +8,7 @@ import com.aiyifan.app.core.model.VideoSummary
 import com.aiyifan.app.core.model.WatchHistory
 import com.aiyifan.app.databinding.ItemVideoCardBinding
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 
 class VideoListAdapter(
     private val onClick: (VideoSummary) -> Unit,
@@ -42,6 +43,7 @@ class VideoListAdapter(
                 Glide.with(binding.poster)
                     .load(video.coverUrl)
                     .centerCrop()
+                    .transform(RoundedCorners(binding.poster.resources.displayMetrics.density.times(8).toInt()))
                     .into(binding.poster)
             }
             binding.title.text = video.title

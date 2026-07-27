@@ -1,8 +1,9 @@
 package com.aiyifan.app.core.ui
 
 import android.app.Activity
-import android.graphics.Color
+import android.os.Build
 import android.view.View
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -11,9 +12,14 @@ import androidx.core.view.updatePadding
 
 fun Activity.setupEdgeToEdge() {
     val lightSystemBars = usesLightSystemBarIcons(resources.configuration.uiMode)
+    val surfaceColor = ContextCompat.getColor(this, com.aiyifan.app.R.color.surface)
     WindowCompat.setDecorFitsSystemWindows(window, false)
-    window.statusBarColor = Color.TRANSPARENT
-    window.navigationBarColor = Color.TRANSPARENT
+    window.statusBarColor = surfaceColor
+    window.navigationBarColor = surfaceColor
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        window.isStatusBarContrastEnforced = false
+        window.isNavigationBarContrastEnforced = false
+    }
     WindowCompat.getInsetsController(window, window.decorView).apply {
         isAppearanceLightStatusBars = lightSystemBars
         isAppearanceLightNavigationBars = lightSystemBars

@@ -9,11 +9,11 @@ import org.w3c.dom.Element
 class VideoCardLayoutTest {
 
     @Test
-    fun `play button preserves its orange drawable and white label`() {
+    fun `play button preserves its orange drawable and semantic accent label`() {
         val document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(layoutFile())
         val playButton = viewWithId(document.documentElement, "playButton")!!
 
-        assertEquals("@color/white", playButton.getAttribute("android:textColor"))
+        assertEquals("@color/text_on_accent", playButton.getAttribute("android:textColor"))
         assertEquals("@null", playButton.getAttribute("app:backgroundTint"))
     }
 

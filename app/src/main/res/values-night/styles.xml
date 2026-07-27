@@ -7,5 +7,6 @@
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryVariant">@color/primary</item>
         <item name="colorSecondary">@color/accent</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.Aiyifan.AlertDialog</item>
     </style>
 </resources>

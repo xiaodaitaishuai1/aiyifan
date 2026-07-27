@@ -31,7 +31,7 @@ class CollectionActivity : AppCompatActivity() {
         binding.recycler.adapter = adapter
         val items = AppGraph.catalogRepository.getFavorites().map { it.toVideoSummary() }
         adapter.submitList(items)
-        binding.emptyView.visibility = if (items.isEmpty()) android.view.View.VISIBLE else android.view.View.GONE
+        binding.emptyState.visibility = if (items.isEmpty()) android.view.View.VISIBLE else android.view.View.GONE
         binding.emptyView.text = "暂无收藏"
     }
 }

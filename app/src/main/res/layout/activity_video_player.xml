@@ -129,19 +129,23 @@
                     <Button
                         android:id="@+id/favoriteButton"
                         android:layout_width="0dp"
-                        android:layout_height="38dp"
+                        android:layout_height="44dp"
                         android:layout_weight="1"
                         android:background="@drawable/bg_button_outline"
+                        android:gravity="center"
+                        android:includeFontPadding="false"
                         android:text="收藏"
                         android:textColor="@color/text_primary" />
 
                     <Button
                         android:id="@+id/shareButton"
                         android:layout_width="0dp"
-                        android:layout_height="38dp"
+                        android:layout_height="44dp"
                         android:layout_marginStart="10dp"
                         android:layout_weight="1"
                         android:background="@drawable/bg_button_outline"
+                        android:gravity="center"
+                        android:includeFontPadding="false"
                         android:text="分享"
                         android:textColor="@color/text_primary" />
                 </LinearLayout>
