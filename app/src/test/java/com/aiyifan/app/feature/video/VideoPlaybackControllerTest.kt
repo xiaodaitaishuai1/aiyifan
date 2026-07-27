@@ -81,6 +81,17 @@ class VideoPlaybackControllerTest {
         assertEquals(12_345L, engine.seekPositionMs)
     }
 
+    @Test
+    fun `prepare keeps playback paused when requested`() {
+        val engine = FakePlaybackEngine()
+        val controller = VideoPlaybackController(engine, FakeCatalogRepository(), FakePlaybackSession())
+
+        assertTrue(controller.prepare(sampleDetail(), sampleEpisode(), startPositionMs = 12_345L, shouldPlay = false))
+
+        assertEquals(12_345L, engine.seekPositionMs)
+        assertFalse(engine.isPlaying)
+    }
+
     private fun sampleDetail() = VideoDetail(
         mediaKey = "video-1",
         title = "Sample video",
