@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.aiyifan.app.core.ui.AspectRatioFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/bannerFrame"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    app:ratioHeight="7"
+    app:ratioWidth="16">
+
+    <ImageView
+        android:id="@+id/bannerPoster"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_poster"
+        android:clipToOutline="true"
+        android:contentDescription="@string/video_poster"
+        android:scaleType="centerCrop" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_home_banner_scrim" />
+
+    <TextView
+        android:id="@+id/bannerTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:ellipsize="end"
+        android:maxLines="2"
+        android:padding="14dp"
+        android:textColor="@color/white"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+</com.aiyifan.app.core.ui.AspectRatioFrameLayout>
