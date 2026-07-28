@@ -63,7 +63,7 @@ class HomeFeedItemFactoryTest {
 
 - [ ] **Step 2: Run the test to verify it fails**
 
-Run: `./gradlew.bat test --tests "com.aiyifan.app.feature.home.HomeFeedItemFactoryTest"`
+Run: `./gradlew.bat :app:testDebugUnitTest --tests "com.aiyifan.app.feature.home.HomeFeedItemFactoryTest"`
 
 Expected: compilation failure because `HomeFeedItemFactory` and `HomeFeedItem` do not exist.
 
@@ -87,7 +87,7 @@ object HomeFeedItemFactory {
 
 - [ ] **Step 4: Run the test to verify it passes**
 
-Run: `./gradlew.bat test --tests "com.aiyifan.app.feature.home.HomeFeedItemFactoryTest"`
+Run: `./gradlew.bat :app:testDebugUnitTest --tests "com.aiyifan.app.feature.home.HomeFeedItemFactoryTest"`
 
 Expected: all two tests pass.
 
@@ -130,7 +130,7 @@ fun `home card reserves a sixteen by nine frame and limits title lines`() {
 
 - [ ] **Step 2: Run the layout contract test to verify it fails**
 
-Run: `./gradlew.bat test --tests "com.aiyifan.app.feature.home.HomeLayoutContractTest"`
+Run: `./gradlew.bat :app:testDebugUnitTest --tests "com.aiyifan.app.feature.home.HomeLayoutContractTest"`
 
 Expected: failure because the two layout resource files do not exist.
 
@@ -167,7 +167,7 @@ Use `AspectRatioFrameLayout` with `app:ratioWidth="16"` and `app:ratioHeight="7"
 
 - [ ] **Step 4: Run the layout contract test to verify it passes**
 
-Run: `./gradlew.bat test --tests "com.aiyifan.app.feature.home.HomeLayoutContractTest"`
+Run: `./gradlew.bat :app:testDebugUnitTest --tests "com.aiyifan.app.feature.home.HomeLayoutContractTest"`
 
 Expected: both XML contract tests pass.
 
@@ -200,7 +200,7 @@ fun `home fragment configures a two column grid and leaves hot list untouched`()
 
 - [ ] **Step 2: Run the grid contract test to verify it fails**
 
-Run: `./gradlew.bat test --tests "com.aiyifan.app.feature.home.HomeLayoutContractTest"`
+Run: `./gradlew.bat :app:testDebugUnitTest --tests "com.aiyifan.app.feature.home.HomeLayoutContractTest"`
 
 Expected: failure because `HomeFragment` still uses `VideoListAdapter` and `LinearLayoutManager`.
 
@@ -223,7 +223,7 @@ binding.videoRecycler.adapter = adapter
 
 - [ ] **Step 4: Run focused tests to verify the integration passes**
 
-Run: `./gradlew.bat test --tests "com.aiyifan.app.feature.home.HomeFeedItemFactoryTest" --tests "com.aiyifan.app.feature.home.HomeLayoutContractTest"`
+Run: `./gradlew.bat :app:testDebugUnitTest --tests "com.aiyifan.app.feature.home.HomeFeedItemFactoryTest" --tests "com.aiyifan.app.feature.home.HomeLayoutContractTest"`
 
 Expected: all tests pass; hot screen contract confirms it remains a linear list.
 

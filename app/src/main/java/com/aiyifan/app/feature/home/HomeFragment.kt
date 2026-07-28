@@ -11,11 +11,10 @@ import androidx.core.view.children
 import androidx.core.view.setMargins
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.GridLayoutManager
 import com.aiyifan.app.R
 import com.aiyifan.app.core.data.AppGraph
 import com.aiyifan.app.core.model.Category
-import com.aiyifan.app.core.ui.VideoListAdapter
 import com.aiyifan.app.databinding.FragmentHomeBinding
 import com.aiyifan.app.feature.history.HistoryActivity
 import com.aiyifan.app.feature.search.SearchActivity
@@ -27,7 +26,7 @@ class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
     private val repository = AppGraph.catalogRepository
-    private lateinit var adapter: VideoListAdapter
+    private lateinit var adapter: HomeVideoAdapter
     private var selectedCategory: Category? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -36,10 +35,14 @@ class HomeFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        adapter = VideoListAdapter { video ->
+        adapter = HomeVideoAdapter { video ->
             startActivity(VideoPlayerActivity.intent(requireContext(), video.mediaKey))
         }
-        binding.videoRecycler.layoutManager = LinearLayoutManager(requireContext())
+        binding.videoRecycler.layoutManager = GridLayoutManager(requireContext(), 2).apply {
+            spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+                override fun getSpanSize(position: Int): Int = adapter.spanSizeAt(position)
+            }
+        }
         binding.videoRecycler.adapter = adapter
         binding.searchBox.setOnClickListener { startActivity(Intent(requireContext(), SearchActivity::class.java)) }
         binding.historyButton.setOnClickListener { startActivity(Intent(requireContext(), HistoryActivity::class.java)) }
