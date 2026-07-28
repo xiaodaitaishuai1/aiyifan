@@ -1,25 +1,57 @@
 package com.aiyifan.app.feature.home
 
+import com.aiyifan.app.core.data.HomeVideoPage
 import com.aiyifan.app.core.model.VideoSummary
 
-class HomeFeedPagination(
-    private val initialSize: Int = 7,
-    private val pageSize: Int = 6,
-) {
-    private var allItems = emptyList<VideoSummary>()
-    private var shownCount = 0
+class HomeFeedPagination {
+    private var shownItems = emptyList<VideoSummary>()
+    private var nextPage = 2
+    private var loadingPage: Int? = null
+    private var serverHasMore = false
 
     val hasMore: Boolean
-        get() = shownCount < allItems.size
+        get() = serverHasMore
 
-    fun reset(selected: List<VideoSummary>): List<VideoSummary> {
-        allItems = selected.distinctBy(VideoSummary::mediaKey)
-        shownCount = minOf(initialSize, allItems.size)
-        return allItems.take(shownCount)
+    fun reset(response: HomeVideoPage): List<VideoSummary> {
+        shownItems = response.videos.distinctBy(VideoSummary::mediaKey)
+        nextPage = 2
+        loadingPage = null
+        serverHasMore = response.hasMore
+        return shownItems
     }
 
-    fun next(): List<VideoSummary> {
-        shownCount = minOf(shownCount + pageSize, allItems.size)
-        return allItems.take(shownCount)
+    fun beginNextPage(): Int? {
+        if (!serverHasMore || loadingPage != null) return null
+        return nextPage.also { requestedPage ->
+            loadingPage = requestedPage
+        }
     }
+
+    fun append(requestedPage: Int, response: HomeVideoPage): List<VideoSummary> {
+        if (loadingPage != requestedPage) return shownItems
+        shownItems = (shownItems + response.videos).distinctBy(VideoSummary::mediaKey)
+        nextPage = requestedPage + 1
+        loadingPage = null
+        serverHasMore = response.hasMore
+        return shownItems
+    }
+
+    fun fail(requestedPage: Int) {
+        if (loadingPage == requestedPage) {
+            loadingPage = null
+        }
+    }
+
+    fun clear() {
+        reset(HomeVideoPage(videos = emptyList(), hasMore = false))
+    }
+
+    fun cancelPending() {
+        loadingPage = null
+    }
+
+    fun reset(selected: List<VideoSummary>): List<VideoSummary> =
+        reset(HomeVideoPage(videos = selected, hasMore = false))
+
+    fun next(): List<VideoSummary> = shownItems
 }

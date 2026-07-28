@@ -14,6 +14,12 @@ interface CatalogRepository {
 
     suspend fun getHomeVideos(categoryId: String): List<VideoSummary>
 
+    suspend fun getHomeVideoPage(
+        category: Category,
+        page: Int,
+        size: Int = 30,
+    ): HomeVideoPage
+
     suspend fun refreshHome()
 
     suspend fun getHotVideos(): List<VideoSummary>

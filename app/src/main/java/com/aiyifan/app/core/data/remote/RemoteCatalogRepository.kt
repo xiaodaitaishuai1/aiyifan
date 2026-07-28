@@ -2,6 +2,7 @@ package com.aiyifan.app.core.data.remote
 
 import com.aiyifan.app.core.data.CatalogRepository
 import com.aiyifan.app.core.data.FakeCatalogRepository
+import com.aiyifan.app.core.data.HomeVideoPage
 import com.aiyifan.app.core.model.Category
 import com.aiyifan.app.core.model.Comment
 import com.aiyifan.app.core.model.Episode
@@ -28,19 +29,16 @@ class RemoteCatalogRepository(
     @Volatile
     private var cachedSections: List<TripDataHomeSection>? = null
 
+    @Volatile
+    private var cachedCategories: List<Category>? = null
+
     private val detailCache = linkedMapOf<String, VideoDetail>()
 
     override suspend fun getCategories(): List<Category> =
         try {
-            ensureSections().mapIndexed { index, section ->
-                Category(
-                    id = section.name,
-                    name = section.name,
-                    type = index,
-                    styleType = 0,
-                )
-            }
-        } catch (_: Throwable) {
+            ensureCategories()
+        } catch (exception: Throwable) {
+            if (exception is kotlinx.coroutines.CancellationException) throw exception
             fallback.getCategories()
         }
 
@@ -54,9 +52,38 @@ class RemoteCatalogRepository(
             fallback.getHomeVideos(categoryId)
         }
 
+    override suspend fun getHomeVideoPage(
+        category: Category,
+        page: Int,
+        size: Int,
+    ): HomeVideoPage =
+        try {
+            require(page > 0) { "Page must be positive" }
+            require(size > 0) { "Page size must be positive" }
+            val baseUrl = configResolver.resolveBaseUrl()
+            val payload = JSONObject()
+                .put("page", page.toString())
+                .put("size", size.toString())
+                .put("titleid", category.id)
+            val response = fetcher.postJson(
+                "${baseUrl}api/Home/GetRelativeVideos",
+                payload.toString(),
+            )
+            if (response.code !in 200..299) {
+                throw IllegalStateException("Home page request failed: ${response.code}")
+            }
+            val videos = TripDataHomeParser.parseSection(response.body, category.name)
+            HomeVideoPage(videos = videos, hasMore = videos.isNotEmpty())
+        } catch (exception: Throwable) {
+            if (exception is kotlinx.coroutines.CancellationException) throw exception
+            if (page > 1) throw exception
+            fallback.getHomeVideoPage(category, page, size)
+        }
+
     override suspend fun refreshHome() {
         cacheLock.withLock {
             cachedSections = fetchHomeSections()
+            cachedCategories = null
         }
     }
 
@@ -175,6 +202,46 @@ class RemoteCatalogRepository(
             fetchHomeSections().also { parsed ->
                 cachedSections = parsed
             }
+        }
+    }
+
+    private suspend fun ensureCategories(): List<Category> {
+        cachedCategories?.let { return it }
+        return cacheLock.withLock {
+            cachedCategories?.let { return@withLock it }
+            fetchCategories().also { parsed ->
+                cachedCategories = parsed
+            }
+        }
+    }
+
+    private suspend fun fetchCategories(): List<Category> {
+        val baseUrl = configResolver.resolveBaseUrl()
+        val response = fetcher.postJson("${baseUrl}api/List/NavigationBar", "{}")
+        if (response.code !in 200..299) {
+            throw IllegalStateException("Navigation request failed: ${response.code}")
+        }
+        val items = JSONObject(response.body)
+            .optJSONObject("data")
+            ?.optJSONArray("list")
+            ?: JSONArray()
+        return buildList {
+            for (index in 0 until items.length()) {
+                val item = items.optJSONObject(index) ?: continue
+                if (item.optInt("type") != 1) continue
+                val id = item.optionalRemoteText("categoryId") ?: continue
+                val name = item.optionalRemoteText("name") ?: continue
+                add(
+                    Category(
+                        id = id,
+                        name = name,
+                        type = item.optInt("type"),
+                        styleType = item.optInt("styleType"),
+                    ),
+                )
+            }
+        }.also { categories ->
+            check(categories.isNotEmpty()) { "Navigation response contains no categories" }
         }
     }
 

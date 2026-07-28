@@ -27,6 +27,20 @@ object TripDataHomeParser {
         }
     }
 
+    fun parseSection(payload: String, name: String): List<VideoSummary> {
+        val sections = JSONObject(payload)
+            .optJSONObject("data")
+            ?.optJSONArray("list")
+            ?: JSONArray()
+        for (index in 0 until sections.length()) {
+            val section = sections.optJSONObject(index) ?: continue
+            if (section.optionalRemoteText("name") == name) {
+                return parseVideos(section.optJSONArray("list")).distinctBy(VideoSummary::mediaKey)
+            }
+        }
+        return emptyList()
+    }
+
     private fun parseVideos(items: JSONArray?): List<VideoSummary> =
         buildList {
             if (items == null) return@buildList

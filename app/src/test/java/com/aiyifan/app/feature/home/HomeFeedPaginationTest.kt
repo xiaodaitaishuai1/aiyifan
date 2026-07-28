@@ -1,30 +1,41 @@
 package com.aiyifan.app.feature.home
 
+import com.aiyifan.app.core.data.HomeVideoPage
 import com.aiyifan.app.core.model.VideoSummary
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class HomeFeedPaginationTest {
     @Test
-    fun `initial page only contains the current category even when it has fewer than seven items`() {
+    fun `next request starts at page two and appends only unique current category videos`() {
         val pager = HomeFeedPagination()
-        val page = pager.reset(listOf("a", "b", "c", "d", "e").map(::video))
+        val initial = pager.reset(HomeVideoPage(listOf("a", "b", "c", "d", "e", "f", "g").map(::video), hasMore = true))
 
-        assertEquals(listOf("a", "b", "c", "d", "e"), page.map { it.mediaKey })
-        assertFalse(pager.hasMore)
+        assertEquals(listOf("a", "b", "c", "d", "e", "f", "g"), initial.map { it.mediaKey })
+        assertEquals(2, pager.beginNextPage())
+        assertNull(pager.beginNextPage())
+
+        val merged = pager.append(
+            requestedPage = 2,
+            response = HomeVideoPage(listOf("g", "h", "i").map(::video), hasMore = true),
+        )
+
+        assertEquals(listOf("a", "b", "c", "d", "e", "f", "g", "h", "i"), merged.map { it.mediaKey })
+        assertEquals(3, pager.beginNextPage())
     }
 
     @Test
-    fun `next page appends six items and stops at the end`() {
+    fun `empty current category response stops further paging`() {
         val pager = HomeFeedPagination()
-        pager.reset((1..15).map { video("v$it") })
+        pager.reset(HomeVideoPage(listOf(video("movie-1")), hasMore = true))
+        val requestedPage = pager.beginNextPage()!!
 
-        assertEquals((1..13).map { "v$it" }, pager.next().map { it.mediaKey })
-        assertTrue(pager.hasMore)
-        assertEquals((1..15).map { "v$it" }, pager.next().map { it.mediaKey })
+        pager.append(requestedPage, HomeVideoPage(emptyList(), hasMore = false))
+
         assertFalse(pager.hasMore)
+        assertNull(pager.beginNextPage())
     }
 
     private fun video(key: String) = VideoSummary(key, title = key, coverUrl = "", videoType = 0)

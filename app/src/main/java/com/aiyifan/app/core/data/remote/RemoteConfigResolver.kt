@@ -25,6 +25,9 @@ interface HttpFetcher {
 
     suspend fun postForm(url: String, params: Map<String, String>): HttpResponse =
         throw UnsupportedOperationException("Form POST is not supported")
+
+    suspend fun postJson(url: String, body: String): HttpResponse =
+        throw UnsupportedOperationException("JSON POST is not supported")
 }
 
 fun interface HttpConnectionOpener {
@@ -104,6 +107,43 @@ class UrlConnectionHttpFetcher(
                     BufferedReader(InputStreamReader(input)).readText()
                 }.orEmpty()
                 HttpResponse(connection.responseCode, body)
+            } finally {
+                connection.disconnect()
+            }
+        }
+
+    override suspend fun postJson(url: String, body: String): HttpResponse =
+        withContext(Dispatchers.IO) {
+            val connection = connectionOpener.open(
+                URL(url),
+                ProxyConnectionPolicy.select(endpointProvider()),
+            ).apply {
+                requestMethod = "POST"
+                connectTimeout = 10_000
+                readTimeout = 10_000
+                instanceFollowRedirects = true
+                doOutput = true
+                setRequestProperty("User-Agent", "Aiyifan/1.0")
+                setRequestProperty("Accept", "application/json,text/plain,*/*")
+                setRequestProperty("Accept-Language", "zh-CN")
+                setRequestProperty("X-Region", DEFAULT_REGION)
+                setRequestProperty("BundleId", "com.cqcsy.ifvod")
+                setRequestProperty("Version", "V3")
+                setRequestProperty("Content-Type", "application/json; charset=UTF-8")
+            }
+            try {
+                OutputStreamWriter(connection.outputStream, Charsets.UTF_8).use { writer ->
+                    writer.write(body)
+                }
+                val stream = if (connection.responseCode in 200..299) {
+                    connection.inputStream
+                } else {
+                    connection.errorStream
+                }
+                val responseBody = stream?.use { input ->
+                    BufferedReader(InputStreamReader(input)).readText()
+                }.orEmpty()
+                HttpResponse(connection.responseCode, responseBody)
             } finally {
                 connection.disconnect()
             }
