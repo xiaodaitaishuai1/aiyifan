@@ -48,8 +48,12 @@ class HomeFragment : Fragment() {
         binding.videoRecycler.adapter = adapter
         binding.videoRecycler.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                if (dy > 0 && !recyclerView.canScrollVertically(1) && pagination.hasMore) {
-                    adapter.submitList(pagination.next())
+                if (dy > 0 && !recyclerView.canScrollVertically(1)) {
+                    if (pagination.hasMore) {
+                        adapter.submitList(pagination.next())
+                    } else {
+                        Toast.makeText(requireContext(), "没有更多了", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         })
@@ -74,7 +78,7 @@ class HomeFragment : Fragment() {
                 if (exception is CancellationException) throw exception
                 context?.let { Toast.makeText(it, "首页刷新失败", Toast.LENGTH_SHORT).show() }
                 if (!refresh) {
-                    pagination.reset(emptyList(), emptyList())
+                    pagination.reset(emptyList())
                     adapter.submitList(emptyList())
                 }
             } finally {
@@ -122,10 +126,7 @@ class HomeFragment : Fragment() {
     }
 
     private suspend fun submitHomeFeed(categories: List<Category>, category: Category) {
-        val selected = repository.getHomeVideos(category.id)
-        val supplements = categories.filterNot { it.id == category.id }
-            .map { repository.getHomeVideos(it.id) }
-        adapter.submitList(pagination.reset(selected, supplements))
+        adapter.submitList(pagination.reset(repository.getHomeVideos(category.id)))
     }
 
     override fun onDestroyView() {

@@ -12,8 +12,8 @@ class HomeFeedPagination(
     val hasMore: Boolean
         get() = shownCount < allItems.size
 
-    fun reset(selected: List<VideoSummary>, supplements: List<List<VideoSummary>>): List<VideoSummary> {
-        allItems = (selected + supplements.flatten()).distinctBy(VideoSummary::mediaKey)
+    fun reset(selected: List<VideoSummary>): List<VideoSummary> {
+        allItems = selected.distinctBy(VideoSummary::mediaKey)
         shownCount = minOf(initialSize, allItems.size)
         return allItems.take(shownCount)
     }
