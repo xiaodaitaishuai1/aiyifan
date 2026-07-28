@@ -37,7 +37,7 @@ private class ProxyAwareGlideUrlLoader(
         height: Int,
         options: com.bumptech.glide.load.Options,
     ): ModelLoader.LoadData<InputStream>? =
-        OkHttpUrlLoader(clientFactory.create()).buildLoadData(model, width, height, options)
+        OkHttpUrlLoader(clientFactory.createDirect()).buildLoadData(model, width, height, options)
 
     override fun handles(model: GlideUrl): Boolean = true
 }
@@ -45,7 +45,7 @@ private class ProxyAwareGlideUrlLoader(
 private class ProxyAwareGlideUrlLoaderFactory(
     endpointProvider: () -> LocalProxyEndpoint?,
 ) : ModelLoaderFactory<GlideUrl, InputStream> {
-    private val clientFactory = ProxyAwareImageClientFactory(endpointProvider)
+    private val clientFactory = ProxyAwareImageClientFactory(endpointProvider = endpointProvider)
 
     override fun build(multiFactory: MultiModelLoaderFactory): ModelLoader<GlideUrl, InputStream> =
         ProxyAwareGlideUrlLoader(clientFactory)

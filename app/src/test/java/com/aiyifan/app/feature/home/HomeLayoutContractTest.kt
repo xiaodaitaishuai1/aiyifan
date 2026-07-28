@@ -38,6 +38,22 @@ class HomeLayoutContractTest {
         assertTrue(source("feature/hot/HotFragment.kt").readText().contains("LinearLayoutManager(requireContext())"))
     }
 
+    @Test
+    fun `home loading footer is theme-aware and spans a grid row`() {
+        val footer = sequenceOf(
+            File("src/main/res/layout/item_home_loading.xml"),
+            File("app/src/main/res/layout/item_home_loading.xml"),
+        ).firstOrNull(File::isFile)
+        val adapter = source("feature/home/HomeVideoAdapter.kt").readText()
+        val fragment = source("feature/home/HomeFragment.kt").readText()
+
+        assertTrue(footer != null)
+        assertTrue(adapter.contains("HomeFeedItem.Loading"))
+        assertTrue(adapter.contains("R.drawable.bg_poster"))
+        assertTrue(adapter.contains("DiskCacheStrategy.ALL"))
+        assertTrue(fragment.contains("adapter.setLoadMoreLoading(false)"))
+    }
+
     private fun layout(name: String): File = sequenceOf(
         File("src/main/res/layout/$name.xml"),
         File("app/src/main/res/layout/$name.xml"),

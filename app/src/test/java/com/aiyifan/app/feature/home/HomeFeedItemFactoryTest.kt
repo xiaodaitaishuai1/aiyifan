@@ -26,6 +26,20 @@ class HomeFeedItemFactoryTest {
         )
     }
 
+    @Test
+    fun `loading state appends a footer after the current home videos`() {
+        val videos = listOf(video("banner"), video("card-one"))
+
+        assertEquals(
+            listOf(
+                HomeFeedItem.Banner(videos[0]),
+                HomeFeedItem.Card(videos[1]),
+                HomeFeedItem.Loading,
+            ),
+            HomeFeedItemFactory.create(videos, isLoadingMore = true),
+        )
+    }
+
     private fun video(mediaKey: String) = VideoSummary(
         mediaKey = mediaKey,
         title = mediaKey,

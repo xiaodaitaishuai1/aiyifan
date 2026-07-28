@@ -15,6 +15,10 @@ class HomeFragmentPaginationContractTest {
         assertTrue(source.contains("repository.getHomeVideoPage(category, page)"))
         assertTrue(source.contains("val requestVersion = homeRequestVersion"))
         assertTrue(source.contains("isCurrentRequest(requestVersion) && selectedCategory?.id == categoryId"))
+        assertTrue(source.contains("homeRefresh.setColorSchemeResources(R.color.accent)"))
+        assertTrue(source.contains("adapter.setLoadMoreLoading(true)"))
+        assertTrue(source.contains("recyclerView.post {"))
+        assertTrue(source.contains("loadNextPage(category, page, requestVersion)"))
         assertFalse(source.contains("pagination.next()"))
     }
 

@@ -13,6 +13,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.aiyifan.app.R
 import com.aiyifan.app.core.data.AppGraph
 import com.aiyifan.app.core.model.Category
 import com.aiyifan.app.databinding.FragmentHomeBinding
@@ -47,6 +48,8 @@ class HomeFragment : Fragment() {
             }
         }
         binding.videoRecycler.adapter = adapter
+        binding.homeRefresh.setColorSchemeResources(R.color.accent)
+        binding.homeRefresh.setProgressBackgroundColorSchemeResource(R.color.surface)
         binding.videoRecycler.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 if (dy <= 0 || recyclerView.canScrollVertically(1) || isInitialPageLoading) return
@@ -56,7 +59,12 @@ class HomeFragment : Fragment() {
                     if (!pagination.hasMore) showToast("没有更多了")
                     return
                 }
-                loadNextPage(category, page)
+                val requestVersion = homeRequestVersion
+                recyclerView.post {
+                    if (isCurrentRequest(requestVersion) && selectedCategory?.id == category.id) {
+                        loadNextPage(category, page, requestVersion)
+                    }
+                }
             }
         })
         binding.searchBox.setOnClickListener { startActivity(Intent(requireContext(), SearchActivity::class.java)) }
@@ -69,6 +77,7 @@ class HomeFragment : Fragment() {
         val requestVersion = ++homeRequestVersion
         isInitialPageLoading = true
         pagination.cancelPending()
+        adapter.setLoadMoreLoading(false)
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val categories = repository.getCategories()
@@ -143,9 +152,9 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun loadNextPage(category: Category, page: Int) {
+    private fun loadNextPage(category: Category, page: Int, requestVersion: Long) {
         val categoryId = category.id
-        val requestVersion = homeRequestVersion
+        adapter.setLoadMoreLoading(true)
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val response = repository.getHomeVideoPage(category, page)
@@ -156,6 +165,7 @@ class HomeFragment : Fragment() {
                 if (exception is CancellationException) throw exception
                 if (isCurrentRequest(requestVersion) && selectedCategory?.id == categoryId) {
                     pagination.fail(page)
+                    adapter.setLoadMoreLoading(false)
                     showToast("加载更多失败")
                 }
             }
