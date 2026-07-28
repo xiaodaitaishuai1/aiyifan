@@ -12,6 +12,7 @@ import androidx.core.view.setMargins
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.aiyifan.app.R
 import com.aiyifan.app.core.data.AppGraph
 import com.aiyifan.app.core.model.Category
@@ -27,6 +28,7 @@ class HomeFragment : Fragment() {
     private val binding get() = _binding!!
     private val repository = AppGraph.catalogRepository
     private lateinit var adapter: HomeVideoAdapter
+    private val pagination = HomeFeedPagination()
     private var selectedCategory: Category? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -44,6 +46,13 @@ class HomeFragment : Fragment() {
             }
         }
         binding.videoRecycler.adapter = adapter
+        binding.videoRecycler.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                if (dy > 0 && !recyclerView.canScrollVertically(1) && pagination.hasMore) {
+                    adapter.submitList(pagination.next())
+                }
+            }
+        })
         binding.searchBox.setOnClickListener { startActivity(Intent(requireContext(), SearchActivity::class.java)) }
         binding.historyButton.setOnClickListener { startActivity(Intent(requireContext(), HistoryActivity::class.java)) }
         binding.homeRefresh.setOnRefreshListener { loadHome(refresh = true) }
@@ -60,11 +69,12 @@ class HomeFragment : Fragment() {
                 val category = categories.firstOrNull { it.id == selectedCategory?.id } ?: categories.first()
                 selectedCategory = category
                 renderCategories(categories)
-                adapter.submitList(repository.getHomeVideos(category.id))
+                submitHomeFeed(categories, category)
             } catch (exception: Throwable) {
                 if (exception is CancellationException) throw exception
                 context?.let { Toast.makeText(it, "首页刷新失败", Toast.LENGTH_SHORT).show() }
                 if (!refresh) {
+                    pagination.reset(emptyList(), emptyList())
                     adapter.submitList(emptyList())
                 }
             } finally {
@@ -103,13 +113,19 @@ class HomeFragment : Fragment() {
             (tab as TextView).setTextColor(resources.getColor(appearance.textColorRes, null))
         }
         viewLifecycleOwner.lifecycleScope.launch {
-            runCatching { repository.getHomeVideos(category.id) }
-                .onSuccess { videos -> adapter.submitList(videos) }
+            runCatching { submitHomeFeed(repository.getCategories(), category) }
                 .onFailure {
                     Toast.makeText(requireContext(), "分类数据加载失败", Toast.LENGTH_SHORT).show()
                     adapter.submitList(emptyList())
                 }
         }
+    }
+
+    private suspend fun submitHomeFeed(categories: List<Category>, category: Category) {
+        val selected = repository.getHomeVideos(category.id)
+        val supplements = categories.filterNot { it.id == category.id }
+            .map { repository.getHomeVideos(it.id) }
+        adapter.submitList(pagination.reset(selected, supplements))
     }
 
     override fun onDestroyView() {
