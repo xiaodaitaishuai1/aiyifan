@@ -8,17 +8,18 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/mineTitle"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
+            android:layout_height="56dp"
+            android:background="@color/surface"
+            android:gravity="center_vertical"
+            android:paddingStart="16dp"
             android:text="我的"
             android:textColor="@color/text_primary"
-            android:textSize="24sp"
+            android:textSize="20sp"
             android:textStyle="bold" />
 
         <TextView
@@ -27,6 +28,7 @@
             android:layout_marginStart="4dp"
             android:layout_marginTop="24dp"
             android:layout_marginBottom="8dp"
+            android:paddingStart="16dp"
             android:text="内容与数据"
             android:textColor="@color/text_secondary"
             android:textSize="13sp" />
@@ -35,8 +37,10 @@
             android:id="@+id/contentGroup"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginHorizontal="12dp"
             android:background="@drawable/bg_surface"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="16dp">
 
             <LinearLayout
                 android:id="@+id/historyButton"
@@ -47,12 +51,33 @@
                 android:paddingStart="16dp"
                 android:paddingEnd="14dp">
 
-                <ImageView android:layout_width="24dp" android:layout_height="24dp" android:contentDescription="观看记录" android:src="@drawable/ic_history" />
-                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="14dp" android:layout_weight="1" android:text="观看记录" android:textColor="@color/text_primary" android:textSize="16sp" />
-                <ImageView android:layout_width="20dp" android:layout_height="20dp" android:contentDescription="进入观看记录" android:src="@drawable/ic_chevron_right" />
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:contentDescription="观看记录"
+                    android:src="@drawable/ic_history" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
+                    android:layout_weight="1"
+                    android:text="观看记录"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:contentDescription="进入观看记录"
+                    android:src="@drawable/ic_chevron_right" />
             </LinearLayout>
 
-            <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="54dp" android:background="@color/outline" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="54dp"
+                android:background="@color/outline" />
 
             <LinearLayout
                 android:id="@+id/collectionButton"
@@ -63,9 +88,26 @@
                 android:paddingStart="16dp"
                 android:paddingEnd="14dp">
 
-                <ImageView android:layout_width="24dp" android:layout_height="24dp" android:contentDescription="我的收藏" android:src="@drawable/ic_favorite" />
-                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="14dp" android:layout_weight="1" android:text="我的收藏" android:textColor="@color/text_primary" android:textSize="16sp" />
-                <ImageView android:layout_width="20dp" android:layout_height="20dp" android:contentDescription="进入我的收藏" android:src="@drawable/ic_chevron_right" />
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:contentDescription="我的收藏"
+                    android:src="@drawable/ic_favorite" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
+                    android:layout_weight="1"
+                    android:text="我的收藏"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:contentDescription="进入我的收藏"
+                    android:src="@drawable/ic_chevron_right" />
             </LinearLayout>
         </LinearLayout>
 
@@ -75,6 +117,7 @@
             android:layout_marginStart="4dp"
             android:layout_marginTop="24dp"
             android:layout_marginBottom="8dp"
+            android:paddingStart="16dp"
             android:text="应用设置"
             android:textColor="@color/text_secondary"
             android:textSize="13sp" />
@@ -83,8 +126,10 @@
             android:id="@+id/settingsGroup"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginHorizontal="12dp"
             android:background="@drawable/bg_surface"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="16dp">
 
             <LinearLayout
                 android:id="@+id/themeSettingsButton"
@@ -146,9 +191,26 @@
                 android:paddingStart="16dp"
                 android:paddingEnd="14dp">
 
-                <ImageView android:layout_width="24dp" android:layout_height="24dp" android:contentDescription="网络代理" android:src="@drawable/ic_network" />
-                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="14dp" android:layout_weight="1" android:text="网络代理" android:textColor="@color/text_primary" android:textSize="16sp" />
-                <ImageView android:layout_width="20dp" android:layout_height="20dp" android:contentDescription="进入网络代理" android:src="@drawable/ic_chevron_right" />
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:contentDescription="网络代理"
+                    android:src="@drawable/ic_network" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
+                    android:layout_weight="1"
+                    android:text="网络代理"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:contentDescription="进入网络代理"
+                    android:src="@drawable/ic_chevron_right" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
