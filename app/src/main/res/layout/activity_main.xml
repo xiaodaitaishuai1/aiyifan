@@ -9,18 +9,18 @@
     <FrameLayout
         android:id="@+id/fragmentContainer"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="@dimen/dp_0"
         android:background="@color/surface"
         android:layout_weight="1" />
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/bottomTabs"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:layout_height="@dimen/dp_56"
         android:background="@color/surface"
         app:tabGravity="fill"
         app:tabIndicatorColor="@color/accent"
-        app:tabIndicatorHeight="2dp"
+        app:tabIndicatorHeight="@dimen/dp_2"
         app:tabMode="fixed"
         app:tabSelectedTextColor="@color/accent"
         app:tabTextColor="@color/text_secondary">

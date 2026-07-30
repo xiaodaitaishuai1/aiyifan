@@ -2,7 +2,7 @@
 <resources>
     <style name="ShapeAppearance.Aiyifan.Rounded" parent="">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">8dp</item>
+        <item name="cornerSize">@dimen/dp_8</item>
     </style>
 
     <style name="ThemeOverlay.Aiyifan.AlertDialog" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">

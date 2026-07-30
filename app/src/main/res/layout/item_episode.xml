@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/episodeTitle"
-    android:layout_width="80dp"
-    android:layout_height="38dp"
-    android:layout_marginEnd="8dp"
+    android:layout_width="@dimen/dp_80"
+    android:layout_height="@dimen/dp_38"
+    android:layout_marginEnd="@dimen/dp_8"
     android:background="@drawable/bg_chip"
     android:gravity="center"
     android:textColor="@color/text_primary"
-    android:textSize="13sp" />
+    android:textSize="@dimen/sp_13" />

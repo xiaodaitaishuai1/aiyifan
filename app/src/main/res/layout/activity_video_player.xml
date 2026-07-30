@@ -15,43 +15,43 @@
         <LinearLayout
             android:id="@+id/playerTopBar"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
+            android:layout_height="@dimen/dp_56"
             android:background="@color/surface"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <ImageButton
                 android:id="@+id/backButton"
-                android:layout_width="56dp"
+                android:layout_width="@dimen/dp_56"
                 android:layout_height="match_parent"
                 android:background="@android:color/transparent"
                 android:contentDescription="返回"
                 android:gravity="center"
-                android:padding="16dp"
+                android:padding="@dimen/dp_16"
                 android:src="@drawable/ic_back" />
 
             <View
-                android:layout_width="0dp"
-                android:layout_height="0dp"
+                android:layout_width="@dimen/dp_0"
+                android:layout_height="@dimen/dp_0"
                 android:layout_weight="1" />
 
             <ImageButton
                 android:id="@+id/floatingWindowButton"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="@dimen/dp_48"
+                android:layout_height="@dimen/dp_48"
                 android:background="@android:color/transparent"
                 android:contentDescription="开启悬浮窗"
-                android:padding="12dp"
+                android:padding="@dimen/dp_12"
                 android:src="@drawable/ic_picture_in_picture"
                 app:tint="@color/text_primary" />
 
             <ImageButton
                 android:id="@+id/fullScreenButton"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="@dimen/dp_48"
+                android:layout_height="@dimen/dp_48"
                 android:background="@android:color/transparent"
                 android:contentDescription="全屏播放"
-                android:padding="12dp"
+                android:padding="@dimen/dp_12"
                 android:src="@drawable/ic_fullscreen"
                 app:tint="@color/text_primary" />
         </LinearLayout>
@@ -59,7 +59,7 @@
         <FrameLayout
             android:id="@+id/playerContainer"
             android:layout_width="match_parent"
-            android:layout_height="211dp"
+            android:layout_height="@dimen/dp_211"
             android:background="@drawable/bg_player">
 
             <androidx.media3.ui.PlayerView
@@ -71,13 +71,13 @@
 
             <ImageButton
                 android:id="@+id/fullscreenExitButton"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="@dimen/dp_48"
+                android:layout_height="@dimen/dp_48"
                 android:layout_gravity="top|end"
-                android:layout_margin="12dp"
+                android:layout_margin="@dimen/dp_12"
                 android:background="@drawable/bg_floating_control"
                 android:contentDescription="退出全屏"
-                android:padding="12dp"
+                android:padding="@dimen/dp_12"
                 android:src="@drawable/ic_fullscreen_exit"
                 android:visibility="gone" />
 
@@ -86,50 +86,50 @@
         <ScrollView
             android:id="@+id/contentScroll"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
+            android:layout_height="@dimen/dp_0"
             android:layout_weight="1">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="14dp">
+                android:padding="@dimen/dp_14">
 
                 <TextView
                     android:id="@+id/title"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textColor="@color/text_primary"
-                    android:textSize="20sp"
+                    android:textSize="@dimen/sp_20"
                     android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/meta"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="@dimen/dp_8"
                     android:textColor="@color/text_secondary"
-                    android:textSize="13sp" />
+                    android:textSize="@dimen/sp_13" />
 
                 <TextView
                     android:id="@+id/intro"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="@dimen/dp_12"
                     android:textColor="@color/text_secondary"
-                    android:textSize="14sp" />
+                    android:textSize="@dimen/sp_14" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:layout_marginTop="12dp"
+                    android:layout_height="@dimen/dp_48"
+                    android:layout_marginTop="@dimen/dp_12"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
                     <Button
                         android:id="@+id/favoriteButton"
-                        android:layout_width="0dp"
-                        android:layout_height="44dp"
+                        android:layout_width="@dimen/dp_0"
+                        android:layout_height="@dimen/dp_44"
                         android:layout_weight="1"
                         android:background="@drawable/bg_button_outline"
                         android:gravity="center"
@@ -139,9 +139,9 @@
 
                     <Button
                         android:id="@+id/shareButton"
-                        android:layout_width="0dp"
-                        android:layout_height="44dp"
-                        android:layout_marginStart="10dp"
+                        android:layout_width="@dimen/dp_0"
+                        android:layout_height="@dimen/dp_44"
+                        android:layout_marginStart="@dimen/dp_10"
                         android:layout_weight="1"
                         android:background="@drawable/bg_button_outline"
                         android:gravity="center"
@@ -152,27 +152,27 @@
 
                 <TextView
                     android:layout_width="match_parent"
-                    android:layout_height="40dp"
+                    android:layout_height="@dimen/dp_40"
                     android:gravity="center_vertical"
                     android:text="选集"
                     android:textColor="@color/text_primary"
-                    android:textSize="16sp"
+                    android:textSize="@dimen/sp_16"
                     android:textStyle="bold" />
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/episodeRecycler"
                     android:layout_width="match_parent"
-                    android:layout_height="52dp"
+                    android:layout_height="@dimen/dp_52"
                     android:orientation="horizontal" />
 
                 <TextView
                     android:layout_width="match_parent"
-                    android:layout_height="40dp"
-                    android:layout_marginTop="10dp"
+                    android:layout_height="@dimen/dp_40"
+                    android:layout_marginTop="@dimen/dp_10"
                     android:gravity="center_vertical"
                     android:text="相关推荐"
                     android:textColor="@color/text_primary"
-                    android:textSize="16sp"
+                    android:textSize="@dimen/sp_16"
                     android:textStyle="bold" />
 
                 <androidx.recyclerview.widget.RecyclerView
@@ -183,12 +183,12 @@
 
                 <TextView
                     android:layout_width="match_parent"
-                    android:layout_height="40dp"
-                    android:layout_marginTop="10dp"
+                    android:layout_height="@dimen/dp_40"
+                    android:layout_marginTop="@dimen/dp_10"
                     android:gravity="center_vertical"
                     android:text="评论"
                     android:textColor="@color/text_primary"
-                    android:textSize="16sp"
+                    android:textSize="@dimen/sp_16"
                     android:textStyle="bold" />
 
                 <androidx.recyclerview.widget.RecyclerView
@@ -202,10 +202,10 @@
 
     <FrameLayout
         android:id="@+id/inAppMiniPlayer"
-        android:layout_width="240dp"
-        android:layout_height="135dp"
+        android:layout_width="@dimen/dp_240"
+        android:layout_height="@dimen/dp_135"
         android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
+        android:layout_margin="@dimen/dp_16"
         android:background="@drawable/bg_floating_player"
         android:clipToOutline="true"
         android:visibility="gone">
@@ -219,35 +219,35 @@
 
         <ImageButton
             android:id="@+id/inAppMiniCloseButton"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
+            android:layout_width="@dimen/dp_36"
+            android:layout_height="@dimen/dp_36"
             android:layout_gravity="top|end"
-            android:layout_margin="6dp"
+            android:layout_margin="@dimen/dp_6"
             android:background="@drawable/bg_floating_control"
             android:contentDescription="关闭播放"
-            android:padding="6dp"
+            android:padding="@dimen/dp_6"
             android:src="@drawable/ic_close" />
 
         <ImageButton
             android:id="@+id/inAppMiniPlayPauseButton"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="@dimen/dp_40"
+            android:layout_height="@dimen/dp_40"
             android:layout_gravity="bottom|center_horizontal"
-            android:layout_marginBottom="8dp"
+            android:layout_marginBottom="@dimen/dp_8"
             android:background="@drawable/bg_floating_control"
             android:contentDescription="暂停播放"
-            android:padding="8dp"
+            android:padding="@dimen/dp_8"
             android:src="@drawable/ic_pause" />
 
         <ImageButton
             android:id="@+id/inAppMiniResizeHandle"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="@dimen/dp_24"
+            android:layout_height="@dimen/dp_24"
             android:layout_gravity="bottom|end"
-            android:layout_margin="4dp"
+            android:layout_margin="@dimen/dp_4"
             android:background="@android:color/transparent"
             android:contentDescription="调整播放器大小"
-            android:padding="2dp"
+            android:padding="@dimen/dp_2"
             android:src="@drawable/ic_resize" />
     </FrameLayout>
 </FrameLayout>

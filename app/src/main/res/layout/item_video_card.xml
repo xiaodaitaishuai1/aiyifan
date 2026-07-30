@@ -3,24 +3,24 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="12dp"
+    android:layout_marginBottom="@dimen/dp_12"
     android:background="@drawable/bg_surface"
     android:orientation="horizontal"
-    android:padding="10dp">
+    android:padding="@dimen/dp_10">
 
     <ImageView
         android:id="@+id/poster"
-        android:layout_width="106dp"
-        android:layout_height="142dp"
+        android:layout_width="@dimen/dp_106"
+        android:layout_height="@dimen/dp_142"
         android:background="@drawable/bg_poster"
         android:clipToOutline="true"
         android:contentDescription="@string/video_poster"
         android:scaleType="centerCrop" />
 
     <LinearLayout
-        android:layout_width="0dp"
-        android:layout_height="142dp"
-        android:layout_marginStart="12dp"
+        android:layout_width="@dimen/dp_0"
+        android:layout_height="@dimen/dp_142"
+        android:layout_marginStart="@dimen/dp_12"
         android:layout_weight="1"
         android:orientation="vertical">
 
@@ -31,37 +31,37 @@
             android:ellipsize="end"
             android:maxLines="2"
             android:textColor="@color/text_primary"
-            android:textSize="16sp"
+            android:textSize="@dimen/sp_16"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/meta"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="@dimen/dp_8"
             android:ellipsize="end"
             android:maxLines="2"
             android:textColor="@color/text_secondary"
-            android:textSize="12sp" />
+            android:textSize="@dimen/sp_12" />
 
         <TextView
             android:id="@+id/score"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="@dimen/dp_8"
             android:textColor="@color/accent"
-            android:textSize="14sp"
+            android:textSize="@dimen/sp_14"
             android:textStyle="bold" />
 
         <Space
-            android:layout_width="1dp"
-            android:layout_height="0dp"
+            android:layout_width="@dimen/dp_1"
+            android:layout_height="@dimen/dp_0"
             android:layout_weight="1" />
 
         <Button
             android:id="@+id/playButton"
-            android:layout_width="120dp"
-            android:layout_height="44dp"
+            android:layout_width="@dimen/dp_120"
+            android:layout_height="@dimen/dp_44"
             android:background="@drawable/bg_button_primary"
             android:gravity="center"
             android:includeFontPadding="false"
