@@ -1,253 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/root"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/bg_page">
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:id="@+id/root" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/bg_page">
 
-    <LinearLayout
-        android:id="@+id/pageContent"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+    <LinearLayout android:id="@+id/pageContent" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
 
-        <LinearLayout
-            android:id="@+id/playerTopBar"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/dp_56"
-            android:background="@color/surface"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+        <LinearLayout android:id="@+id/playerTopBar" android:layout_width="match_parent" android:layout_height="@dimen/dp_56" android:background="@color/surface" android:gravity="center_vertical" android:orientation="horizontal">
 
-            <ImageButton
-                android:id="@+id/backButton"
-                android:layout_width="@dimen/dp_56"
-                android:layout_height="match_parent"
-                android:background="@android:color/transparent"
-                android:contentDescription="返回"
-                android:gravity="center"
-                android:padding="@dimen/dp_16"
-                android:src="@drawable/ic_back" />
+            <ImageButton android:id="@+id/backButton" android:layout_width="@dimen/dp_56" android:layout_height="match_parent" android:background="@android:color/transparent" android:contentDescription="@string/hardcoded_text_001" android:gravity="center" android:padding="@dimen/dp_16" android:src="@drawable/ic_back" />
 
-            <View
-                android:layout_width="@dimen/dp_0"
-                android:layout_height="@dimen/dp_0"
-                android:layout_weight="1" />
+            <View android:layout_width="@dimen/dp_0" android:layout_height="@dimen/dp_0" android:layout_weight="1" />
 
-            <ImageButton
-                android:id="@+id/floatingWindowButton"
-                android:layout_width="@dimen/dp_48"
-                android:layout_height="@dimen/dp_48"
-                android:background="@android:color/transparent"
-                android:contentDescription="开启悬浮窗"
-                android:padding="@dimen/dp_12"
-                android:src="@drawable/ic_picture_in_picture"
-                app:tint="@color/text_primary" />
+            <ImageButton android:id="@+id/floatingWindowButton" android:layout_width="@dimen/dp_48" android:layout_height="@dimen/dp_48" android:background="@android:color/transparent" android:contentDescription="@string/hardcoded_text_022" android:padding="@dimen/dp_12" android:src="@drawable/ic_picture_in_picture" app:tint="@color/text_primary" />
 
-            <ImageButton
-                android:id="@+id/fullScreenButton"
-                android:layout_width="@dimen/dp_48"
-                android:layout_height="@dimen/dp_48"
-                android:background="@android:color/transparent"
-                android:contentDescription="全屏播放"
-                android:padding="@dimen/dp_12"
-                android:src="@drawable/ic_fullscreen"
-                app:tint="@color/text_primary" />
+            <ImageButton android:id="@+id/fullScreenButton" android:layout_width="@dimen/dp_48" android:layout_height="@dimen/dp_48" android:background="@android:color/transparent" android:contentDescription="@string/hardcoded_text_023" android:padding="@dimen/dp_12" android:src="@drawable/ic_fullscreen" app:tint="@color/text_primary" />
         </LinearLayout>
 
-        <FrameLayout
-            android:id="@+id/playerContainer"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/dp_211"
-            android:background="@drawable/bg_player">
+        <FrameLayout android:id="@+id/playerContainer" android:layout_width="match_parent" android:layout_height="@dimen/dp_211" android:background="@drawable/bg_player">
 
-            <androidx.media3.ui.PlayerView
-                android:id="@+id/playerView"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                app:show_buffering="when_playing"
-                app:use_controller="true" />
+            <androidx.media3.ui.PlayerView android:id="@+id/playerView" android:layout_width="match_parent" android:layout_height="match_parent" app:show_buffering="when_playing" app:use_controller="true" />
 
-            <ImageButton
-                android:id="@+id/fullscreenExitButton"
-                android:layout_width="@dimen/dp_48"
-                android:layout_height="@dimen/dp_48"
-                android:layout_gravity="top|end"
-                android:layout_margin="@dimen/dp_12"
-                android:background="@drawable/bg_floating_control"
-                android:contentDescription="退出全屏"
-                android:padding="@dimen/dp_12"
-                android:src="@drawable/ic_fullscreen_exit"
-                android:visibility="gone" />
+            <ImageButton android:id="@+id/fullscreenExitButton" android:layout_width="@dimen/dp_48" android:layout_height="@dimen/dp_48" android:layout_gravity="top|end" android:layout_margin="@dimen/dp_12" android:background="@drawable/bg_floating_control" android:contentDescription="@string/hardcoded_text_024" android:padding="@dimen/dp_12" android:src="@drawable/ic_fullscreen_exit" android:visibility="gone" />
 
         </FrameLayout>
 
-        <ScrollView
-            android:id="@+id/contentScroll"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/dp_0"
-            android:layout_weight="1">
+        <ScrollView android:id="@+id/contentScroll" android:layout_width="match_parent" android:layout_height="@dimen/dp_0" android:layout_weight="1">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="@dimen/dp_14">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="@dimen/dp_14">
 
-                <TextView
-                    android:id="@+id/title"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/text_primary"
-                    android:textSize="@dimen/sp_20"
-                    android:textStyle="bold" />
+                <TextView android:id="@+id/title" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/text_primary" android:textSize="@dimen/sp_20" android:textStyle="bold" />
 
-                <TextView
-                    android:id="@+id/meta"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/dp_8"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="@dimen/sp_13" />
+                <TextView android:id="@+id/meta" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/dp_8" android:textColor="@color/text_secondary" android:textSize="@dimen/sp_13" />
 
-                <TextView
-                    android:id="@+id/intro"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/dp_12"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="@dimen/sp_14" />
+                <TextView android:id="@+id/intro" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/dp_12" android:textColor="@color/text_secondary" android:textSize="@dimen/sp_14" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="@dimen/dp_48"
-                    android:layout_marginTop="@dimen/dp_12"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="@dimen/dp_48" android:layout_marginTop="@dimen/dp_12" android:gravity="center_vertical" android:orientation="horizontal">
 
-                    <Button
-                        android:id="@+id/favoriteButton"
-                        android:layout_width="@dimen/dp_0"
-                        android:layout_height="@dimen/dp_44"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_button_outline"
-                        android:gravity="center"
-                        android:includeFontPadding="false"
-                        android:text="收藏"
-                        android:textColor="@color/text_primary" />
+                    <Button android:id="@+id/favoriteButton" android:layout_width="@dimen/dp_0" android:layout_height="@dimen/dp_44" android:layout_weight="1" android:background="@drawable/bg_button_outline" android:gravity="center" android:includeFontPadding="false" android:text="@string/hardcoded_text_025" android:textColor="@color/text_primary" />
 
-                    <Button
-                        android:id="@+id/shareButton"
-                        android:layout_width="@dimen/dp_0"
-                        android:layout_height="@dimen/dp_44"
-                        android:layout_marginStart="@dimen/dp_10"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_button_outline"
-                        android:gravity="center"
-                        android:includeFontPadding="false"
-                        android:text="分享"
-                        android:textColor="@color/text_primary" />
+                    <Button android:id="@+id/shareButton" android:layout_width="@dimen/dp_0" android:layout_height="@dimen/dp_44" android:layout_marginStart="@dimen/dp_10" android:layout_weight="1" android:background="@drawable/bg_button_outline" android:gravity="center" android:includeFontPadding="false" android:text="@string/hardcoded_text_026" android:textColor="@color/text_primary" />
                 </LinearLayout>
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="@dimen/dp_40"
-                    android:gravity="center_vertical"
-                    android:text="选集"
-                    android:textColor="@color/text_primary"
-                    android:textSize="@dimen/sp_16"
-                    android:textStyle="bold" />
+                <TextView android:layout_width="match_parent" android:layout_height="@dimen/dp_40" android:gravity="center_vertical" android:text="@string/hardcoded_text_027" android:textColor="@color/text_primary" android:textSize="@dimen/sp_16" android:textStyle="bold" />
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/episodeRecycler"
-                    android:layout_width="match_parent"
-                    android:layout_height="@dimen/dp_52"
-                    android:orientation="horizontal" />
+                <androidx.recyclerview.widget.RecyclerView android:id="@+id/episodeRecycler" android:layout_width="match_parent" android:layout_height="@dimen/dp_52" android:orientation="horizontal" />
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="@dimen/dp_40"
-                    android:layout_marginTop="@dimen/dp_10"
-                    android:gravity="center_vertical"
-                    android:text="相关推荐"
-                    android:textColor="@color/text_primary"
-                    android:textSize="@dimen/sp_16"
-                    android:textStyle="bold" />
+                <TextView android:layout_width="match_parent" android:layout_height="@dimen/dp_40" android:layout_marginTop="@dimen/dp_10" android:gravity="center_vertical" android:text="@string/hardcoded_text_028" android:textColor="@color/text_primary" android:textSize="@dimen/sp_16" android:textStyle="bold" />
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/relatedRecycler"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:nestedScrollingEnabled="false" />
+                <androidx.recyclerview.widget.RecyclerView android:id="@+id/relatedRecycler" android:layout_width="match_parent" android:layout_height="wrap_content" android:nestedScrollingEnabled="false" />
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="@dimen/dp_40"
-                    android:layout_marginTop="@dimen/dp_10"
-                    android:gravity="center_vertical"
-                    android:text="评论"
-                    android:textColor="@color/text_primary"
-                    android:textSize="@dimen/sp_16"
-                    android:textStyle="bold" />
+                <TextView android:layout_width="match_parent" android:layout_height="@dimen/dp_40" android:layout_marginTop="@dimen/dp_10" android:gravity="center_vertical" android:text="@string/hardcoded_text_029" android:textColor="@color/text_primary" android:textSize="@dimen/sp_16" android:textStyle="bold" />
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/commentRecycler"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:nestedScrollingEnabled="false" />
+                <androidx.recyclerview.widget.RecyclerView android:id="@+id/commentRecycler" android:layout_width="match_parent" android:layout_height="wrap_content" android:nestedScrollingEnabled="false" />
             </LinearLayout>
         </ScrollView>
     </LinearLayout>
 
-    <FrameLayout
-        android:id="@+id/inAppMiniPlayer"
-        android:layout_width="@dimen/dp_240"
-        android:layout_height="@dimen/dp_135"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/dp_16"
-        android:background="@drawable/bg_floating_player"
-        android:clipToOutline="true"
-        android:visibility="gone">
+    <FrameLayout android:id="@+id/inAppMiniPlayer" android:layout_width="@dimen/dp_240" android:layout_height="@dimen/dp_135" android:layout_gravity="bottom|end" android:layout_margin="@dimen/dp_16" android:background="@drawable/bg_floating_player" android:clipToOutline="true" android:visibility="gone">
 
-        <androidx.media3.ui.PlayerView
-            android:id="@+id/inAppMiniPlayerView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:show_buffering="when_playing"
-            app:use_controller="false" />
+        <androidx.media3.ui.PlayerView android:id="@+id/inAppMiniPlayerView" android:layout_width="match_parent" android:layout_height="match_parent" app:show_buffering="when_playing" app:use_controller="false" />
 
-        <ImageButton
-            android:id="@+id/inAppMiniCloseButton"
-            android:layout_width="@dimen/dp_36"
-            android:layout_height="@dimen/dp_36"
-            android:layout_gravity="top|end"
-            android:layout_margin="@dimen/dp_6"
-            android:background="@drawable/bg_floating_control"
-            android:contentDescription="关闭播放"
-            android:padding="@dimen/dp_6"
-            android:src="@drawable/ic_close" />
+        <ImageButton android:id="@+id/inAppMiniCloseButton" android:layout_width="@dimen/dp_36" android:layout_height="@dimen/dp_36" android:layout_gravity="top|end" android:layout_margin="@dimen/dp_6" android:background="@drawable/bg_floating_control" android:contentDescription="@string/hardcoded_text_030" android:padding="@dimen/dp_6" android:src="@drawable/ic_close" />
 
-        <ImageButton
-            android:id="@+id/inAppMiniPlayPauseButton"
-            android:layout_width="@dimen/dp_40"
-            android:layout_height="@dimen/dp_40"
-            android:layout_gravity="bottom|center_horizontal"
-            android:layout_marginBottom="@dimen/dp_8"
-            android:background="@drawable/bg_floating_control"
-            android:contentDescription="暂停播放"
-            android:padding="@dimen/dp_8"
-            android:src="@drawable/ic_pause" />
+        <ImageButton android:id="@+id/inAppMiniPlayPauseButton" android:layout_width="@dimen/dp_40" android:layout_height="@dimen/dp_40" android:layout_gravity="bottom|center_horizontal" android:layout_marginBottom="@dimen/dp_8" android:background="@drawable/bg_floating_control" android:contentDescription="@string/hardcoded_text_031" android:padding="@dimen/dp_8" android:src="@drawable/ic_pause" />
 
-        <ImageButton
-            android:id="@+id/inAppMiniResizeHandle"
-            android:layout_width="@dimen/dp_24"
-            android:layout_height="@dimen/dp_24"
-            android:layout_gravity="bottom|end"
-            android:layout_margin="@dimen/dp_4"
-            android:background="@android:color/transparent"
-            android:contentDescription="调整播放器大小"
-            android:padding="@dimen/dp_2"
-            android:src="@drawable/ic_resize" />
+        <ImageButton android:id="@+id/inAppMiniResizeHandle" android:layout_width="@dimen/dp_24" android:layout_height="@dimen/dp_24" android:layout_gravity="bottom|end" android:layout_margin="@dimen/dp_4" android:background="@android:color/transparent" android:contentDescription="@string/hardcoded_text_032" android:padding="@dimen/dp_2" android:src="@drawable/ic_resize" />
     </FrameLayout>
 </FrameLayout>

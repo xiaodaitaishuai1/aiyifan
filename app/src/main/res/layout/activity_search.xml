@@ -1,161 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/bg_page"
-    android:orientation="vertical">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/bg_page" android:orientation="vertical">
 
-    <LinearLayout
-        android:id="@+id/topBar"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/dp_56"
-        android:background="@color/surface"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="@dimen/dp_8"
-        android:paddingEnd="@dimen/dp_12">
+    <LinearLayout android:id="@+id/topBar" android:layout_width="match_parent" android:layout_height="@dimen/dp_56" android:background="@color/surface" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="@dimen/dp_8" android:paddingEnd="@dimen/dp_12">
 
-        <ImageButton
-            android:id="@+id/backButton"
-            android:layout_width="@dimen/dp_48"
-            android:layout_height="match_parent"
-            android:background="@android:color/transparent"
-            android:contentDescription="返回"
-            android:gravity="center"
-            android:padding="@dimen/dp_12"
-            android:src="@drawable/ic_back" />
+        <ImageButton android:id="@+id/backButton" android:layout_width="@dimen/dp_48" android:layout_height="match_parent" android:background="@android:color/transparent" android:contentDescription="@string/hardcoded_text_001" android:gravity="center" android:padding="@dimen/dp_12" android:src="@drawable/ic_back" />
 
-        <EditText
-            android:id="@+id/searchEdit"
-            android:layout_width="@dimen/dp_0"
-            android:layout_height="@dimen/dp_36"
-            android:layout_weight="1"
-            android:background="@drawable/bg_search"
-            android:hint="输入片名、演员、导演"
-            android:imeOptions="actionSearch"
-            android:inputType="text"
-            android:paddingStart="@dimen/dp_12"
-            android:paddingEnd="@dimen/dp_12"
-            android:singleLine="true"
-            android:textColor="@color/text_primary"
-            android:textColorHint="@color/text_secondary"
-            android:textSize="@dimen/sp_14" />
+        <EditText android:id="@+id/searchEdit" android:layout_width="@dimen/dp_0" android:layout_height="@dimen/dp_36" android:layout_weight="1" android:background="@drawable/bg_search" android:hint="@string/hardcoded_text_015" android:imeOptions="actionSearch" android:inputType="text" android:paddingStart="@dimen/dp_12" android:paddingEnd="@dimen/dp_12" android:singleLine="true" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:textSize="@dimen/sp_14" />
 
-        <TextView
-            android:id="@+id/searchButton"
-            android:layout_width="@dimen/dp_54"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:text="搜索"
-            android:textColor="@color/text_primary"
-            android:textSize="@dimen/sp_16" />
+        <TextView android:id="@+id/searchButton" android:layout_width="@dimen/dp_54" android:layout_height="match_parent" android:gravity="center" android:text="@string/hardcoded_text_016" android:textColor="@color/text_primary" android:textSize="@dimen/sp_16" />
     </LinearLayout>
 
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/dp_0"
-        android:layout_weight="1">
+    <FrameLayout android:layout_width="match_parent" android:layout_height="@dimen/dp_0" android:layout_weight="1">
 
-        <ScrollView
-            android:id="@+id/initialScroll"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:fillViewport="true"
-            android:scrollbars="none">
+        <ScrollView android:id="@+id/initialScroll" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:scrollbars="none">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="@dimen/dp_16">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="@dimen/dp_16">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="@dimen/dp_44"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="@dimen/dp_44" android:gravity="center_vertical" android:orientation="horizontal">
 
-                    <TextView
-                        android:layout_width="@dimen/dp_0"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="搜索历史"
-                        android:textColor="@color/text_primary"
-                        android:textSize="@dimen/sp_17"
-                        android:textStyle="bold" />
+                    <TextView android:layout_width="@dimen/dp_0" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/hardcoded_text_017" android:textColor="@color/text_primary" android:textSize="@dimen/sp_17" android:textStyle="bold" />
 
-                    <TextView
-                        android:id="@+id/clearHistoryButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="@dimen/dp_44"
-                        android:gravity="center"
-                        android:paddingStart="@dimen/dp_12"
-                        android:paddingEnd="@dimen/dp_12"
-                        android:text="清空"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="@dimen/sp_13" />
+                    <TextView android:id="@+id/clearHistoryButton" android:layout_width="wrap_content" android:layout_height="@dimen/dp_44" android:gravity="center" android:paddingStart="@dimen/dp_12" android:paddingEnd="@dimen/dp_12" android:text="@string/hardcoded_text_018" android:textColor="@color/text_secondary" android:textSize="@dimen/sp_13" />
                 </LinearLayout>
 
-                <com.aiyifan.app.core.ui.KeywordFlowLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/historyContainer" />
+                <com.aiyifan.app.core.ui.KeywordFlowLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/historyContainer" />
 
-                <TextView
-                    android:id="@+id/expandHistoryButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="@dimen/dp_36"
-                    android:gravity="center_vertical"
-                    android:text="展开"
-                    android:textColor="@color/accent"
-                    android:textSize="@dimen/sp_13"
-                    android:visibility="gone" />
+                <TextView android:id="@+id/expandHistoryButton" android:layout_width="wrap_content" android:layout_height="@dimen/dp_36" android:gravity="center_vertical" android:text="@string/hardcoded_text_019" android:textColor="@color/accent" android:textSize="@dimen/sp_13" android:visibility="gone" />
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/dp_20"
-                    android:text="热门搜索"
-                    android:textColor="@color/text_primary"
-                    android:textSize="@dimen/sp_17"
-                    android:textStyle="bold" />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/dp_20" android:text="@string/hardcoded_text_020" android:textColor="@color/text_primary" android:textSize="@dimen/sp_17" android:textStyle="bold" />
 
-                <com.aiyifan.app.core.ui.KeywordFlowLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/dp_12"
-                    android:id="@+id/hotContainer" />
+                <com.aiyifan.app.core.ui.KeywordFlowLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/dp_12" android:id="@+id/hotContainer" />
             </LinearLayout>
         </ScrollView>
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/suggestionRecycler"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="gone" />
+        <androidx.recyclerview.widget.RecyclerView android:id="@+id/suggestionRecycler" android:layout_width="match_parent" android:layout_height="match_parent" android:visibility="gone" />
 
-        <FrameLayout
-            android:id="@+id/resultsContainer"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="gone">
+        <FrameLayout android:id="@+id/resultsContainer" android:layout_width="match_parent" android:layout_height="match_parent" android:visibility="gone">
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/resultRecycler"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:clipToPadding="false"
-                android:padding="@dimen/dp_12" />
+            <androidx.recyclerview.widget.RecyclerView android:id="@+id/resultRecycler" android:layout_width="match_parent" android:layout_height="match_parent" android:clipToPadding="false" android:padding="@dimen/dp_12" />
 
-            <TextView
-                android:id="@+id/searchStatus"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:gravity="center"
-                android:padding="@dimen/dp_16"
-                android:textColor="@color/text_secondary"
-                android:textSize="@dimen/sp_13" />
+            <TextView android:id="@+id/searchStatus" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:gravity="center" android:padding="@dimen/dp_16" android:textColor="@color/text_secondary" android:textSize="@dimen/sp_13" />
         </FrameLayout>
     </FrameLayout>
 </LinearLayout>

@@ -1,146 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/root"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/bg_page"
-    android:orientation="vertical">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/root" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/bg_page" android:orientation="vertical">
 
-    <LinearLayout
-        android:id="@+id/topBar"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/dp_56"
-        android:background="@color/surface"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
+    <LinearLayout android:id="@+id/topBar" android:layout_width="match_parent" android:layout_height="@dimen/dp_56" android:background="@color/surface" android:gravity="center_vertical" android:orientation="horizontal">
 
-        <ImageButton
-            android:id="@+id/backButton"
-            android:layout_width="@dimen/dp_56"
-            android:layout_height="match_parent"
-            android:background="@android:color/transparent"
-            android:contentDescription="返回"
-            android:gravity="center"
-            android:padding="@dimen/dp_16"
-            android:src="@drawable/ic_back" />
+        <ImageButton android:id="@+id/backButton" android:layout_width="@dimen/dp_56" android:layout_height="match_parent" android:background="@android:color/transparent" android:contentDescription="@string/hardcoded_text_001" android:gravity="center" android:padding="@dimen/dp_16" android:src="@drawable/ic_back" />
 
-        <TextView
-            android:layout_width="@dimen/dp_0"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:text="&#x7F51;&#x7EDC;&#x4EE3;&#x7406;"
-            android:textColor="@color/text_primary"
-            android:textSize="@dimen/sp_20"
-            android:textStyle="bold" />
+        <TextView android:layout_width="@dimen/dp_0" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center_vertical" android:text="@string/hardcoded_text_007" android:textColor="@color/text_primary" android:textSize="@dimen/sp_20" android:textStyle="bold" />
     </LinearLayout>
 
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/dp_0"
-        android:layout_weight="1"
-        android:fillViewport="true">
+    <ScrollView android:layout_width="match_parent" android:layout_height="@dimen/dp_0" android:layout_weight="1" android:fillViewport="true">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="@dimen/dp_16">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="@dimen/dp_16">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="&#x8BA2;&#x9605;&#x5730;&#x5740;"
-                android:textColor="@color/text_primary"
-                android:textSize="@dimen/sp_16"
-                android:textStyle="bold" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/hardcoded_text_008" android:textColor="@color/text_primary" android:textSize="@dimen/sp_16" android:textStyle="bold" />
 
-            <EditText
-                android:id="@+id/subscriptionEdit"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/dp_96"
-                android:layout_marginTop="@dimen/dp_10"
-                android:background="@drawable/bg_search"
-                android:gravity="top|start"
-                android:hint="&#x7C98;&#x8D34;&#x8BA2;&#x9605;&#x5730;&#x5740;"
-                android:importantForAutofill="noExcludeDescendants"
-                android:inputType="textUri"
-                android:padding="@dimen/dp_14"
-                android:textColor="@color/text_primary"
-                android:textColorHint="@color/text_secondary"
-                android:textSize="@dimen/sp_14" />
+            <EditText android:id="@+id/subscriptionEdit" android:layout_width="match_parent" android:layout_height="@dimen/dp_96" android:layout_marginTop="@dimen/dp_10" android:background="@drawable/bg_search" android:gravity="top|start" android:hint="@string/hardcoded_text_009" android:importantForAutofill="noExcludeDescendants" android:inputType="textUri" android:padding="@dimen/dp_14" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:textSize="@dimen/sp_14" />
 
-            <Button
-                android:id="@+id/updateSubscriptionButton"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/dp_48"
-                android:layout_marginTop="@dimen/dp_12"
-                android:background="@drawable/bg_button_primary"
-                android:backgroundTint="@null"
-                android:text="&#x66F4;&#x65B0;&#x8BA2;&#x9605;"
-                android:textColor="@color/text_on_accent" />
+            <Button android:id="@+id/updateSubscriptionButton" android:layout_width="match_parent" android:layout_height="@dimen/dp_48" android:layout_marginTop="@dimen/dp_12" android:background="@drawable/bg_button_primary" android:backgroundTint="@null" android:text="@string/hardcoded_text_010" android:textColor="@color/text_on_accent" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/dp_26"
-                android:text="&#x8282;&#x70B9;"
-                android:textColor="@color/text_primary"
-                android:textSize="@dimen/sp_16"
-                android:textStyle="bold" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/dp_26" android:text="@string/hardcoded_text_011" android:textColor="@color/text_primary" android:textSize="@dimen/sp_16" android:textStyle="bold" />
 
-            <Spinner
-                android:id="@+id/nodeSpinner"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/dp_48"
-                android:layout_marginTop="@dimen/dp_10"
-                android:background="@drawable/bg_search"
-                android:paddingStart="@dimen/dp_14"
-                android:paddingEnd="@dimen/dp_14" />
+            <Spinner android:id="@+id/nodeSpinner" android:layout_width="match_parent" android:layout_height="@dimen/dp_48" android:layout_marginTop="@dimen/dp_10" android:background="@drawable/bg_search" android:paddingStart="@dimen/dp_14" android:paddingEnd="@dimen/dp_14" />
 
-            <TextView
-                android:id="@+id/emptyNodesView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/dp_8"
-                android:text="&#x66F4;&#x65B0;&#x8BA2;&#x9605;&#x540E;&#x53EF;&#x9009;&#x62E9;&#x8282;&#x70B9;"
-                android:textColor="@color/text_secondary"
-                android:textSize="@dimen/sp_13" />
+            <TextView android:id="@+id/emptyNodesView" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/dp_8" android:text="@string/hardcoded_text_012" android:textColor="@color/text_secondary" android:textSize="@dimen/sp_13" />
 
-            <TextView
-                android:id="@+id/statusView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/dp_26"
-                android:textColor="@color/text_secondary"
-                android:textSize="@dimen/sp_14" />
+            <TextView android:id="@+id/statusView" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/dp_26" android:textColor="@color/text_secondary" android:textSize="@dimen/sp_14" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/dp_12"
-                android:orientation="horizontal">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/dp_12" android:orientation="horizontal">
 
-                <Button
-                    android:id="@+id/connectButton"
-                    android:layout_width="@dimen/dp_0"
-                    android:layout_height="@dimen/dp_48"
-                    android:layout_weight="1"
-                    android:background="@drawable/bg_button_primary"
-                    android:backgroundTint="@null"
-                    android:text="&#x8FDE;&#x63A5;"
-                    android:textColor="@color/text_on_accent" />
+                <Button android:id="@+id/connectButton" android:layout_width="@dimen/dp_0" android:layout_height="@dimen/dp_48" android:layout_weight="1" android:background="@drawable/bg_button_primary" android:backgroundTint="@null" android:text="@string/hardcoded_text_013" android:textColor="@color/text_on_accent" />
 
-                <Button
-                    android:id="@+id/disconnectButton"
-                    android:layout_width="@dimen/dp_0"
-                    android:layout_height="@dimen/dp_48"
-                    android:layout_marginStart="@dimen/dp_10"
-                    android:layout_weight="1"
-                    android:background="@drawable/bg_surface"
-                    android:backgroundTint="@null"
-                    android:text="&#x65AD;&#x5F00;"
-                    android:textColor="@color/text_primary" />
+                <Button android:id="@+id/disconnectButton" android:layout_width="@dimen/dp_0" android:layout_height="@dimen/dp_48" android:layout_marginStart="@dimen/dp_10" android:layout_weight="1" android:background="@drawable/bg_surface" android:backgroundTint="@null" android:text="@string/hardcoded_text_014" android:textColor="@color/text_primary" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>

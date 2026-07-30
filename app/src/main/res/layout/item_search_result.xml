@@ -1,121 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/dp_12"
-    android:background="@drawable/bg_surface"
-    android:orientation="vertical"
-    android:padding="@dimen/dp_10">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="@dimen/dp_12" android:background="@drawable/bg_surface" android:orientation="vertical" android:padding="@dimen/dp_10">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/dp_187"
-        android:orientation="horizontal">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="@dimen/dp_187" android:orientation="horizontal">
 
-        <ImageView
-            android:id="@+id/poster"
-            android:layout_width="@dimen/dp_140"
-            android:layout_height="@dimen/dp_187"
-            android:background="@drawable/bg_poster"
-            android:clipToOutline="true"
-            android:contentDescription="@string/video_poster"
-            android:scaleType="centerCrop" />
+        <ImageView android:id="@+id/poster" android:layout_width="@dimen/dp_140" android:layout_height="@dimen/dp_187" android:background="@drawable/bg_poster" android:clipToOutline="true" android:contentDescription="@string/video_poster" android:scaleType="centerCrop" />
 
-        <LinearLayout
-            android:layout_width="@dimen/dp_0"
-            android:layout_height="match_parent"
-            android:layout_marginStart="@dimen/dp_12"
-            android:layout_weight="1"
-            android:orientation="vertical">
+        <LinearLayout android:layout_width="@dimen/dp_0" android:layout_height="match_parent" android:layout_marginStart="@dimen/dp_12" android:layout_weight="1" android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:maxLines="2"
-                android:textColor="@color/text_primary"
-                android:textSize="@dimen/sp_16"
-                android:textStyle="bold" />
+            <TextView android:id="@+id/title" android:layout_width="match_parent" android:layout_height="wrap_content" android:ellipsize="end" android:maxLines="2" android:textColor="@color/text_primary" android:textSize="@dimen/sp_16" android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/primaryMeta"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/dp_8"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:textColor="@color/text_secondary"
-                android:textSize="@dimen/sp_12" />
+            <TextView android:id="@+id/primaryMeta" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/dp_8" android:ellipsize="end" android:maxLines="1" android:textColor="@color/text_secondary" android:textSize="@dimen/sp_12" />
 
-            <TextView
-                android:id="@+id/secondaryMeta"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/dp_4"
-                android:ellipsize="end"
-                android:maxLines="2"
-                android:textColor="@color/text_secondary"
-                android:textSize="@dimen/sp_12" />
+            <TextView android:id="@+id/secondaryMeta" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/dp_4" android:ellipsize="end" android:maxLines="2" android:textColor="@color/text_secondary" android:textSize="@dimen/sp_12" />
 
-            <TextView
-                android:id="@+id/credits"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/dp_6"
-                android:ellipsize="end"
-                android:maxLines="3"
-                android:textColor="@color/text_secondary"
-                android:textSize="@dimen/sp_12" />
+            <TextView android:id="@+id/credits" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/dp_6" android:ellipsize="end" android:maxLines="3" android:textColor="@color/text_secondary" android:textSize="@dimen/sp_12" />
         </LinearLayout>
     </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/episodePreviewRow"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/dp_10"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:visibility="gone">
+    <LinearLayout android:id="@+id/episodePreviewRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/dp_10" android:gravity="center_vertical" android:orientation="horizontal" android:visibility="gone">
 
-        <HorizontalScrollView
-            android:layout_width="@dimen/dp_0"
-            android:layout_height="@dimen/dp_32"
-            android:layout_weight="1"
-            android:scrollbars="none">
+        <HorizontalScrollView android:layout_width="@dimen/dp_0" android:layout_height="@dimen/dp_32" android:layout_weight="1" android:scrollbars="none">
 
-            <LinearLayout
-                android:id="@+id/episodePreviewContainer"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:orientation="horizontal" />
+            <LinearLayout android:id="@+id/episodePreviewContainer" android:layout_width="wrap_content" android:layout_height="match_parent" android:orientation="horizontal" />
         </HorizontalScrollView>
 
-        <TextView
-            android:id="@+id/viewAllButton"
-            android:layout_width="wrap_content"
-            android:layout_height="@dimen/dp_32"
-            android:layout_marginStart="@dimen/dp_8"
-            android:background="@drawable/bg_button_outline"
-            android:gravity="center"
-            android:paddingStart="@dimen/dp_10"
-            android:paddingEnd="@dimen/dp_10"
-            android:text="查看全部"
-            android:textColor="@color/text_primary"
-            android:textSize="@dimen/sp_12" />
+        <TextView android:id="@+id/viewAllButton" android:layout_width="wrap_content" android:layout_height="@dimen/dp_32" android:layout_marginStart="@dimen/dp_8" android:background="@drawable/bg_button_outline" android:gravity="center" android:paddingStart="@dimen/dp_10" android:paddingEnd="@dimen/dp_10" android:text="@string/hardcoded_text_045" android:textColor="@color/text_primary" android:textSize="@dimen/sp_12" />
     </LinearLayout>
 
-    <Button
-        android:id="@+id/playButton"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/dp_44"
-        android:layout_marginTop="@dimen/dp_10"
-        android:background="@drawable/bg_button_primary"
-        android:gravity="center"
-        android:includeFontPadding="false"
-        app:backgroundTint="@null"
-        android:text="立即播放"
-        android:textColor="@color/text_on_accent" />
+    <Button android:id="@+id/playButton" android:layout_width="match_parent" android:layout_height="@dimen/dp_44" android:layout_marginTop="@dimen/dp_10" android:background="@drawable/bg_button_primary" android:gravity="center" android:includeFontPadding="false" app:backgroundTint="@null" android:text="@string/hardcoded_text_046" android:textColor="@color/text_on_accent" />
 </LinearLayout>

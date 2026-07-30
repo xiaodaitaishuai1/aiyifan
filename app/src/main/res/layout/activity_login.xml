@@ -1,66 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/bg_page"
-    android:orientation="vertical"
-    android:padding="@dimen/dp_24">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/bg_page" android:orientation="vertical" android:padding="@dimen/dp_24">
 
-    <ImageButton
-        android:id="@+id/backButton"
-        android:layout_width="@dimen/dp_48"
-        android:layout_height="@dimen/dp_48"
-        android:background="@android:color/transparent"
-        android:contentDescription="返回"
-        android:padding="@dimen/dp_12"
-        android:src="@drawable/ic_back" />
+    <ImageButton android:id="@+id/backButton" android:layout_width="@dimen/dp_48" android:layout_height="@dimen/dp_48" android:background="@android:color/transparent" android:contentDescription="@string/hardcoded_text_001" android:padding="@dimen/dp_12" android:src="@drawable/ic_back" />
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/dp_30"
-        android:text="登录爱壹帆"
-        android:textColor="@color/text_primary"
-        android:textSize="@dimen/sp_26"
-        android:textStyle="bold" />
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/dp_30" android:text="@string/hardcoded_text_002" android:textColor="@color/text_primary" android:textSize="@dimen/sp_26" android:textStyle="bold" />
 
-    <EditText
-        android:id="@+id/accountEdit"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/dp_48"
-        android:layout_marginTop="@dimen/dp_32"
-        android:background="@drawable/bg_search"
-        android:hint="账号"
-        android:paddingStart="@dimen/dp_14"
-        android:paddingEnd="@dimen/dp_14"
-        android:singleLine="true" />
+    <EditText android:id="@+id/accountEdit" android:layout_width="match_parent" android:layout_height="@dimen/dp_48" android:layout_marginTop="@dimen/dp_32" android:background="@drawable/bg_search" android:hint="@string/hardcoded_text_003" android:paddingStart="@dimen/dp_14" android:paddingEnd="@dimen/dp_14" android:singleLine="true" />
 
-    <EditText
-        android:id="@+id/passwordEdit"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/dp_48"
-        android:layout_marginTop="@dimen/dp_12"
-        android:background="@drawable/bg_search"
-        android:hint="密码"
-        android:inputType="textPassword"
-        android:paddingStart="@dimen/dp_14"
-        android:paddingEnd="@dimen/dp_14"
-        android:singleLine="true" />
+    <EditText android:id="@+id/passwordEdit" android:layout_width="match_parent" android:layout_height="@dimen/dp_48" android:layout_marginTop="@dimen/dp_12" android:background="@drawable/bg_search" android:hint="@string/hardcoded_text_004" android:inputType="textPassword" android:paddingStart="@dimen/dp_14" android:paddingEnd="@dimen/dp_14" android:singleLine="true" />
 
-    <CheckBox
-        android:id="@+id/agreementCheck"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/dp_48"
-        android:layout_marginTop="@dimen/dp_12"
-        android:text="我已阅读并同意用户协议与隐私政策"
-        android:textColor="@color/text_secondary" />
+    <CheckBox android:id="@+id/agreementCheck" android:layout_width="match_parent" android:layout_height="@dimen/dp_48" android:layout_marginTop="@dimen/dp_12" android:text="@string/hardcoded_text_005" android:textColor="@color/text_secondary" />
 
-    <Button
-        android:id="@+id/loginButton"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/dp_48"
-        android:layout_marginTop="@dimen/dp_20"
-        android:background="@drawable/bg_button_primary"
-        android:text="登录"
-        android:textColor="@color/text_on_accent" />
+    <Button android:id="@+id/loginButton" android:layout_width="match_parent" android:layout_height="@dimen/dp_48" android:layout_marginTop="@dimen/dp_20" android:background="@drawable/bg_button_primary" android:text="@string/hardcoded_text_006" android:textColor="@color/text_on_accent" />
 </LinearLayout>

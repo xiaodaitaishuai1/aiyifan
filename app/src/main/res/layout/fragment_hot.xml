@@ -1,25 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/bg_page"
-    android:orientation="vertical">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/bg_page" android:orientation="vertical">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/dp_56"
-        android:background="@color/surface"
-        android:gravity="center_vertical"
-        android:paddingStart="@dimen/dp_16"
-        android:text="热门"
-        android:textColor="@color/text_primary"
-        android:textSize="@dimen/sp_20"
-        android:textStyle="bold" />
+    <TextView android:layout_width="match_parent" android:layout_height="@dimen/dp_56" android:background="@color/surface" android:gravity="center_vertical" android:paddingStart="@dimen/dp_16" android:text="@string/hardcoded_text_036" android:textColor="@color/text_primary" android:textSize="@dimen/sp_20" android:textStyle="bold" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/hotRecycler"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:clipToPadding="false"
-        android:padding="@dimen/dp_12" />
+    <androidx.recyclerview.widget.RecyclerView android:id="@+id/hotRecycler" android:layout_width="match_parent" android:layout_height="match_parent" android:clipToPadding="false" android:padding="@dimen/dp_12" />
 </LinearLayout>

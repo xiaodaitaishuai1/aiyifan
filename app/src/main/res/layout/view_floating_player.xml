@@ -1,48 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/bg_floating_player"
-    android:clipToOutline="true">
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/bg_floating_player" android:clipToOutline="true">
 
-    <androidx.media3.ui.PlayerView
-        android:id="@+id/floatingPlayerView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:show_buffering="when_playing"
-        app:use_controller="false" />
+    <androidx.media3.ui.PlayerView android:id="@+id/floatingPlayerView" android:layout_width="match_parent" android:layout_height="match_parent" app:show_buffering="when_playing" app:use_controller="false" />
 
-    <ImageButton
-        android:id="@+id/floatingCloseButton"
-        android:layout_width="@dimen/dp_36"
-        android:layout_height="@dimen/dp_36"
-        android:layout_gravity="top|end"
-        android:layout_margin="@dimen/dp_6"
-        android:background="@drawable/bg_floating_control"
-        android:contentDescription="关闭悬浮播放器"
-        android:padding="@dimen/dp_6"
-        android:src="@drawable/ic_close" />
+    <ImageButton android:id="@+id/floatingCloseButton" android:layout_width="@dimen/dp_36" android:layout_height="@dimen/dp_36" android:layout_gravity="top|end" android:layout_margin="@dimen/dp_6" android:background="@drawable/bg_floating_control" android:contentDescription="@string/hardcoded_text_047" android:padding="@dimen/dp_6" android:src="@drawable/ic_close" />
 
-    <ImageButton
-        android:id="@+id/floatingPlayPauseButton"
-        android:layout_width="@dimen/dp_40"
-        android:layout_height="@dimen/dp_40"
-        android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginBottom="@dimen/dp_8"
-        android:background="@drawable/bg_floating_control"
-        android:contentDescription="暂停播放"
-        android:padding="@dimen/dp_8"
-        android:src="@drawable/ic_pause" />
+    <ImageButton android:id="@+id/floatingPlayPauseButton" android:layout_width="@dimen/dp_40" android:layout_height="@dimen/dp_40" android:layout_gravity="bottom|center_horizontal" android:layout_marginBottom="@dimen/dp_8" android:background="@drawable/bg_floating_control" android:contentDescription="@string/hardcoded_text_031" android:padding="@dimen/dp_8" android:src="@drawable/ic_pause" />
 
-    <ImageButton
-        android:id="@+id/floatingResizeHandle"
-        android:layout_width="@dimen/dp_24"
-        android:layout_height="@dimen/dp_24"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/dp_4"
-        android:background="@android:color/transparent"
-        android:contentDescription="调整悬浮播放器大小"
-        android:padding="@dimen/dp_2"
-        android:src="@drawable/ic_resize" />
+    <ImageButton android:id="@+id/floatingResizeHandle" android:layout_width="@dimen/dp_24" android:layout_height="@dimen/dp_24" android:layout_gravity="bottom|end" android:layout_margin="@dimen/dp_4" android:background="@android:color/transparent" android:contentDescription="@string/hardcoded_text_048" android:padding="@dimen/dp_2" android:src="@drawable/ic_resize" />
 </FrameLayout>

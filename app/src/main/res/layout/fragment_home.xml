@@ -1,79 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/bg_page"
-    android:orientation="vertical">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/bg_page" android:orientation="vertical">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/dp_56"
-        android:background="@color/surface"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="@dimen/dp_12"
-        android:paddingEnd="@dimen/dp_12">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="@dimen/dp_56" android:background="@color/surface" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="@dimen/dp_12" android:paddingEnd="@dimen/dp_12">
 
-        <TextView
-            android:layout_width="@dimen/dp_44"
-            android:layout_height="@dimen/dp_44"
-            android:gravity="center"
-            android:text="壹"
-            android:textColor="@color/accent"
-            android:textSize="@dimen/sp_22"
-            android:textStyle="bold" />
+        <TextView android:layout_width="@dimen/dp_44" android:layout_height="@dimen/dp_44" android:gravity="center" android:text="@string/hardcoded_text_033" android:textColor="@color/accent" android:textSize="@dimen/sp_22" android:textStyle="bold" />
 
-        <TextView
-            android:id="@+id/searchBox"
-            android:layout_width="@dimen/dp_0"
-            android:layout_height="@dimen/dp_34"
-            android:layout_marginStart="@dimen/dp_8"
-            android:layout_weight="1"
-            android:background="@drawable/bg_search"
-            android:gravity="center_vertical"
-            android:paddingStart="@dimen/dp_14"
-            android:text="搜一搜"
-            android:textColor="@color/text_secondary"
-            android:textSize="@dimen/sp_14" />
+        <TextView android:id="@+id/searchBox" android:layout_width="@dimen/dp_0" android:layout_height="@dimen/dp_34" android:layout_marginStart="@dimen/dp_8" android:layout_weight="1" android:background="@drawable/bg_search" android:gravity="center_vertical" android:paddingStart="@dimen/dp_14" android:text="@string/hardcoded_text_034" android:textColor="@color/text_secondary" android:textSize="@dimen/sp_14" />
 
-        <TextView
-            android:id="@+id/historyButton"
-            android:layout_width="@dimen/dp_52"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:text="历史"
-            android:textColor="@color/text_primary"
-            android:textSize="@dimen/sp_13" />
+        <TextView android:id="@+id/historyButton" android:layout_width="@dimen/dp_52" android:layout_height="match_parent" android:gravity="center" android:text="@string/hardcoded_text_035" android:textColor="@color/text_primary" android:textSize="@dimen/sp_13" />
     </LinearLayout>
 
-    <HorizontalScrollView
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/dp_44"
-        android:background="@color/surface"
-        android:overScrollMode="never"
-        android:scrollbars="none">
+    <HorizontalScrollView android:layout_width="match_parent" android:layout_height="@dimen/dp_44" android:background="@color/surface" android:overScrollMode="never" android:scrollbars="none">
 
-        <LinearLayout
-            android:id="@+id/categoryContainer"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="@dimen/dp_12"
-            android:paddingEnd="@dimen/dp_12" />
+        <LinearLayout android:id="@+id/categoryContainer" android:layout_width="wrap_content" android:layout_height="match_parent" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="@dimen/dp_12" android:paddingEnd="@dimen/dp_12" />
     </HorizontalScrollView>
 
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-        android:id="@+id/homeRefresh"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/dp_0"
-        android:layout_weight="1">
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout android:id="@+id/homeRefresh" android:layout_width="match_parent" android:layout_height="@dimen/dp_0" android:layout_weight="1">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/videoRecycler"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:clipToPadding="false"
-            android:padding="@dimen/dp_12" />
+        <androidx.recyclerview.widget.RecyclerView android:id="@+id/videoRecycler" android:layout_width="match_parent" android:layout_height="match_parent" android:clipToPadding="false" android:padding="@dimen/dp_12" />
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 </LinearLayout>
