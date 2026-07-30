@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="4dp"
+    android:layout_margin="@dimen/dp_4"
     android:orientation="vertical">
 
     <com.aiyifan.app.core.ui.AspectRatioFrameLayout
@@ -27,11 +27,11 @@
         android:id="@+id/cardTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
+        android:layout_marginTop="@dimen/dp_6"
         android:ellipsize="end"
         android:maxLines="2"
         android:textColor="@color/text_primary"
-        android:textSize="14sp"
+        android:textSize="@dimen/sp_14"
         android:textStyle="bold" />
 
     <TextView
@@ -41,5 +41,5 @@
         android:ellipsize="end"
         android:maxLines="1"
         android:textColor="@color/text_secondary"
-        android:textSize="12sp" />
+        android:textSize="@dimen/sp_12" />
 </LinearLayout>

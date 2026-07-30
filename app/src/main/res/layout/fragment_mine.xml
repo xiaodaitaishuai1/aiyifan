@@ -13,99 +13,99 @@
         <TextView
             android:id="@+id/mineTitle"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
+            android:layout_height="@dimen/dp_56"
             android:background="@color/surface"
             android:gravity="center_vertical"
-            android:paddingStart="16dp"
+            android:paddingStart="@dimen/dp_16"
             android:text="我的"
             android:textColor="@color/text_primary"
-            android:textSize="20sp"
+            android:textSize="@dimen/sp_20"
             android:textStyle="bold" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="8dp"
-            android:paddingStart="16dp"
+            android:layout_marginStart="@dimen/dp_4"
+            android:layout_marginTop="@dimen/dp_24"
+            android:layout_marginBottom="@dimen/dp_8"
+            android:paddingStart="@dimen/dp_16"
             android:text="内容与数据"
             android:textColor="@color/text_secondary"
-            android:textSize="13sp" />
+            android:textSize="@dimen/sp_13" />
 
         <LinearLayout
             android:id="@+id/contentGroup"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="12dp"
+            android:layout_marginHorizontal="@dimen/dp_12"
             android:background="@drawable/bg_surface"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="@dimen/dp_16">
 
             <LinearLayout
                 android:id="@+id/historyButton"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
+                android:layout_height="@dimen/dp_56"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingStart="16dp"
-                android:paddingEnd="14dp">
+                android:paddingStart="@dimen/dp_16"
+                android:paddingEnd="@dimen/dp_14">
 
                 <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
+                    android:layout_width="@dimen/dp_24"
+                    android:layout_height="@dimen/dp_24"
                     android:contentDescription="观看记录"
                     android:src="@drawable/ic_history" />
 
                 <TextView
-                    android:layout_width="0dp"
+                    android:layout_width="@dimen/dp_0"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="14dp"
+                    android:layout_marginStart="@dimen/dp_14"
                     android:layout_weight="1"
                     android:text="观看记录"
                     android:textColor="@color/text_primary"
-                    android:textSize="16sp" />
+                    android:textSize="@dimen/sp_16" />
 
                 <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
+                    android:layout_width="@dimen/dp_20"
+                    android:layout_height="@dimen/dp_20"
                     android:contentDescription="进入观看记录"
                     android:src="@drawable/ic_chevron_right" />
             </LinearLayout>
 
             <View
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginStart="54dp"
+                android:layout_height="@dimen/dp_1"
+                android:layout_marginStart="@dimen/dp_54"
                 android:background="@color/outline" />
 
             <LinearLayout
                 android:id="@+id/collectionButton"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
+                android:layout_height="@dimen/dp_56"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingStart="16dp"
-                android:paddingEnd="14dp">
+                android:paddingStart="@dimen/dp_16"
+                android:paddingEnd="@dimen/dp_14">
 
                 <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
+                    android:layout_width="@dimen/dp_24"
+                    android:layout_height="@dimen/dp_24"
                     android:contentDescription="我的收藏"
                     android:src="@drawable/ic_favorite" />
 
                 <TextView
-                    android:layout_width="0dp"
+                    android:layout_width="@dimen/dp_0"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="14dp"
+                    android:layout_marginStart="@dimen/dp_14"
                     android:layout_weight="1"
                     android:text="我的收藏"
                     android:textColor="@color/text_primary"
-                    android:textSize="16sp" />
+                    android:textSize="@dimen/sp_16" />
 
                 <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
+                    android:layout_width="@dimen/dp_20"
+                    android:layout_height="@dimen/dp_20"
                     android:contentDescription="进入我的收藏"
                     android:src="@drawable/ic_chevron_right" />
             </LinearLayout>
@@ -114,42 +114,42 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="8dp"
-            android:paddingStart="16dp"
+            android:layout_marginStart="@dimen/dp_4"
+            android:layout_marginTop="@dimen/dp_24"
+            android:layout_marginBottom="@dimen/dp_8"
+            android:paddingStart="@dimen/dp_16"
             android:text="应用设置"
             android:textColor="@color/text_secondary"
-            android:textSize="13sp" />
+            android:textSize="@dimen/sp_13" />
 
         <LinearLayout
             android:id="@+id/settingsGroup"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="12dp"
+            android:layout_marginHorizontal="@dimen/dp_12"
             android:background="@drawable/bg_surface"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="@dimen/dp_16">
 
             <LinearLayout
                 android:id="@+id/themeSettingsButton"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
+                android:layout_height="@dimen/dp_56"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingStart="16dp"
-                android:paddingEnd="14dp">
+                android:paddingStart="@dimen/dp_16"
+                android:paddingEnd="@dimen/dp_14">
 
                 <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
+                    android:layout_width="@dimen/dp_24"
+                    android:layout_height="@dimen/dp_24"
                     android:contentDescription="@string/theme_settings_title"
                     android:src="@drawable/ic_theme" />
 
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:layout_width="@dimen/dp_0"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="14dp"
+                    android:layout_marginStart="@dimen/dp_14"
                     android:layout_weight="1"
                     android:orientation="vertical">
 
@@ -158,57 +158,57 @@
                         android:layout_height="wrap_content"
                         android:text="@string/theme_settings_title"
                         android:textColor="@color/text_primary"
-                        android:textSize="16sp" />
+                        android:textSize="@dimen/sp_16" />
 
                     <TextView
                         android:id="@+id/themeSettingsSummary"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
+                        android:layout_marginTop="@dimen/dp_2"
                         android:textColor="@color/text_secondary"
-                        android:textSize="12sp" />
+                        android:textSize="@dimen/sp_12" />
                 </LinearLayout>
 
                 <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
+                    android:layout_width="@dimen/dp_20"
+                    android:layout_height="@dimen/dp_20"
                     android:contentDescription="@string/enter_theme_settings"
                     android:src="@drawable/ic_chevron_right" />
             </LinearLayout>
 
             <View
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginStart="54dp"
+                android:layout_height="@dimen/dp_1"
+                android:layout_marginStart="@dimen/dp_54"
                 android:background="@color/outline" />
 
             <LinearLayout
                 android:id="@+id/proxySettingsButton"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
+                android:layout_height="@dimen/dp_56"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingStart="16dp"
-                android:paddingEnd="14dp">
+                android:paddingStart="@dimen/dp_16"
+                android:paddingEnd="@dimen/dp_14">
 
                 <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
+                    android:layout_width="@dimen/dp_24"
+                    android:layout_height="@dimen/dp_24"
                     android:contentDescription="网络代理"
                     android:src="@drawable/ic_network" />
 
                 <TextView
-                    android:layout_width="0dp"
+                    android:layout_width="@dimen/dp_0"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="14dp"
+                    android:layout_marginStart="@dimen/dp_14"
                     android:layout_weight="1"
                     android:text="网络代理"
                     android:textColor="@color/text_primary"
-                    android:textSize="16sp" />
+                    android:textSize="@dimen/sp_16" />
 
                 <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
+                    android:layout_width="@dimen/dp_20"
+                    android:layout_height="@dimen/dp_20"
                     android:contentDescription="进入网络代理"
                     android:src="@drawable/ic_chevron_right" />
             </LinearLayout>

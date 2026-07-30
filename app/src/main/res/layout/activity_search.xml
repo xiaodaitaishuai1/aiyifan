@@ -8,52 +8,52 @@
     <LinearLayout
         android:id="@+id/topBar"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:layout_height="@dimen/dp_56"
         android:background="@color/surface"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingStart="8dp"
-        android:paddingEnd="12dp">
+        android:paddingStart="@dimen/dp_8"
+        android:paddingEnd="@dimen/dp_12">
 
         <ImageButton
             android:id="@+id/backButton"
-            android:layout_width="48dp"
+            android:layout_width="@dimen/dp_48"
             android:layout_height="match_parent"
             android:background="@android:color/transparent"
             android:contentDescription="返回"
             android:gravity="center"
-            android:padding="12dp"
+            android:padding="@dimen/dp_12"
             android:src="@drawable/ic_back" />
 
         <EditText
             android:id="@+id/searchEdit"
-            android:layout_width="0dp"
-            android:layout_height="36dp"
+            android:layout_width="@dimen/dp_0"
+            android:layout_height="@dimen/dp_36"
             android:layout_weight="1"
             android:background="@drawable/bg_search"
             android:hint="输入片名、演员、导演"
             android:imeOptions="actionSearch"
             android:inputType="text"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
+            android:paddingStart="@dimen/dp_12"
+            android:paddingEnd="@dimen/dp_12"
             android:singleLine="true"
             android:textColor="@color/text_primary"
             android:textColorHint="@color/text_secondary"
-            android:textSize="14sp" />
+            android:textSize="@dimen/sp_14" />
 
         <TextView
             android:id="@+id/searchButton"
-            android:layout_width="54dp"
+            android:layout_width="@dimen/dp_54"
             android:layout_height="match_parent"
             android:gravity="center"
             android:text="搜索"
             android:textColor="@color/text_primary"
-            android:textSize="16sp" />
+            android:textSize="@dimen/sp_16" />
     </LinearLayout>
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="@dimen/dp_0"
         android:layout_weight="1">
 
         <ScrollView
@@ -67,33 +67,33 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="@dimen/dp_16">
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="44dp"
+                    android:layout_height="@dimen/dp_44"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
                     <TextView
-                        android:layout_width="0dp"
+                        android:layout_width="@dimen/dp_0"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="搜索历史"
                         android:textColor="@color/text_primary"
-                        android:textSize="17sp"
+                        android:textSize="@dimen/sp_17"
                         android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/clearHistoryButton"
                         android:layout_width="wrap_content"
-                        android:layout_height="44dp"
+                        android:layout_height="@dimen/dp_44"
                         android:gravity="center"
-                        android:paddingStart="12dp"
-                        android:paddingEnd="12dp"
+                        android:paddingStart="@dimen/dp_12"
+                        android:paddingEnd="@dimen/dp_12"
                         android:text="清空"
                         android:textColor="@color/text_secondary"
-                        android:textSize="13sp" />
+                        android:textSize="@dimen/sp_13" />
                 </LinearLayout>
 
                 <com.aiyifan.app.core.ui.KeywordFlowLayout
@@ -104,26 +104,26 @@
                 <TextView
                     android:id="@+id/expandHistoryButton"
                     android:layout_width="wrap_content"
-                    android:layout_height="36dp"
+                    android:layout_height="@dimen/dp_36"
                     android:gravity="center_vertical"
                     android:text="展开"
                     android:textColor="@color/accent"
-                    android:textSize="13sp"
+                    android:textSize="@dimen/sp_13"
                     android:visibility="gone" />
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="20dp"
+                    android:layout_marginTop="@dimen/dp_20"
                     android:text="热门搜索"
                     android:textColor="@color/text_primary"
-                    android:textSize="17sp"
+                    android:textSize="@dimen/sp_17"
                     android:textStyle="bold" />
 
                 <com.aiyifan.app.core.ui.KeywordFlowLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="@dimen/dp_12"
                     android:id="@+id/hotContainer" />
             </LinearLayout>
         </ScrollView>
@@ -145,7 +145,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
-                android:padding="12dp" />
+                android:padding="@dimen/dp_12" />
 
             <TextView
                 android:id="@+id/searchStatus"
@@ -153,9 +153,9 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:gravity="center"
-                android:padding="16dp"
+                android:padding="@dimen/dp_16"
                 android:textColor="@color/text_secondary"
-                android:textSize="13sp" />
+                android:textSize="@dimen/sp_13" />
         </FrameLayout>
     </FrameLayout>
 </LinearLayout>
