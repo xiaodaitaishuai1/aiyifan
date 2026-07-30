@@ -73,4 +73,10 @@
   <string name="hardcoded_text_047">关闭悬浮播放器</string>
   <string name="hardcoded_text_048">调整悬浮播放器大小</string>
   <string name="hardcoded_text_049">首页</string>
+    <string name="login_agreement_required">请先同意用户协议与隐私政策</string>
+    <string name="login_default_account">爱壹帆用户</string>
+    <string name="login_success">登录成功</string>
+    <string name="collection_empty">暂无收藏</string>
+    <string name="history_clear">清空</string>
+    <string name="history_empty">暂无观看记录</string>
 </resources>

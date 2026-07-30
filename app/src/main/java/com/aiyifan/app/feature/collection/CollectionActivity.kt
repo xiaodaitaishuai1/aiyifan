@@ -3,6 +3,7 @@ package com.aiyifan.app.feature.collection
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.aiyifan.app.R
 import com.aiyifan.app.core.data.AppGraph
 import com.aiyifan.app.core.ui.applySystemBarsPadding
 import com.aiyifan.app.core.ui.setupEdgeToEdge
@@ -21,7 +22,7 @@ class CollectionActivity : AppCompatActivity() {
         setContentView(binding.root)
         binding.root.applySystemBarsPadding(left = true, right = true, bottom = true)
         binding.topBar.applySystemBarsPadding(top = true, growHeight = true)
-        binding.title.text = "我的收藏"
+        binding.title.setText(R.string.hardcoded_text_041)
         binding.actionButton.text = ""
         binding.backButton.setOnClickListener { finish() }
         val adapter = VideoListAdapter { video ->
@@ -32,6 +33,6 @@ class CollectionActivity : AppCompatActivity() {
         val items = AppGraph.catalogRepository.getFavorites().map { it.toVideoSummary() }
         adapter.submitList(items)
         binding.emptyState.visibility = if (items.isEmpty()) android.view.View.VISIBLE else android.view.View.GONE
-        binding.emptyView.text = "暂无收藏"
+        binding.emptyView.setText(R.string.collection_empty)
     }
 }

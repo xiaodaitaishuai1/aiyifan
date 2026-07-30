@@ -3,6 +3,7 @@ package com.aiyifan.app.feature.auth
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.aiyifan.app.R
 import com.aiyifan.app.core.ui.applySystemBarsPadding
 import com.aiyifan.app.core.ui.setupEdgeToEdge
 import com.aiyifan.app.databinding.ActivityLoginBinding
@@ -19,12 +20,12 @@ class LoginActivity : AppCompatActivity() {
         binding.backButton.setOnClickListener { finish() }
         binding.loginButton.setOnClickListener {
             if (!binding.agreementCheck.isChecked) {
-                Toast.makeText(this, "请先同意用户协议与隐私政策", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.login_agreement_required, Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            val account = binding.accountEdit.text.toString().ifBlank { "爱壹帆用户" }
+            val account = binding.accountEdit.text.toString().ifBlank { getString(R.string.login_default_account) }
             getSharedPreferences("auth", MODE_PRIVATE).edit().putString("nickname", account).apply()
-            Toast.makeText(this, "登录成功", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.login_success, Toast.LENGTH_SHORT).show()
             finish()
         }
     }

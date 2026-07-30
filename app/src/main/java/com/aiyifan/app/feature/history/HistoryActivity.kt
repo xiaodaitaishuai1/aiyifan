@@ -3,6 +3,7 @@ package com.aiyifan.app.feature.history
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.aiyifan.app.R
 import com.aiyifan.app.core.data.AppGraph
 import com.aiyifan.app.core.ui.applySystemBarsPadding
 import com.aiyifan.app.core.ui.setupEdgeToEdge
@@ -22,8 +23,8 @@ class HistoryActivity : AppCompatActivity() {
         setContentView(binding.root)
         binding.root.applySystemBarsPadding(left = true, right = true, bottom = true)
         binding.topBar.applySystemBarsPadding(top = true, growHeight = true)
-        binding.title.text = "观看记录"
-        binding.actionButton.text = "清空"
+        binding.title.setText(R.string.hardcoded_text_039)
+        binding.actionButton.setText(R.string.history_clear)
         binding.backButton.setOnClickListener { finish() }
         binding.actionButton.setOnClickListener {
             AppGraph.catalogRepository.clearHistory()
@@ -41,6 +42,6 @@ class HistoryActivity : AppCompatActivity() {
         val items = AppGraph.catalogRepository.getHistory().map { it.toVideoSummary() }
         adapter.submitList(items)
         binding.emptyState.visibility = if (items.isEmpty()) android.view.View.VISIBLE else android.view.View.GONE
-        binding.emptyView.text = "暂无观看记录"
+        binding.emptyView.setText(R.string.history_empty)
     }
 }
