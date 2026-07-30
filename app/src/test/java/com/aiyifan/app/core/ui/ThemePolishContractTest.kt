@@ -19,8 +19,8 @@ class ThemePolishContractTest {
 
     @Test
     fun `primary and outline buttons have eight dp rounded corners`() {
-        assertEquals("8dp", cornerRadius("bg_button_primary"))
-        assertEquals("8dp", cornerRadius("bg_button_outline"))
+        assertEquals("@dimen/dp_8", cornerRadius("bg_button_primary"))
+        assertEquals("@dimen/dp_8", cornerRadius("bg_button_outline"))
     }
 
     @Test
@@ -40,10 +40,10 @@ class ThemePolishContractTest {
 
     @Test
     fun `critical text buttons reserve forty four dp height`() {
-        assertEquals("44dp", view(root(layout("item_video_card")), "playButton").getAttribute("android:layout_height"))
+        assertEquals("@dimen/dp_44", view(root(layout("item_video_card")), "playButton").getAttribute("android:layout_height"))
         val player = root(layout("activity_video_player"))
-        assertEquals("44dp", view(player, "favoriteButton").getAttribute("android:layout_height"))
-        assertEquals("44dp", view(player, "shareButton").getAttribute("android:layout_height"))
+        assertEquals("@dimen/dp_44", view(player, "favoriteButton").getAttribute("android:layout_height"))
+        assertEquals("@dimen/dp_44", view(player, "shareButton").getAttribute("android:layout_height"))
     }
 
     @Test
