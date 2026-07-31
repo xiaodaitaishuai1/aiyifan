@@ -13,6 +13,13 @@ class EncryptedProxySettingsStore(context: Context) : ProxySettingsStore {
         EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
     )
 
+    override fun hasConnectedBefore(): Boolean =
+        preferences.getBoolean(KEY_HAS_CONNECTED_BEFORE, false)
+
+    override fun saveHasConnectedBefore(value: Boolean) {
+        preferences.edit().putBoolean(KEY_HAS_CONNECTED_BEFORE, value).apply()
+    }
+
     override fun readSubscriptionUrl(): String? = preferences.getString(KEY_SUBSCRIPTION_URL, null)
 
     override fun saveSubscriptionUrl(value: String) {
@@ -27,6 +34,7 @@ class EncryptedProxySettingsStore(context: Context) : ProxySettingsStore {
 
     private companion object {
         const val PREFERENCES_NAME = "encrypted_proxy_settings"
+        const val KEY_HAS_CONNECTED_BEFORE = "has_connected_before"
         const val KEY_SUBSCRIPTION_URL = "subscription_url"
         const val KEY_SELECTED_NODE_ID = "selected_node_id"
     }

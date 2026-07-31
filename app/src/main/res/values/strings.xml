@@ -82,4 +82,13 @@
     <string name="collection_empty">暂无收藏</string>
     <string name="history_clear">清空</string>
     <string name="history_empty">暂无观看记录</string>
+    <string name="home_vpn_connect">VPN</string>
+    <string name="home_vpn_connecting">连接中</string>
+    <string name="home_vpn_connected">已连接</string>
+    <string name="home_vpn_missing_subscription">请先在 VPN 设置中配置订阅</string>
+    <string name="home_vpn_restore_failed">VPN 订阅恢复失败，请在 VPN 设置中检查订阅</string>
+    <string name="home_vpn_no_available_node">未找到可用 VPN 节点，请在 VPN 设置中更新订阅</string>
+    <string name="home_vpn_configuration_failed">VPN 节点配置不兼容，请更换节点</string>
+    <string name="home_vpn_service_failed">VPN 服务启动失败，请重试</string>
+    <string name="home_vpn_connection_failed">VPN 连接失败，请在 VPN 设置中检查节点</string>
 </resources>

@@ -54,6 +54,15 @@ class HomeLayoutContractTest {
         assertTrue(fragment.contains("adapter.setLoadMoreLoading(false)"))
     }
 
+    @Test
+    fun `home contains a hidden VPN quick connect button`() {
+        val home = root(layout("fragment_home"))
+        val button = view(home, "vpnQuickConnectButton")
+
+        assertEquals("gone", button.getAttribute("android:visibility"))
+        assertEquals("@string/home_vpn_connect", button.getAttribute("android:text"))
+    }
+
     private fun layout(name: String): File = sequenceOf(
         File("src/main/res/layout/$name.xml"),
         File("app/src/main/res/layout/$name.xml"),

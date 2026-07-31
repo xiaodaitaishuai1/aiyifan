@@ -13,7 +13,7 @@ class MineLayoutTest {
     fun `mine screen presents profile and grouped navigation`() {
         val root = parseLayout()
 
-        assertEquals("我的", viewWithId(root, "mineTitle").getAttribute("android:text"))
+        assertEquals("@string/hardcoded_text_037", viewWithId(root, "mineTitle").getAttribute("android:text"))
         assertEquals("LinearLayout", viewWithId(root, "contentGroup").tagName)
         assertEquals("LinearLayout", viewWithId(root, "settingsGroup").tagName)
         assertEquals("LinearLayout", viewWithId(root, "themeSettingsButton").tagName)

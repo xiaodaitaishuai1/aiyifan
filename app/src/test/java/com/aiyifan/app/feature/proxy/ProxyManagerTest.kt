@@ -9,8 +9,10 @@ import com.aiyifan.app.feature.proxy.runtime.SingBoxConfigProvider
 import com.aiyifan.app.feature.proxy.runtime.SingBoxEngine
 import com.aiyifan.app.feature.proxy.runtime.SingBoxRuntime
 import java.util.Base64
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -41,6 +43,7 @@ class ProxyManagerTest {
         assertEquals(LocalProxyEndpoint("127.0.0.1", 2080), endpoint)
         assertEquals("edge.example.com", engine.startedForHost)
         assertEquals(1, listener.connectedCalls)
+        assertTrue(store.hasConnectedBefore)
     }
 
     @Test
@@ -63,9 +66,10 @@ class ProxyManagerTest {
 
     @Test
     fun `records a safe failure stage when the local proxy cannot start`() = runBlocking {
+        val store = FakeSettingsStore()
         val manager = ProxyManager(
             parser = ProxySubscriptionParser(::decodeWithJvmBase64),
-            settingsStore = FakeSettingsStore(),
+            settingsStore = store,
             subscriptionLoader = FakeSubscriptionLoader(encodedSubscription()),
             runtime = SingBoxRuntime(FailingEngine(), HostConfigProvider()),
         )
@@ -75,6 +79,78 @@ class ProxyManagerTest {
 
         assertEquals(null, endpoint)
         assertEquals(ProxyConnectionFailure.UNKNOWN, manager.lastConnectionFailure)
+        assertFalse(store.hasConnectedBefore)
+    }
+
+    @Test
+    fun `quick connect restores saved subscription before connecting`() = runBlocking {
+        val store = FakeSettingsStore().apply {
+            subscriptionUrl = "https://subscription.example.com/token"
+        }
+        val loader = FakeSubscriptionLoader(encodedSubscription())
+        val manager = ProxyManager(
+            parser = ProxySubscriptionParser(::decodeWithJvmBase64),
+            settingsStore = store,
+            subscriptionLoader = loader,
+            runtime = SingBoxRuntime(RecordingEngine(), HostConfigProvider()),
+        )
+
+        val result = manager.quickConnect()
+
+        assertTrue(result is ProxyQuickConnectResult.Connected)
+        assertEquals("https://subscription.example.com/token", loader.loadedUrl)
+    }
+
+    @Test
+    fun `quick connect does not start runtime without a saved subscription`() = runBlocking {
+        val engine = RecordingEngine()
+        val manager = ProxyManager(
+            parser = ProxySubscriptionParser(::decodeWithJvmBase64),
+            settingsStore = FakeSettingsStore(),
+            subscriptionLoader = FakeSubscriptionLoader(encodedSubscription()),
+            runtime = SingBoxRuntime(engine, HostConfigProvider()),
+        )
+
+        val result = manager.quickConnect()
+
+        assertEquals(ProxyQuickConnectResult.MissingSubscription, result)
+        assertEquals(null, engine.startedForHost)
+    }
+
+    @Test
+    fun `quick connect reports restore failure without starting runtime`() = runBlocking {
+        val engine = RecordingEngine()
+        val manager = ProxyManager(
+            parser = ProxySubscriptionParser(::decodeWithJvmBase64),
+            settingsStore = FakeSettingsStore().apply {
+                subscriptionUrl = "https://subscription.example.com/token"
+            },
+            subscriptionLoader = FailingSubscriptionLoader(),
+            runtime = SingBoxRuntime(engine, HostConfigProvider()),
+        )
+
+        val result = manager.quickConnect()
+
+        assertEquals(ProxyQuickConnectResult.RestoreFailed, result)
+        assertEquals(null, engine.startedForHost)
+    }
+
+    @Test
+    fun `quick connect propagates subscription restoration cancellation`() = runBlocking {
+        val manager = ProxyManager(
+            parser = ProxySubscriptionParser(::decodeWithJvmBase64),
+            settingsStore = FakeSettingsStore().apply {
+                subscriptionUrl = "https://subscription.example.com/token"
+            },
+            subscriptionLoader = CancellingSubscriptionLoader(),
+            runtime = SingBoxRuntime(RecordingEngine(), HostConfigProvider()),
+        )
+
+        try {
+            manager.quickConnect()
+            org.junit.Assert.fail("Expected cancellation")
+        } catch (_: CancellationException) {
+        }
     }
 
     private fun encodedSubscription(): String = Base64.getEncoder().encodeToString(
@@ -88,6 +164,13 @@ class ProxyManagerTest {
     private class FakeSettingsStore : ProxySettingsStore {
         var subscriptionUrl: String? = null
         var selectedNodeId: String? = null
+        var hasConnectedBefore = false
+
+        override fun hasConnectedBefore(): Boolean = hasConnectedBefore
+
+        override fun saveHasConnectedBefore(value: Boolean) {
+            hasConnectedBefore = value
+        }
 
         override fun readSubscriptionUrl(): String? = subscriptionUrl
 
@@ -109,6 +192,14 @@ class ProxyManagerTest {
             loadedUrl = url
             return content
         }
+    }
+
+    private class FailingSubscriptionLoader : SubscriptionContentLoader {
+        override suspend fun loadDirect(url: String): String = error("subscription unavailable")
+    }
+
+    private class CancellingSubscriptionLoader : SubscriptionContentLoader {
+        override suspend fun loadDirect(url: String): String = throw CancellationException()
     }
 
     private class RecordingEngine : SingBoxEngine {

@@ -12,6 +12,10 @@ import com.aiyifan.app.feature.proxy.runtime.SingBoxStartupException
 import com.aiyifan.app.feature.proxy.runtime.SingBoxStartupStage
 
 interface ProxySettingsStore {
+    fun hasConnectedBefore(): Boolean
+
+    fun saveHasConnectedBefore(value: Boolean)
+
     fun readSubscriptionUrl(): String?
 
     fun saveSubscriptionUrl(value: String)
@@ -30,6 +34,18 @@ enum class ProxyConnectionFailure {
     SERVICE_CREATION,
     SERVICE_START,
     UNKNOWN,
+}
+
+sealed interface ProxyQuickConnectResult {
+    data object MissingSubscription : ProxyQuickConnectResult
+
+    data object RestoreFailed : ProxyQuickConnectResult
+
+    data object NoAvailableNode : ProxyQuickConnectResult
+
+    data class Connected(val endpoint: LocalProxyEndpoint) : ProxyQuickConnectResult
+
+    data class ConnectionFailed(val failure: ProxyConnectionFailure?) : ProxyQuickConnectResult
 }
 
 interface ProxyConnectionListener {
@@ -67,6 +83,8 @@ class ProxyManager(
 
     fun storedSubscriptionUrl(): String? = settingsStore.readSubscriptionUrl()
 
+    fun hasConnectedBefore(): Boolean = settingsStore.hasConnectedBefore()
+
     suspend fun refresh(url: String): SubscriptionImportResult {
         val result = parser.parse(subscriptionLoader.loadDirect(url))
         if (result is SubscriptionImportResult.Imported) {
@@ -88,6 +106,27 @@ class ProxyManager(
         return true
     }
 
+    suspend fun quickConnect(): ProxyQuickConnectResult {
+        if (nodes.isEmpty()) {
+            val subscriptionUrl = storedSubscriptionUrl()?.trim().orEmpty()
+            if (subscriptionUrl.isEmpty()) return ProxyQuickConnectResult.MissingSubscription
+
+            val refreshResult = try {
+                refresh(subscriptionUrl)
+            } catch (exception: Throwable) {
+                if (exception is kotlinx.coroutines.CancellationException) throw exception
+                return ProxyQuickConnectResult.RestoreFailed
+            }
+            if (refreshResult !is SubscriptionImportResult.Imported || selectedNode == null) {
+                return ProxyQuickConnectResult.NoAvailableNode
+            }
+        }
+
+        if (selectedNode == null) return ProxyQuickConnectResult.NoAvailableNode
+        return connect()?.let(ProxyQuickConnectResult::Connected)
+            ?: ProxyQuickConnectResult.ConnectionFailed(lastConnectionFailure)
+    }
+
     fun connect(): LocalProxyEndpoint? {
         val node = selectedNode ?: return null
         if (state is ProxyConnectionState.Connected && activeEndpoint != null) return activeEndpoint
@@ -97,6 +136,7 @@ class ProxyManager(
         return try {
             runtime.connect(node).also {
                 stateMachine.completeConnection(attempt)
+                settingsStore.saveHasConnectedBefore(true)
                 connectionListener.onConnected()
             }
         } catch (error: Throwable) {

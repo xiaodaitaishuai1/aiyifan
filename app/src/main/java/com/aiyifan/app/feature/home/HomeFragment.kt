@@ -18,10 +18,15 @@ import com.aiyifan.app.core.data.AppGraph
 import com.aiyifan.app.core.model.Category
 import com.aiyifan.app.databinding.FragmentHomeBinding
 import com.aiyifan.app.feature.history.HistoryActivity
+import com.aiyifan.app.feature.proxy.ProxyConnectionFailure
+import com.aiyifan.app.feature.proxy.ProxyQuickConnectResult
+import com.aiyifan.app.feature.proxy.domain.ProxyConnectionState
 import com.aiyifan.app.feature.search.SearchActivity
 import com.aiyifan.app.feature.video.VideoPlayerActivity
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
@@ -32,6 +37,8 @@ class HomeFragment : Fragment() {
     private var selectedCategory: Category? = null
     private var homeRequestVersion = 0L
     private var isInitialPageLoading = false
+    private var isVpnQuickConnecting = false
+    private val proxyManager get() = AppGraph.proxyManager
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
@@ -68,9 +75,57 @@ class HomeFragment : Fragment() {
             }
         })
         binding.searchBox.setOnClickListener { startActivity(Intent(requireContext(), SearchActivity::class.java)) }
+        binding.vpnQuickConnectButton.setOnClickListener(::connectVpnFromHome)
         binding.historyButton.setOnClickListener { startActivity(Intent(requireContext(), HistoryActivity::class.java)) }
         binding.homeRefresh.setOnRefreshListener(::loadHome)
+        renderVpnQuickConnect()
         loadHome()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (_binding != null) renderVpnQuickConnect()
+    }
+
+    private fun connectVpnFromHome(view: View) {
+        if (isVpnQuickConnecting || proxyManager.state is ProxyConnectionState.Connected) return
+
+        isVpnQuickConnecting = true
+        renderVpnQuickConnect()
+        viewLifecycleOwner.lifecycleScope.launch {
+            val result = withContext(Dispatchers.IO) { proxyManager.quickConnect() }
+            if (_binding == null) return@launch
+
+            isVpnQuickConnecting = false
+            renderVpnQuickConnect()
+            showToast(vpnQuickConnectMessage(result))
+        }
+    }
+
+    private fun renderVpnQuickConnect() {
+        val button = binding.vpnQuickConnectButton
+        val presentation = HomeVpnQuickConnectPresentation.resolve(
+            hasConnectedBefore = proxyManager.hasConnectedBefore(),
+            isConnecting = isVpnQuickConnecting,
+            connectionState = proxyManager.state,
+        )
+        button.visibility = if (presentation.isVisible) View.VISIBLE else View.GONE
+        button.text = getString(presentation.textRes)
+        button.isEnabled = presentation.isEnabled
+    }
+
+    private fun vpnQuickConnectMessage(result: ProxyQuickConnectResult): String = when (result) {
+        is ProxyQuickConnectResult.Connected -> getString(R.string.home_vpn_connected)
+        ProxyQuickConnectResult.MissingSubscription -> getString(R.string.home_vpn_missing_subscription)
+        ProxyQuickConnectResult.RestoreFailed -> getString(R.string.home_vpn_restore_failed)
+        ProxyQuickConnectResult.NoAvailableNode -> getString(R.string.home_vpn_no_available_node)
+        is ProxyQuickConnectResult.ConnectionFailed -> when (result.failure) {
+            ProxyConnectionFailure.CONFIGURATION -> getString(R.string.home_vpn_configuration_failed)
+            ProxyConnectionFailure.SERVICE_CREATION,
+            ProxyConnectionFailure.SERVICE_START -> getString(R.string.home_vpn_service_failed)
+            ProxyConnectionFailure.UNKNOWN,
+            null -> getString(R.string.home_vpn_connection_failed)
+        }
     }
 
     private fun loadHome() {

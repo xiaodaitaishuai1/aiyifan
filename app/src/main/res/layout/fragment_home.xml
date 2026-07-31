@@ -7,6 +7,8 @@
 
         <TextView android:id="@+id/searchBox" android:layout_width="@dimen/dp_0" android:layout_height="@dimen/dp_34" android:layout_marginStart="@dimen/dp_8" android:layout_weight="1" android:background="@drawable/bg_search" android:gravity="center_vertical" android:paddingStart="@dimen/dp_14" android:text="@string/hardcoded_text_034" android:textColor="@color/text_secondary" android:textSize="@dimen/sp_14" />
 
+        <Button android:id="@+id/vpnQuickConnectButton" android:layout_width="wrap_content" android:layout_height="@dimen/dp_34" android:layout_marginStart="@dimen/dp_4" android:background="@drawable/bg_button_outline" android:gravity="center" android:minWidth="@dimen/dp_0" android:paddingStart="@dimen/dp_8" android:paddingEnd="@dimen/dp_8" android:text="@string/home_vpn_connect" android:textColor="@color/accent" android:textSize="@dimen/sp_12" android:visibility="gone" />
+
         <TextView android:id="@+id/historyButton" android:layout_width="@dimen/dp_52" android:layout_height="match_parent" android:gravity="center" android:text="@string/hardcoded_text_035" android:textColor="@color/text_primary" android:textSize="@dimen/sp_13" />
     </LinearLayout>
 
