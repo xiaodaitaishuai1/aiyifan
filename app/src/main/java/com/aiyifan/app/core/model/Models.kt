@@ -40,6 +40,8 @@ data class Episode(
     val lang: String? = null,
     val duration: String? = null,
     val watchProgressMs: Long = 0L,
+    val opSecond: Long? = null,
+    val epSecond: Long? = null,
 )
 
 data class PlaybackLanguage(

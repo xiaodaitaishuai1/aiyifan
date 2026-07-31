@@ -319,6 +319,8 @@ class RemoteCatalogRepository(
                         resolution = item.optionalRemoteText("resolution"),
                         lang = item.optionalRemoteText("lang"),
                         duration = null,
+                        opSecond = item.optionalRemoteSecond("opSecond"),
+                        epSecond = item.optionalRemoteSecond("epSecond"),
                     ),
                 )
             }
@@ -350,6 +352,8 @@ class RemoteCatalogRepository(
             mediaUrl = chosen.optionalRemoteText("mediaUrl"),
             resolution = chosen.optionalRemoteText("resolution"),
             lang = chosen.optionalRemoteText("lang") ?: fallbackEpisode.lang,
+            opSecond = chosen.optionalRemoteSecond("opSecond") ?: fallbackEpisode.opSecond,
+            epSecond = chosen.optionalRemoteSecond("epSecond") ?: fallbackEpisode.epSecond,
         )
     }
 
@@ -422,6 +426,9 @@ class RemoteCatalogRepository(
     private fun JSONObject.optionalRemoteText(key: String): String? =
         RemoteTextNormalizer.optional(optString(key))
 
+    private fun JSONObject.optionalRemoteSecond(key: String): Long? =
+        opt(key)?.toString()?.toLongOrNull()?.takeIf { it in 0L..MAX_PLAYBACK_SECOND }
+
     private suspend fun localSuggestions(query: String): List<SearchSuggestion> =
         try {
             ensureSections()
@@ -487,5 +494,6 @@ class RemoteCatalogRepository(
 
     private companion object {
         const val DEFAULT_REGION = "cn"
+        const val MAX_PLAYBACK_SECOND = Long.MAX_VALUE / 1_000L
     }
 }

@@ -39,6 +39,8 @@
                     <Button android:id="@+id/shareButton" android:layout_width="@dimen/dp_0" android:layout_height="@dimen/dp_44" android:layout_marginStart="@dimen/dp_10" android:layout_weight="1" android:background="@drawable/bg_button_outline" android:gravity="center" android:includeFontPadding="false" android:text="@string/hardcoded_text_026" android:textColor="@color/text_primary" />
                 </LinearLayout>
 
+                <androidx.appcompat.widget.SwitchCompat android:id="@+id/autoSkipIntroOutroSwitch" android:layout_width="match_parent" android:layout_height="@dimen/dp_48" android:layout_marginTop="@dimen/dp_4" android:gravity="center_vertical" android:text="@string/auto_skip_intro_outro" android:textColor="@color/text_primary" android:textSize="@dimen/sp_14" />
+
                 <TextView android:layout_width="match_parent" android:layout_height="@dimen/dp_40" android:gravity="center_vertical" android:text="@string/hardcoded_text_027" android:textColor="@color/text_primary" android:textSize="@dimen/sp_16" android:textStyle="bold" />
 
                 <androidx.recyclerview.widget.RecyclerView android:id="@+id/episodeRecycler" android:layout_width="match_parent" android:layout_height="@dimen/dp_52" android:orientation="horizontal" />

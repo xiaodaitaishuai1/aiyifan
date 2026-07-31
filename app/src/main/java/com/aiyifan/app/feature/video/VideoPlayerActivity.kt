@@ -52,6 +52,9 @@ class VideoPlayerActivity : AppCompatActivity() {
     private var restoreMiniPlayerOnStart = false
     private var pendingFloatingRecoveryPositionMs: Long? = null
     private var controllerVisibility = View.GONE
+    private lateinit var autoSkipPreferenceStore: AutoSkipPreferenceStore
+    private var removePositionListener: (() -> Unit)? = null
+    private var hasAutomaticallyAdvancedOutro = false
 
     @UnstableApi
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,6 +62,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         setupEdgeToEdge()
         binding = ActivityVideoPlayerBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        autoSkipPreferenceStore = AutoSkipPreferenceStore(this)
         binding.pageContent.applySystemBarsPadding(
             left = true,
             right = true,
@@ -77,6 +81,12 @@ class VideoPlayerActivity : AppCompatActivity() {
             },
         )
         binding.floatingWindowButton.setOnClickListener { showFloatingPresentation() }
+        binding.autoSkipIntroOutroSwitch.apply {
+            isChecked = autoSkipPreferenceStore.isEnabled()
+            setOnCheckedChangeListener { _, isChecked ->
+                autoSkipPreferenceStore.setEnabled(isChecked)
+            }
+        }
         binding.inAppMiniPlayPauseButton.setOnClickListener {
             playbackController.togglePlayPause()
             updateInAppMiniPlayPauseButton()
@@ -94,6 +104,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
+        registerPositionListener()
         FloatingPlayerRecovery.consumePosition(this)?.let(::restorePlaybackAfterFloatingWindow)
         if (restoreMiniPlayerOnStart && !isInPictureInPictureMode) {
             restoreMiniPlayerOnStart = false
@@ -184,7 +195,12 @@ class VideoPlayerActivity : AppCompatActivity() {
         commentAdapter.submitList(AppGraph.catalogRepository.getComments(detail.mediaKey))
     }
 
-    private fun loadEpisodePlayback(detail: VideoDetail, episode: Episode) {
+    private fun loadEpisodePlayback(
+        detail: VideoDetail,
+        episode: Episode,
+        resetOutroAdvance: Boolean = true,
+    ) {
+        if (resetOutroAdvance) hasAutomaticallyAdvancedOutro = false
         binding.meta.text = listOfNotNull(
             detail.typeName,
             detail.publishTime,
@@ -197,9 +213,19 @@ class VideoPlayerActivity : AppCompatActivity() {
                 .onSuccess { playableEpisode ->
                     playingEpisode = playableEpisode
                     val resumePositionMs = pendingFloatingRecoveryPositionMs ?: 0L
-                    if (playbackController.prepare(detail, playableEpisode, resumePositionMs)) {
+                    val startPositionMs = AutoSkipPolicy.initialPositionMs(
+                        resumePositionMs = resumePositionMs,
+                        introSecond = playableEpisode.opSecond,
+                        enabled = autoSkipPreferenceStore.isEnabled(),
+                    )
+                    val skippedIntro = resumePositionMs <= 0L && startPositionMs > 0L
+                    if (playbackController.prepare(detail, playableEpisode, startPositionMs)) {
                         pendingFloatingRecoveryPositionMs = null
+                        hasAutomaticallyAdvancedOutro = false
                         attachPlayerToCurrentSurface()
+                        if (skippedIntro) {
+                            Toast.makeText(this@VideoPlayerActivity, R.string.auto_skip_intro, Toast.LENGTH_SHORT).show()
+                        }
                     } else {
                         Toast.makeText(this@VideoPlayerActivity, R.string.video_no_playable_stream, Toast.LENGTH_SHORT).show()
                     }
@@ -214,6 +240,31 @@ class VideoPlayerActivity : AppCompatActivity() {
                     Toast.makeText(this@VideoPlayerActivity, R.string.video_stream_load_failed, Toast.LENGTH_SHORT).show()
                 }
         }
+    }
+
+    private fun handlePlaybackPosition(positionMs: Long) {
+        val activeDetail = detail ?: return
+        val activeEpisode = playingEpisode ?: return
+        val activeIndex = activeDetail.episodes.indexOfFirst { it.episodeKey == activeEpisode.episodeKey }
+        if (activeIndex < 0) return
+        val nextEpisode = activeDetail.episodes.getOrNull(activeIndex + 1) ?: return
+        if (
+            !AutoSkipPolicy.shouldAdvance(
+                positionMs = positionMs,
+                outroSecond = activeEpisode.epSecond,
+                enabled = autoSkipPreferenceStore.isEnabled(),
+                hasNextEpisode = true,
+                hasAdvanced = hasAutomaticallyAdvancedOutro,
+            )
+        ) {
+            return
+        }
+
+        hasAutomaticallyAdvancedOutro = true
+        selectedEpisode = nextEpisode
+        episodeAdapter.submitList(activeDetail.episodes, nextEpisode)
+        Toast.makeText(this, R.string.auto_skip_outro, Toast.LENGTH_SHORT).show()
+        loadEpisodePlayback(activeDetail, nextEpisode, resetOutroAdvance = false)
     }
 
     private fun attachPlayerToCurrentSurface() {
@@ -378,6 +429,7 @@ class VideoPlayerActivity : AppCompatActivity() {
             packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
 
     override fun onStop() {
+        unregisterPositionListener()
         super.onStop()
         if (!isInPictureInPictureMode && isInAppMiniPlayerVisible && !isChangingConfigurations) {
             restoreMiniPlayerOnStart = true
@@ -389,6 +441,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        unregisterPositionListener()
         binding.playerView.player = null
         binding.inAppMiniPlayerView.player = null
         if (isFinishing && !isInPictureInPictureMode) {
@@ -396,6 +449,17 @@ class VideoPlayerActivity : AppCompatActivity() {
             playbackController.release()
         }
         super.onDestroy()
+    }
+
+    private fun registerPositionListener() {
+        if (removePositionListener == null) {
+            removePositionListener = playbackController.addPositionListener(::handlePlaybackPosition)
+        }
+    }
+
+    private fun unregisterPositionListener() {
+        removePositionListener?.invoke()
+        removePositionListener = null
     }
 
     private fun closePlayback() {
