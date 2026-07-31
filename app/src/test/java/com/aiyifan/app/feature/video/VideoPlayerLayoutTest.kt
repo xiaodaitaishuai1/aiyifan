@@ -31,14 +31,27 @@ class VideoPlayerLayoutTest {
     }
 
     @Test
-    fun `detail top bar is light and full screen exit button overlays the player`() {
+    fun `detail top bar is light and full screen title bar overlays the player`() {
         val document = videoPlayerLayout()
         val topBar = viewWithId(document, "playerTopBar")!!
         val playerContainer = viewWithId(document, "playerContainer")!!
 
         assertEquals("@color/surface", topBar.getAttribute("android:background"))
         assertEquals("@drawable/ic_back", viewWithId(topBar, "backButton")!!.getAttribute("android:src"))
-        assertEquals("fullscreenExitButton", viewWithId(playerContainer, "fullscreenExitButton")!!.idName())
+        assertEquals("fullScreenTitleBar", viewWithId(playerContainer, "fullScreenTitleBar")!!.idName())
+    }
+
+    @Test
+    fun `normal and full screen title bars show a single ellipsized video title`() {
+        val document = videoPlayerLayout()
+        val normalTopBar = viewWithId(document, "playerTopBar")!!
+        val fullScreenTopBar = viewWithId(document, "fullScreenTitleBar")!!
+
+        assertEquals("1", viewWithId(normalTopBar, "videoTitle")!!.getAttribute("android:maxLines"))
+        assertEquals("end", viewWithId(normalTopBar, "videoTitle")!!.getAttribute("android:ellipsize"))
+        assertEquals("fullScreenBackButton", viewWithId(fullScreenTopBar, "fullScreenBackButton")!!.idName())
+        assertEquals("1", viewWithId(fullScreenTopBar, "fullScreenVideoTitle")!!.getAttribute("android:maxLines"))
+        assertEquals("end", viewWithId(fullScreenTopBar, "fullScreenVideoTitle")!!.getAttribute("android:ellipsize"))
     }
 
     @Test

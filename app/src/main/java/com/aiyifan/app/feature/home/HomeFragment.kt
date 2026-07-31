@@ -19,6 +19,7 @@ import com.aiyifan.app.core.model.Category
 import com.aiyifan.app.databinding.FragmentHomeBinding
 import com.aiyifan.app.feature.history.HistoryActivity
 import com.aiyifan.app.feature.proxy.ProxyConnectionFailure
+import com.aiyifan.app.feature.proxy.ProxyConnectionObserver
 import com.aiyifan.app.feature.proxy.ProxyQuickConnectResult
 import com.aiyifan.app.feature.proxy.domain.ProxyConnectionState
 import com.aiyifan.app.feature.search.SearchActivity
@@ -39,6 +40,11 @@ class HomeFragment : Fragment() {
     private var isInitialPageLoading = false
     private var isVpnQuickConnecting = false
     private val proxyManager get() = AppGraph.proxyManager
+    private val proxyConnectionObserver = ProxyConnectionObserver {
+        if (_binding != null) {
+            viewLifecycleOwner.lifecycleScope.launch { loadHome() }
+        }
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
@@ -80,6 +86,16 @@ class HomeFragment : Fragment() {
         binding.homeRefresh.setOnRefreshListener(::loadHome)
         renderVpnQuickConnect()
         loadHome()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        proxyManager.addConnectionObserver(proxyConnectionObserver)
+    }
+
+    override fun onStop() {
+        proxyManager.removeConnectionObserver(proxyConnectionObserver)
+        super.onStop()
     }
 
     override fun onResume() {

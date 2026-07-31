@@ -17,7 +17,7 @@ data class HomeVpnQuickConnectPresentation(
         ): HomeVpnQuickConnectPresentation {
             val isConnectionInProgress = isConnecting || connectionState is ProxyConnectionState.Connecting
             return HomeVpnQuickConnectPresentation(
-                isVisible = hasConnectedBefore,
+                isVisible = hasConnectedBefore && connectionState !is ProxyConnectionState.Connected,
                 isEnabled = hasConnectedBefore && !isConnectionInProgress && connectionState !is ProxyConnectionState.Connected,
                 textRes = when {
                     isConnectionInProgress -> R.string.home_vpn_connecting

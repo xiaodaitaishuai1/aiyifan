@@ -7,7 +7,7 @@
 
             <ImageButton android:id="@+id/backButton" android:layout_width="@dimen/dp_56" android:layout_height="match_parent" android:background="@android:color/transparent" android:contentDescription="@string/hardcoded_text_001" android:gravity="center" android:padding="@dimen/dp_16" android:src="@drawable/ic_back" />
 
-            <View android:layout_width="@dimen/dp_0" android:layout_height="@dimen/dp_0" android:layout_weight="1" />
+            <TextView android:id="@+id/videoTitle" android:layout_width="@dimen/dp_0" android:layout_height="wrap_content" android:layout_weight="1" android:ellipsize="end" android:maxLines="1" android:textColor="@color/text_primary" android:textSize="@dimen/sp_16" />
 
             <ImageButton android:id="@+id/floatingWindowButton" android:layout_width="@dimen/dp_48" android:layout_height="@dimen/dp_48" android:background="@android:color/transparent" android:contentDescription="@string/hardcoded_text_022" android:padding="@dimen/dp_12" android:src="@drawable/ic_picture_in_picture" app:tint="@color/text_primary" />
 
@@ -18,7 +18,12 @@
 
             <androidx.media3.ui.PlayerView android:id="@+id/playerView" android:layout_width="match_parent" android:layout_height="match_parent" app:show_buffering="when_playing" app:use_controller="true" />
 
-            <ImageButton android:id="@+id/fullscreenExitButton" android:layout_width="@dimen/dp_48" android:layout_height="@dimen/dp_48" android:layout_gravity="top|end" android:layout_margin="@dimen/dp_12" android:background="@drawable/bg_floating_control" android:contentDescription="@string/hardcoded_text_024" android:padding="@dimen/dp_12" android:src="@drawable/ic_fullscreen_exit" android:visibility="gone" />
+            <LinearLayout android:id="@+id/fullScreenTitleBar" android:layout_width="match_parent" android:layout_height="@dimen/dp_48" android:layout_gravity="top" android:background="#99000000" android:gravity="center_vertical" android:orientation="horizontal" android:visibility="gone">
+
+                <ImageButton android:id="@+id/fullScreenBackButton" android:layout_width="@dimen/dp_48" android:layout_height="match_parent" android:background="@android:color/transparent" android:contentDescription="@string/hardcoded_text_001" android:padding="@dimen/dp_12" android:src="@drawable/ic_back" app:tint="@android:color/white" />
+
+                <TextView android:id="@+id/fullScreenVideoTitle" android:layout_width="@dimen/dp_0" android:layout_height="wrap_content" android:layout_marginEnd="@dimen/dp_16" android:layout_weight="1" android:ellipsize="end" android:maxLines="1" android:textColor="@android:color/white" android:textSize="@dimen/sp_16" />
+            </LinearLayout>
 
         </FrameLayout>
 

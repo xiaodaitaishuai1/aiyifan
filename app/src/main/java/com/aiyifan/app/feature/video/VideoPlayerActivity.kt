@@ -73,11 +73,11 @@ class VideoPlayerActivity : AppCompatActivity() {
 
         binding.backButton.setOnClickListener { handleBack() }
         binding.fullScreenButton.setOnClickListener { setFullScreen(!isFullScreen) }
-        binding.fullscreenExitButton.setOnClickListener { setFullScreen(false) }
+        binding.fullScreenBackButton.setOnClickListener { setFullScreen(false) }
         binding.playerView.setControllerVisibilityListener(
             PlayerView.ControllerVisibilityListener { controllerVisibility ->
                 this.controllerVisibility = controllerVisibility
-                updateFullScreenExitButton()
+                updateFullScreenTitleBar()
             },
         )
         binding.floatingWindowButton.setOnClickListener { showFloatingPresentation() }
@@ -134,6 +134,8 @@ class VideoPlayerActivity : AppCompatActivity() {
             return
         }
         binding.title.setText(R.string.video_loading)
+        binding.videoTitle.setText(R.string.video_loading)
+        binding.fullScreenVideoTitle.setText(R.string.video_loading)
         lifecycleScope.launch {
             runCatching { AppGraph.catalogRepository.getVideoDetail(mediaKey) }
                 .onSuccess { loadedDetail ->
@@ -154,6 +156,8 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     private fun renderDetail(detail: VideoDetail) {
         binding.title.text = detail.title
+        binding.videoTitle.text = detail.title
+        binding.fullScreenVideoTitle.text = detail.title
         binding.meta.text = listOfNotNull(
             detail.typeName,
             detail.publishTime,
@@ -305,7 +309,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         }
         binding.playerTopBar.isVisible = !enabled
         ViewCompat.requestApplyInsets(binding.pageContent)
-        updateFullScreenExitButton()
+        updateFullScreenTitleBar()
         binding.contentScroll.isVisible = !enabled && !isInAppMiniPlayerVisible
         (binding.playerContainer.layoutParams as LinearLayout.LayoutParams).apply {
             height = if (enabled) 0 else dpToPx(NORMAL_PLAYER_HEIGHT_DP)
@@ -314,8 +318,8 @@ class VideoPlayerActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateFullScreenExitButton() {
-        binding.fullscreenExitButton.isVisible = FullScreenControlVisibility.shouldShowExitButton(
+    private fun updateFullScreenTitleBar() {
+        binding.fullScreenTitleBar.isVisible = FullScreenControlVisibility.shouldShowTitleBar(
             isFullScreen = isFullScreen,
             controllerVisibility = controllerVisibility,
         )
@@ -348,6 +352,8 @@ class VideoPlayerActivity : AppCompatActivity() {
         binding.floatingWindowButton.isVisible = !isInPictureInPictureMode
         binding.backButton.isVisible = !isInPictureInPictureMode
         binding.playerTopBar.isVisible = !isInPictureInPictureMode && !isFullScreen
+        binding.fullScreenTitleBar.isVisible = !isInPictureInPictureMode &&
+            FullScreenControlVisibility.shouldShowTitleBar(isFullScreen, controllerVisibility)
     }
 
     private fun enterSystemPictureInPicture(): Boolean {

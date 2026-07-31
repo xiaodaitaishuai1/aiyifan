@@ -10,6 +10,7 @@ import com.aiyifan.app.feature.proxy.domain.SubscriptionImportResult
 import com.aiyifan.app.feature.proxy.runtime.SingBoxRuntime
 import com.aiyifan.app.feature.proxy.runtime.SingBoxStartupException
 import com.aiyifan.app.feature.proxy.runtime.SingBoxStartupStage
+import java.util.concurrent.CopyOnWriteArraySet
 
 interface ProxySettingsStore {
     fun hasConnectedBefore(): Boolean
@@ -54,6 +55,10 @@ interface ProxyConnectionListener {
     fun onDisconnected()
 }
 
+fun interface ProxyConnectionObserver {
+    fun onConnected()
+}
+
 private object NoOpProxyConnectionListener : ProxyConnectionListener {
     override fun onConnected() = Unit
 
@@ -68,6 +73,8 @@ class ProxyManager(
     private val stateMachine: ProxyConnectionStateMachine = ProxyConnectionStateMachine(),
     private val connectionListener: ProxyConnectionListener = NoOpProxyConnectionListener,
 ) {
+    private val connectionObservers = CopyOnWriteArraySet<ProxyConnectionObserver>()
+
     var nodes: List<ProxyNode> = emptyList()
         private set
     var selectedNode: ProxyNode? = null
@@ -84,6 +91,14 @@ class ProxyManager(
     fun storedSubscriptionUrl(): String? = settingsStore.readSubscriptionUrl()
 
     fun hasConnectedBefore(): Boolean = settingsStore.hasConnectedBefore()
+
+    fun addConnectionObserver(observer: ProxyConnectionObserver) {
+        connectionObservers += observer
+    }
+
+    fun removeConnectionObserver(observer: ProxyConnectionObserver) {
+        connectionObservers -= observer
+    }
 
     suspend fun refresh(url: String): SubscriptionImportResult {
         val result = parser.parse(subscriptionLoader.loadDirect(url))
@@ -138,6 +153,9 @@ class ProxyManager(
                 stateMachine.completeConnection(attempt)
                 settingsStore.saveHasConnectedBefore(true)
                 connectionListener.onConnected()
+                connectionObservers.forEach { observer ->
+                    runCatching(observer::onConnected)
+                }
             }
         } catch (error: Throwable) {
             stateMachine.failConnection(attempt)

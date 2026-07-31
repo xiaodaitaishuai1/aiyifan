@@ -36,16 +36,15 @@ class HomeVpnQuickConnectPresentationTest {
     }
 
     @Test
-    fun `shows connected state without allowing another connection`() {
+    fun `hides quick connect after VPN is connected`() {
         val presentation = HomeVpnQuickConnectPresentation.resolve(
             hasConnectedBefore = true,
             isConnecting = false,
             connectionState = ProxyConnectionState.Connected(testNode()),
         )
 
-        assertTrue(presentation.isVisible)
+        assertFalse(presentation.isVisible)
         assertFalse(presentation.isEnabled)
-        assertEquals(R.string.home_vpn_connected, presentation.textRes)
     }
 
     @Test

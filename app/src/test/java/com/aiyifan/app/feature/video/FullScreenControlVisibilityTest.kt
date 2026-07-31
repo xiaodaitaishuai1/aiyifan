@@ -8,9 +8,9 @@ import org.junit.Test
 class FullScreenControlVisibilityTest {
 
     @Test
-    fun `exit button is visible only while full screen controller is visible`() {
-        assertTrue(FullScreenControlVisibility.shouldShowExitButton(isFullScreen = true, controllerVisibility = View.VISIBLE))
-        assertFalse(FullScreenControlVisibility.shouldShowExitButton(isFullScreen = true, controllerVisibility = View.GONE))
-        assertFalse(FullScreenControlVisibility.shouldShowExitButton(isFullScreen = false, controllerVisibility = View.VISIBLE))
+    fun `title bar is visible only while full screen controller is visible`() {
+        assertTrue(FullScreenControlVisibility.shouldShowTitleBar(isFullScreen = true, controllerVisibility = View.VISIBLE))
+        assertFalse(FullScreenControlVisibility.shouldShowTitleBar(isFullScreen = true, controllerVisibility = View.GONE))
+        assertFalse(FullScreenControlVisibility.shouldShowTitleBar(isFullScreen = false, controllerVisibility = View.VISIBLE))
     }
 }

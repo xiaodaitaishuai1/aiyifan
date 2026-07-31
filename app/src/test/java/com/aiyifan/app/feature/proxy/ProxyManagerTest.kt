@@ -153,6 +153,44 @@ class ProxyManagerTest {
         }
     }
 
+    @Test
+    fun `notifies registered connection observer after success and stops after removal`() = runBlocking {
+        val observer = RecordingConnectionObserver()
+        val manager = ProxyManager(
+            parser = ProxySubscriptionParser(::decodeWithJvmBase64),
+            settingsStore = FakeSettingsStore(),
+            subscriptionLoader = FakeSubscriptionLoader(encodedSubscription()),
+            runtime = SingBoxRuntime(RecordingEngine(), HostConfigProvider()),
+        )
+        manager.addConnectionObserver(observer)
+        manager.refresh("https://subscription.example.com/one")
+
+        manager.connect()
+
+        assertEquals(1, observer.connectedCalls)
+        manager.removeConnectionObserver(observer)
+        manager.disconnect()
+        manager.connect()
+        assertEquals(1, observer.connectedCalls)
+    }
+
+    @Test
+    fun `does not notify connection observer when runtime start fails`() = runBlocking {
+        val observer = RecordingConnectionObserver()
+        val manager = ProxyManager(
+            parser = ProxySubscriptionParser(::decodeWithJvmBase64),
+            settingsStore = FakeSettingsStore(),
+            subscriptionLoader = FakeSubscriptionLoader(encodedSubscription()),
+            runtime = SingBoxRuntime(FailingEngine(), HostConfigProvider()),
+        )
+        manager.addConnectionObserver(observer)
+        manager.refresh("https://subscription.example.com/one")
+
+        manager.connect()
+
+        assertEquals(0, observer.connectedCalls)
+    }
+
     private fun encodedSubscription(): String = Base64.getEncoder().encodeToString(
         "vless://123e4567-e89b-12d3-a456-426614174000@edge.example.com:443?encryption=none#Edge".toByteArray(),
     )
@@ -231,6 +269,14 @@ class ProxyManagerTest {
         }
 
         override fun onDisconnected() = Unit
+    }
+
+    private class RecordingConnectionObserver : ProxyConnectionObserver {
+        var connectedCalls = 0
+
+        override fun onConnected() {
+            connectedCalls += 1
+        }
     }
 
     private class HostConfigProvider : SingBoxConfigProvider {
