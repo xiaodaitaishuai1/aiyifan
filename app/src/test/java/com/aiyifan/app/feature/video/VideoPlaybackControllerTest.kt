@@ -92,6 +92,18 @@ class VideoPlaybackControllerTest {
         assertFalse(engine.isPlaying)
     }
 
+    @Test
+    fun `position listener receives playback progress from the engine`() {
+        val engine = FakePlaybackEngine()
+        val controller = VideoPlaybackController(engine, FakeCatalogRepository(), FakePlaybackSession())
+        val positions = mutableListOf<Long>()
+
+        controller.addPositionListener(positions::add)
+        engine.dispatchPosition(34_000L)
+
+        assertEquals(listOf(34_000L), positions)
+    }
+
     private fun sampleDetail() = VideoDetail(
         mediaKey = "video-1",
         title = "Sample video",
@@ -114,6 +126,7 @@ class VideoPlaybackControllerTest {
         var setMediaCalls = 0
         var releaseCalls = 0
         var seekPositionMs = 0L
+        private var positionListener: ((Long) -> Unit)? = null
 
         override fun setMediaUrl(mediaUrl: String) {
             setMediaCalls++
@@ -123,6 +136,16 @@ class VideoPlaybackControllerTest {
 
         override fun seekTo(positionMs: Long) {
             seekPositionMs = positionMs
+        }
+
+        override fun addPositionListener(listener: (Long) -> Unit): () -> Unit {
+            positionListener = listener
+            return { positionListener = null }
+        }
+
+        fun dispatchPosition(positionMs: Long) {
+            currentPosition = positionMs
+            positionListener?.invoke(positionMs)
         }
 
         override fun play() {

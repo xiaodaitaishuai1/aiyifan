@@ -46,6 +46,14 @@ class VideoPlayerLayoutTest {
         assertEquals(null, viewWithId(videoPlayerLayout(), "fullScreenQualityButton"))
     }
 
+    @Test
+    fun `player offers an auto skip intro and outro switch`() {
+        val autoSkipSwitch = viewWithId(videoPlayerLayout(), "autoSkipIntroOutroSwitch")
+
+        assertNotNull(autoSkipSwitch)
+        assertEquals("@string/auto_skip_intro_outro", autoSkipSwitch!!.getAttribute("android:text"))
+    }
+
     private fun videoPlayerLayout() = DocumentBuilderFactory.newInstance()
         .newDocumentBuilder()
         .parse(layoutFile())

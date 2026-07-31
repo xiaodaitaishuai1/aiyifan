@@ -1,11 +1,14 @@
 package com.aiyifan.app.feature.video
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import androidx.annotation.OptIn as AndroidxOptIn
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.MediaSession
@@ -27,6 +30,8 @@ interface PlaybackEngine {
     fun prepare()
 
     fun seekTo(positionMs: Long)
+
+    fun addPositionListener(listener: (Long) -> Unit): () -> Unit
 
     fun play()
 
@@ -99,6 +104,8 @@ class VideoPlaybackController(
             engine.play()
         }
     }
+
+    fun addPositionListener(listener: (Long) -> Unit): () -> Unit = engine.addPositionListener(listener)
 
     fun saveHistory() {
         val detail = activeDetail ?: return
@@ -174,6 +181,25 @@ private class Media3PlaybackEngine(
     private val player: ExoPlayer,
 ) : PlaybackEngine {
     private var attachedPlayerView: PlayerView? = null
+    private val positionListeners = linkedSetOf<(Long) -> Unit>()
+    private val positionHandler = Handler(Looper.getMainLooper())
+    private val positionRunnable = object : Runnable {
+        override fun run() {
+            if (!player.isPlaying) return
+
+            positionListeners.forEach { listener -> listener(player.currentPosition.coerceAtLeast(0L)) }
+            positionHandler.postDelayed(this, POSITION_UPDATE_INTERVAL_MS)
+        }
+    }
+    private val playerListener = object : Player.Listener {
+        override fun onIsPlayingChanged(isPlaying: Boolean) {
+            if (isPlaying) startPositionUpdates() else positionHandler.removeCallbacks(positionRunnable)
+        }
+    }
+
+    init {
+        player.addListener(playerListener)
+    }
 
     override val isPlaying: Boolean
         get() = player.isPlaying
@@ -196,8 +222,18 @@ private class Media3PlaybackEngine(
         player.seekTo(positionMs)
     }
 
+    override fun addPositionListener(listener: (Long) -> Unit): () -> Unit {
+        positionListeners += listener
+        if (player.isPlaying) startPositionUpdates()
+        return {
+            positionListeners -= listener
+            if (positionListeners.isEmpty()) positionHandler.removeCallbacks(positionRunnable)
+        }
+    }
+
     override fun play() {
         player.play()
+        startPositionUpdates()
     }
 
     override fun pause() {
@@ -218,7 +254,19 @@ private class Media3PlaybackEngine(
     }
 
     override fun release() {
+        positionHandler.removeCallbacks(positionRunnable)
+        positionListeners.clear()
+        player.removeListener(playerListener)
         player.release()
+    }
+
+    private fun startPositionUpdates() {
+        positionHandler.removeCallbacks(positionRunnable)
+        positionHandler.post(positionRunnable)
+    }
+
+    private companion object {
+        const val POSITION_UPDATE_INTERVAL_MS = 1_000L
     }
 }
 

@@ -11,6 +11,9 @@
     <string name="video_stream_loading">正在加载播放源</string>
     <string name="video_stream_load_failed">播放源加载失败</string>
     <string name="video_no_playable_stream">暂无可播放视频</string>
+    <string name="auto_skip_intro_outro">自动跳过片头片尾</string>
+    <string name="auto_skip_intro">已为您跳过片头</string>
+    <string name="auto_skip_outro">即将跳过片尾，播放下一集</string>
     <string name="video_play_count">播放 %1$d</string>
     <string name="video_director">导演：%1$s</string>
     <string name="video_cast">主演：%1$s</string>

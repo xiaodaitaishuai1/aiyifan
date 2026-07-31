@@ -14,7 +14,7 @@ class RemoteCatalogRepositoryPlaybackTest {
     fun `forced resolution requests and returns matching playback source`() = runBlocking {
         val fetcher = PlaybackFetcher(
             """{"data":{"list":[
-                {"resolution":"720P","mediaUrl":"https://example.com/720.m3u8"},
+                {"resolution":"720P","mediaUrl":"https://example.com/720.m3u8","opSecond":90,"epSecond":2640},
                 {"resolution":"1080P","mediaUrl":"https://example.com/1080.m3u8","isDefault":true}
             ]}}""",
         )
@@ -28,6 +28,8 @@ class RemoteCatalogRepositoryPlaybackTest {
         assertEquals("720P", fetcher.requestedResolution)
         assertEquals("720P", result.resolution)
         assertEquals("https://example.com/720.m3u8", result.mediaUrl)
+        assertEquals(90L, result.opSecond)
+        assertEquals(2_640L, result.epSecond)
     }
 
     @Test
@@ -39,6 +41,18 @@ class RemoteCatalogRepositoryPlaybackTest {
         )
 
         assertNull(result.mediaUrl)
+    }
+
+    @Test
+    fun `playback response ignores intro and outro values that overflow milliseconds`() = runBlocking {
+        val result = repository(
+            PlaybackFetcher(
+                """{"data":{"list":[{"resolution":"720P","mediaUrl":"https://example.com/720.m3u8","opSecond":9223372036854775807,"epSecond":9223372036854775807}]}}""",
+            ),
+        ).resolvePlayback(detail(), episode(), forceRefresh = true)
+
+        assertNull(result.opSecond)
+        assertNull(result.epSecond)
     }
 
     private fun repository(fetcher: HttpFetcher) = RemoteCatalogRepository(
