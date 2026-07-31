@@ -5,6 +5,11 @@ data class FloatingWindowPosition(
     val y: Int,
 )
 
+enum class FloatingWindowEdge {
+    LEFT,
+    RIGHT,
+}
+
 object FloatingWindowPositionPolicy {
     fun snapToNearestHorizontalEdge(
         x: Int,
@@ -13,6 +18,8 @@ object FloatingWindowPositionPolicy {
         windowHeight: Int,
         displayWidth: Int,
         displayHeight: Int,
+        hideThreshold: Int = DEFAULT_HIDE_THRESHOLD,
+        hiddenHandleWidth: Int = DEFAULT_HIDDEN_HANDLE_WIDTH,
     ): FloatingWindowPosition {
         val clamped = clampToDisplay(
             x = x,
@@ -23,7 +30,32 @@ object FloatingWindowPositionPolicy {
             displayHeight = displayHeight,
         )
         val rightEdge = (displayWidth - windowWidth).coerceAtLeast(0)
-        return clamped.copy(x = if (clamped.x <= rightEdge / 2) 0 else rightEdge)
+        val handleWidth = hiddenHandleWidth.coerceIn(0, windowWidth)
+        return when {
+            clamped.x <= hideThreshold -> clamped.copy(x = -(windowWidth - handleWidth))
+            rightEdge - clamped.x <= hideThreshold -> clamped.copy(x = displayWidth - handleWidth)
+            clamped.x <= rightEdge / 2 -> clamped.copy(x = 0)
+            else -> clamped.copy(x = rightEdge)
+        }
+    }
+
+    fun hiddenEdgeForPosition(
+        x: Int,
+        windowWidth: Int,
+        displayWidth: Int,
+    ): FloatingWindowEdge? = when {
+        x < 0 -> FloatingWindowEdge.LEFT
+        x > (displayWidth - windowWidth).coerceAtLeast(0) -> FloatingWindowEdge.RIGHT
+        else -> null
+    }
+
+    fun visibleXForEdge(
+        edge: FloatingWindowEdge,
+        windowWidth: Int,
+        displayWidth: Int,
+    ): Int = when (edge) {
+        FloatingWindowEdge.LEFT -> 0
+        FloatingWindowEdge.RIGHT -> (displayWidth - windowWidth).coerceAtLeast(0)
     }
 
     fun clampToDisplay(
@@ -37,4 +69,7 @@ object FloatingWindowPositionPolicy {
         x = x.coerceIn(0, (displayWidth - windowWidth).coerceAtLeast(0)),
         y = y.coerceIn(0, (displayHeight - windowHeight).coerceAtLeast(0)),
     )
+
+    private const val DEFAULT_HIDE_THRESHOLD = 32
+    private const val DEFAULT_HIDDEN_HANDLE_WIDTH = 24
 }

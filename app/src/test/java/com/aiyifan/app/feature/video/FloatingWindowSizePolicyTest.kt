@@ -28,4 +28,17 @@ class FloatingWindowSizePolicyTest {
             ),
         )
     }
+
+    @Test
+    fun `resize applies a pinch scale factor while preserving the aspect ratio`() {
+        assertEquals(
+            FloatingWindowSize(width = 400, height = 225),
+            FloatingWindowSizePolicy.resizeByScale(
+                currentWidth = 320,
+                scaleFactor = 1.25f,
+                minWidth = 240,
+                maxWidth = 480,
+            ),
+        )
+    }
 }

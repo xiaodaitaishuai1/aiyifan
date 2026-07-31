@@ -49,4 +49,34 @@ class FloatingWindowPositionPolicyTest {
             ),
         )
     }
+
+    @Test
+    fun `snap hides a window released close to the left edge`() {
+        assertEquals(
+            FloatingWindowPosition(x = -296, y = 180),
+            FloatingWindowPositionPolicy.snapToNearestHorizontalEdge(
+                x = 24,
+                y = 180,
+                windowWidth = 320,
+                windowHeight = 180,
+                displayWidth = 1080,
+                displayHeight = 2400,
+            ),
+        )
+    }
+
+    @Test
+    fun `snap hides a window released close to the right edge`() {
+        assertEquals(
+            FloatingWindowPosition(x = 1056, y = 180),
+            FloatingWindowPositionPolicy.snapToNearestHorizontalEdge(
+                x = 744,
+                y = 180,
+                windowWidth = 320,
+                windowHeight = 180,
+                displayWidth = 1080,
+                displayHeight = 2400,
+            ),
+        )
+    }
 }

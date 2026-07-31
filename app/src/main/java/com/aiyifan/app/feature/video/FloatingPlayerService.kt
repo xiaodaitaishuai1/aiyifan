@@ -14,9 +14,11 @@ import android.util.DisplayMetrics
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.MotionEvent
+import android.view.ScaleGestureDetector
 import android.view.View
 import android.view.ViewConfiguration
 import android.view.WindowManager
+import android.widget.FrameLayout
 import android.widget.ImageButton
 import androidx.core.app.NotificationCompat
 import androidx.media3.ui.PlayerView
@@ -31,6 +33,7 @@ class FloatingPlayerService : Service() {
 
     private var floatingRoot: View? = null
     private var layoutParams: WindowManager.LayoutParams? = null
+    private var hiddenEdge: FloatingWindowEdge? = null
     private var isClosing = false
     private var controlsVisible = true
     private var controlsShownAtMs = 0L
@@ -93,7 +96,7 @@ class FloatingPlayerService : Service() {
         val dragTouchListener = DragTouchListener()
         root.setOnTouchListener(dragTouchListener)
         root.findViewById<PlayerView>(R.id.floatingPlayerView).setOnTouchListener(dragTouchListener)
-        root.findViewById<View>(R.id.floatingResizeHandle).setOnTouchListener(ResizeTouchListener())
+        root.findViewById<View>(R.id.floatingRestoreHandle).setOnTouchListener(dragTouchListener)
     }
 
     private fun createLayoutParams(): WindowManager.LayoutParams {
@@ -108,7 +111,7 @@ class FloatingPlayerService : Service() {
             size.height,
             overlayWindowType(),
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-            PixelFormat.TRANSLUCENT,
+            PixelFormat.OPAQUE,
         ).apply {
             gravity = Gravity.TOP or Gravity.START
             x = dpToPx(DEFAULT_MARGIN_DP)
@@ -169,7 +172,7 @@ class FloatingPlayerService : Service() {
         controlsShownAtMs = SystemClock.elapsedRealtime()
         root.findViewById<View>(R.id.floatingCloseButton).visibility = View.VISIBLE
         root.findViewById<View>(R.id.floatingPlayPauseButton).visibility = View.VISIBLE
-        root.findViewById<View>(R.id.floatingResizeHandle).visibility = View.VISIBLE
+        hideRestoreHandle(root)
         root.removeCallbacks(controlsAutoHideRunnable)
         root.postDelayed(controlsAutoHideRunnable, CONTROLS_AUTO_HIDE_DELAY_MS)
     }
@@ -190,10 +193,13 @@ class FloatingPlayerService : Service() {
             )
             return
         }
+        hideControls(root)
+    }
+
+    private fun hideControls(root: View) {
         controlsVisible = false
         root.findViewById<View>(R.id.floatingCloseButton).visibility = View.GONE
         root.findViewById<View>(R.id.floatingPlayPauseButton).visibility = View.GONE
-        root.findViewById<View>(R.id.floatingResizeHandle).visibility = View.GONE
     }
 
     private fun toggleControls(root: View) {
@@ -201,10 +207,7 @@ class FloatingPlayerService : Service() {
             showControls(root)
         } else {
             root.removeCallbacks(controlsAutoHideRunnable)
-            controlsVisible = false
-            root.findViewById<View>(R.id.floatingCloseButton).visibility = View.GONE
-            root.findViewById<View>(R.id.floatingPlayPauseButton).visibility = View.GONE
-            root.findViewById<View>(R.id.floatingResizeHandle).visibility = View.GONE
+            hideControls(root)
         }
     }
 
@@ -235,17 +238,120 @@ class FloatingPlayerService : Service() {
         floatingRoot?.let { windowManager.updateViewLayout(it, params) }
     }
 
+    private fun settleAfterDrag(params: WindowManager.LayoutParams) {
+        val displayMetrics = displayMetrics()
+        FloatingWindowPositionPolicy.snapToNearestHorizontalEdge(
+            x = params.x,
+            y = params.y,
+            windowWidth = params.width,
+            windowHeight = params.height,
+            displayWidth = displayMetrics.widthPixels,
+            displayHeight = displayMetrics.heightPixels,
+            hideThreshold = dpToPx(HIDE_EDGE_THRESHOLD_DP),
+            hiddenHandleWidth = dpToPx(HIDDEN_HANDLE_WIDTH_DP),
+        ).also {
+            params.x = it.x
+            params.y = it.y
+        }
+        hiddenEdge = FloatingWindowPositionPolicy.hiddenEdgeForPosition(
+            x = params.x,
+            windowWidth = params.width,
+            displayWidth = displayMetrics.widthPixels,
+        )
+        floatingRoot?.let { root ->
+            hiddenEdge?.let { edge ->
+                root.removeCallbacks(controlsAutoHideRunnable)
+                hideControls(root)
+                showRestoreHandle(root, edge)
+            } ?: hideRestoreHandle(root)
+        }
+        updateLayout(params)
+    }
+
+    private fun restoreFloatingWindow(showControls: Boolean) {
+        val root = floatingRoot ?: return
+        val params = layoutParams ?: return
+        val edge = hiddenEdge ?: return
+        val displayMetrics = displayMetrics()
+        params.x = FloatingWindowPositionPolicy.visibleXForEdge(
+            edge = edge,
+            windowWidth = params.width,
+            displayWidth = displayMetrics.widthPixels,
+        )
+        clampPosition(params).also { params.y = it.y }
+        hiddenEdge = null
+        hideRestoreHandle(root)
+        updateLayout(params)
+        if (showControls) showControls(root)
+    }
+
+    private fun showRestoreHandle(root: View, edge: FloatingWindowEdge) {
+        root.findViewById<ImageButton>(R.id.floatingRestoreHandle).apply {
+            (layoutParams as FrameLayout.LayoutParams).gravity = when (edge) {
+                FloatingWindowEdge.LEFT -> Gravity.END or Gravity.CENTER_VERTICAL
+                FloatingWindowEdge.RIGHT -> Gravity.START or Gravity.CENTER_VERTICAL
+            }
+            rotation = if (edge == FloatingWindowEdge.LEFT) 180f else 0f
+            visibility = View.VISIBLE
+        }
+    }
+
+    private fun hideRestoreHandle(root: View) {
+        root.findViewById<View>(R.id.floatingRestoreHandle).visibility = View.GONE
+    }
+
     private inner class DragTouchListener : View.OnTouchListener {
         private var downRawX = 0f
         private var downRawY = 0f
         private var initialX = 0
         private var initialY = 0
         private var isDragging = false
+        private var isScaling = false
+        private var hasScaled = false
+        private var wasHiddenOnDown = false
+        private val scaleGestureDetector = ScaleGestureDetector(
+            this@FloatingPlayerService,
+            object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+                override fun onScaleBegin(detector: ScaleGestureDetector): Boolean {
+                    isScaling = true
+                    hasScaled = true
+                    isDragging = false
+                    return true
+                }
+
+                override fun onScale(detector: ScaleGestureDetector): Boolean {
+                    val params = layoutParams ?: return false
+                    val size = FloatingWindowSizePolicy.resizeByScale(
+                        currentWidth = params.width,
+                        scaleFactor = detector.scaleFactor,
+                        minWidth = dpToPx(MIN_WIDTH_DP),
+                        maxWidth = dpToPx(MAX_WIDTH_DP),
+                    )
+                    params.width = size.width
+                    params.height = size.height
+                    clampPosition(params).also {
+                        params.x = it.x
+                        params.y = it.y
+                    }
+                    updateLayout(params)
+                    return true
+                }
+
+                override fun onScaleEnd(detector: ScaleGestureDetector) {
+                    isScaling = false
+                }
+            },
+        )
 
         override fun onTouch(view: View, event: MotionEvent): Boolean {
             val params = layoutParams ?: return false
+            val wasScaling = isScaling
+            scaleGestureDetector.onTouchEvent(event)
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
+                    hasScaled = false
+                    wasHiddenOnDown = hiddenEdge != null
+                    if (wasHiddenOnDown) restoreFloatingWindow(showControls = false)
                     downRawX = event.rawX
                     downRawY = event.rawY
                     initialX = params.x
@@ -255,6 +361,7 @@ class FloatingPlayerService : Service() {
                 }
 
                 MotionEvent.ACTION_MOVE -> {
+                    if (isScaling || event.pointerCount > 1) return true
                     val deltaX = event.rawX - downRawX
                     val deltaY = event.rawY - downRawY
                     if (!isDragging && maxOf(kotlin.math.abs(deltaX), kotlin.math.abs(deltaY)) >= ViewConfiguration.get(this@FloatingPlayerService).scaledTouchSlop) {
@@ -272,60 +379,24 @@ class FloatingPlayerService : Service() {
                 }
 
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    if (wasScaling || hasScaled) {
+                        hasScaled = false
+                        return true
+                    }
                     if (isDragging) {
-                        val displayPosition = clampPosition(params)
-                        val displayMetrics = displayMetrics()
-                        FloatingWindowPositionPolicy.snapToNearestHorizontalEdge(
-                            x = displayPosition.x,
-                            y = displayPosition.y,
-                            windowWidth = params.width,
-                            windowHeight = params.height,
-                            displayWidth = displayMetrics.widthPixels,
-                            displayHeight = displayMetrics.heightPixels,
-                        ).also {
-                            params.x = it.x
-                            params.y = it.y
-                        }
-                        updateLayout(params)
+                        settleAfterDrag(params)
                     } else if (event.actionMasked == MotionEvent.ACTION_UP) {
-                        view.performClick()
-                        floatingRoot?.let(::toggleControls)
+                        if (wasHiddenOnDown) {
+                            floatingRoot?.let(::showControls)
+                        } else {
+                            view.performClick()
+                            floatingRoot?.let(::toggleControls)
+                        }
                     }
                     return true
                 }
-            }
-            return false
-        }
-    }
 
-    private inner class ResizeTouchListener : View.OnTouchListener {
-        private var downRawX = 0f
-        private var initialWidth = 0
-
-        override fun onTouch(view: View, event: MotionEvent): Boolean {
-            val params = layoutParams ?: return false
-            when (event.actionMasked) {
-                MotionEvent.ACTION_DOWN -> {
-                    downRawX = event.rawX
-                    initialWidth = params.width
-                    return true
-                }
-
-                MotionEvent.ACTION_MOVE -> {
-                    val size = FloatingWindowSizePolicy.resize(
-                        requestedWidth = initialWidth + (event.rawX - downRawX).toInt(),
-                        minWidth = dpToPx(MIN_WIDTH_DP),
-                        maxWidth = dpToPx(MAX_WIDTH_DP),
-                    )
-                    params.width = size.width
-                    params.height = size.height
-                    clampPosition(params).also {
-                        params.x = it.x
-                        params.y = it.y
-                    }
-                    updateLayout(params)
-                    return true
-                }
+                MotionEvent.ACTION_POINTER_DOWN, MotionEvent.ACTION_POINTER_UP -> return true
             }
             return false
         }
@@ -338,6 +409,8 @@ class FloatingPlayerService : Service() {
         private const val MIN_WIDTH_DP = 240
         private const val MAX_WIDTH_DP = 480
         private const val DEFAULT_MARGIN_DP = 16
+        private const val HIDE_EDGE_THRESHOLD_DP = 32
+        private const val HIDDEN_HANDLE_WIDTH_DP = 24
         private const val CONTROLS_AUTO_HIDE_DELAY_MS = 2_500L
 
         fun intent(context: Context): Intent = Intent(context, FloatingPlayerService::class.java)

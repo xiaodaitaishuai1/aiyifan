@@ -91,4 +91,5 @@
     <string name="home_vpn_configuration_failed">VPN 节点配置不兼容，请更换节点</string>
     <string name="home_vpn_service_failed">VPN 服务启动失败，请重试</string>
     <string name="home_vpn_connection_failed">VPN 连接失败，请在 VPN 设置中检查节点</string>
+    <string name="floating_player_restore">恢复悬浮播放器</string>
 </resources>

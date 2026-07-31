@@ -16,6 +16,17 @@ object FloatingWindowSizePolicy {
         )
     }
 
+    fun resizeByScale(
+        currentWidth: Int,
+        scaleFactor: Float,
+        minWidth: Int,
+        maxWidth: Int,
+    ): FloatingWindowSize = resize(
+        requestedWidth = (currentWidth * scaleFactor).roundToInt(),
+        minWidth = minWidth,
+        maxWidth = maxWidth,
+    )
+
     private const val WIDTH_RATIO = 16f
     private const val HEIGHT_RATIO = 9f
 }
