@@ -8,7 +8,7 @@
         android:name="android.hardware.touchscreen"
         android:required="false" />
 
-    <application>
+    <application android:banner="@drawable/tv_launcher_banner">
         <activity
             android:name=".feature.tv.TvMainActivity"
             android:exported="true"
