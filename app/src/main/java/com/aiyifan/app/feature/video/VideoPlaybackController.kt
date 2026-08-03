@@ -82,6 +82,9 @@ class VideoPlaybackController(
     val currentPositionMs: Long
         get() = if (released) 0L else engine.currentPosition.coerceAtLeast(0L)
 
+    val durationMs: Long
+        get() = if (released) 0L else engine.duration.coerceAtLeast(0L)
+
     val activeSession: ActivePlaybackSession?
         get() = activeDetail?.let { detail ->
             activeEpisode?.let { episode -> ActivePlaybackSession(detail, episode) }
