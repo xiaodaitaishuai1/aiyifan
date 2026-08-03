@@ -37,9 +37,14 @@ class EpisodeAdapter(
         private val onClick: (Episode) -> Unit,
     ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(episode: Episode, selected: Boolean) {
+            val appearance = ChipAppearanceResolver.forSelection(selected)
             binding.episodeTitle.text = episode.episodeTitle
             binding.episodeTitle.isSelected = selected
-            binding.root.alpha = if (selected) 1.0f else 0.72f
+            binding.episodeTitle.setBackgroundResource(appearance.backgroundRes)
+            binding.episodeTitle.setTextColor(
+                binding.root.resources.getColor(appearance.textColorRes, null),
+            )
+            binding.root.alpha = 1.0f
             binding.root.setOnClickListener { onClick(episode) }
         }
     }

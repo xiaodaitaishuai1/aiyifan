@@ -1,30 +1,30 @@
-package com.aiyifan.app.feature.home
+package com.aiyifan.app.core.ui
 
 import com.aiyifan.app.R
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-class HomeCategoryAppearanceTest {
+class ChipAppearanceResolverTest {
 
     @Test
-    fun `selected category uses accent background and white text`() {
+    fun `selected chip uses accent background and white text`() {
         assertEquals(
-            CategoryChipAppearance(
+            ChipAppearance(
                 backgroundRes = R.drawable.bg_chip_selected,
                 textColorRes = R.color.white,
             ),
-            HomeCategoryAppearance.forSelection(isSelected = true),
+            ChipAppearanceResolver.forSelection(isSelected = true),
         )
     }
 
     @Test
-    fun `unselected category uses neutral background and primary text`() {
+    fun `unselected chip uses neutral background and primary text`() {
         assertEquals(
-            CategoryChipAppearance(
+            ChipAppearance(
                 backgroundRes = R.drawable.bg_chip,
                 textColorRes = R.color.text_primary,
             ),
-            HomeCategoryAppearance.forSelection(isSelected = false),
+            ChipAppearanceResolver.forSelection(isSelected = false),
         )
     }
 }

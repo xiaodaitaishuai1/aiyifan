@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.aiyifan.app.R
 import com.aiyifan.app.core.data.AppGraph
 import com.aiyifan.app.core.model.Category
+import com.aiyifan.app.core.ui.ChipAppearanceResolver
 import com.aiyifan.app.databinding.FragmentHomeBinding
 import com.aiyifan.app.feature.history.HistoryActivity
 import com.aiyifan.app.feature.proxy.ProxyConnectionFailure
@@ -172,7 +173,7 @@ class HomeFragment : Fragment() {
     private fun renderCategories(categories: List<Category>) {
         binding.categoryContainer.removeAllViews()
         categories.forEach { category ->
-            val appearance = HomeCategoryAppearance.forSelection(category.id == selectedCategory?.id)
+            val appearance = ChipAppearanceResolver.forSelection(category.id == selectedCategory?.id)
             val tab = TextView(requireContext()).apply {
                 text = category.name
                 textSize = 14f
@@ -196,7 +197,7 @@ class HomeFragment : Fragment() {
         selectedCategory = category
         isInitialPageLoading = true
         binding.categoryContainer.children.forEach { tab ->
-            val appearance = HomeCategoryAppearance.forSelection(tab.tag == category.id)
+            val appearance = ChipAppearanceResolver.forSelection(tab.tag == category.id)
             tab.setBackgroundResource(appearance.backgroundRes)
             (tab as TextView).setTextColor(resources.getColor(appearance.textColorRes, null))
         }
