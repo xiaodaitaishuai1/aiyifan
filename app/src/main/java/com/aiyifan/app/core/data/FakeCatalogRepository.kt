@@ -13,6 +13,7 @@ import com.aiyifan.app.core.model.WatchHistory
 class FakeCatalogRepository(
     private val clock: () -> Long = System::currentTimeMillis,
 ) : CatalogRepository {
+    var resolvePlaybackFailure: Throwable? = null
     private val favorites = linkedMapOf<String, FavoriteVideo>()
     private val history = linkedMapOf<String, WatchHistory>()
 
@@ -168,7 +169,10 @@ class FakeCatalogRepository(
         detail: VideoDetail,
         episode: Episode,
         forceRefresh: Boolean,
-    ): Episode = episode
+    ): Episode {
+        resolvePlaybackFailure?.let { throw it }
+        return episode
+    }
 
     override fun getComments(mediaKey: String): List<Comment> =
         listOf(

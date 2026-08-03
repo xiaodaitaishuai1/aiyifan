@@ -48,6 +48,19 @@ interface PlaybackSession {
     fun release()
 }
 
+data class ActivePlaybackSession(
+    val detail: VideoDetail,
+    val episode: Episode,
+)
+
+sealed interface EpisodeSwitchResult {
+    data class Switched(val episode: Episode) : EpisodeSwitchResult
+
+    data object Unavailable : EpisodeSwitchResult
+
+    data object Failed : EpisodeSwitchResult
+}
+
 class VideoPlaybackController(
     private val engine: PlaybackEngine,
     private val repository: CatalogRepository,
@@ -68,6 +81,11 @@ class VideoPlaybackController(
 
     val currentPositionMs: Long
         get() = if (released) 0L else engine.currentPosition.coerceAtLeast(0L)
+
+    val activeSession: ActivePlaybackSession?
+        get() = activeDetail?.let { detail ->
+            activeEpisode?.let { episode -> ActivePlaybackSession(detail, episode) }
+        }
 
     fun prepare(
         detail: VideoDetail,
@@ -102,6 +120,28 @@ class VideoPlaybackController(
             engine.pause()
         } else {
             engine.play()
+        }
+    }
+
+    fun seekTo(positionMs: Long) {
+        if (isPrepared) engine.seekTo(positionMs.coerceAtLeast(0L))
+    }
+
+    suspend fun switchEpisode(offset: Int): EpisodeSwitchResult {
+        val detail = activeDetail ?: return EpisodeSwitchResult.Unavailable
+        val activeEpisode = activeEpisode ?: return EpisodeSwitchResult.Unavailable
+        val activeIndex = detail.episodes.indexOfFirst { it.episodeKey == activeEpisode.episodeKey }
+        val targetEpisode = detail.episodes.getOrNull(activeIndex + offset) ?: return EpisodeSwitchResult.Unavailable
+        val playableEpisode = runCatching {
+            repository.resolvePlayback(detail, targetEpisode)
+        }.getOrElse {
+            return EpisodeSwitchResult.Failed
+        }
+
+        return if (prepare(detail, playableEpisode)) {
+            EpisodeSwitchResult.Switched(playableEpisode)
+        } else {
+            EpisodeSwitchResult.Failed
         }
     }
 

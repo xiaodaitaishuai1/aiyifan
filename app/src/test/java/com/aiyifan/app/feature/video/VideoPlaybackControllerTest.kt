@@ -3,6 +3,7 @@ package com.aiyifan.app.feature.video
 import com.aiyifan.app.core.data.FakeCatalogRepository
 import com.aiyifan.app.core.model.Episode
 import com.aiyifan.app.core.model.VideoDetail
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotSame
@@ -104,15 +105,57 @@ class VideoPlaybackControllerTest {
         assertEquals(listOf(34_000L), positions)
     }
 
-    private fun sampleDetail() = VideoDetail(
+    @Test
+    fun `prepared episode is exposed as the active playback session`() {
+        val detail = sampleDetail()
+        val episode = sampleEpisode()
+        val controller = VideoPlaybackController(FakePlaybackEngine(), FakeCatalogRepository(), FakePlaybackSession())
+
+        assertTrue(controller.prepare(detail, episode))
+
+        assertEquals(episode, controller.activeSession?.episode)
+    }
+
+    @Test
+    fun `next episode resolves before replacing the active playback session`() = runBlocking {
+        val first = sampleEpisode(key = "episode-1")
+        val second = sampleEpisode(key = "episode-2")
+        val controller = VideoPlaybackController(FakePlaybackEngine(), FakeCatalogRepository(), FakePlaybackSession())
+
+        assertTrue(controller.prepare(sampleDetail(episodes = listOf(first, second)), first))
+
+        assertEquals(EpisodeSwitchResult.Switched(second), controller.switchEpisode(offset = 1))
+        assertEquals(second, controller.activeSession?.episode)
+    }
+
+    @Test
+    fun `failed adjacent resolution keeps the active playback session`() = runBlocking {
+        val first = sampleEpisode(key = "episode-1")
+        val second = sampleEpisode(key = "episode-2")
+        val repository = FakeCatalogRepository().apply {
+            resolvePlaybackFailure = IllegalStateException("network")
+        }
+        val controller = VideoPlaybackController(FakePlaybackEngine(), repository, FakePlaybackSession())
+
+        assertTrue(controller.prepare(sampleDetail(episodes = listOf(first, second)), first))
+
+        assertEquals(EpisodeSwitchResult.Failed, controller.switchEpisode(offset = 1))
+        assertEquals(first, controller.activeSession?.episode)
+    }
+
+    private fun sampleDetail(episodes: List<Episode> = emptyList()) = VideoDetail(
         mediaKey = "video-1",
         title = "Sample video",
         coverUrl = "",
         videoType = 1,
+        episodes = episodes,
     )
 
-    private fun sampleEpisode(mediaUrl: String = "https://example.com/video.m3u8") = Episode(
-        episodeKey = "episode-1",
+    private fun sampleEpisode(
+        key: String = "episode-1",
+        mediaUrl: String = "https://example.com/video.m3u8",
+    ) = Episode(
+        episodeKey = key,
         episodeTitle = "Episode 1",
         uniqueId = 1,
         mediaUrl = mediaUrl,
