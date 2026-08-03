@@ -6,10 +6,7 @@
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
 
     <application
         android:name=".AiyifanApp"
@@ -19,31 +16,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity
-            android:name=".feature.auth.LoginActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
-        <activity
-            android:name=".feature.collection.CollectionActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
-        <activity
-            android:name=".feature.history.HistoryActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
-        <activity
-            android:name=".feature.proxy.ProxySettingsActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
-        <activity
-            android:name=".feature.search.SearchActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
-        <activity
-            android:name=".feature.video.VideoPlayerActivity"
-            android:configChanges="keyboardHidden|orientation|screenSize|smallestScreenSize"
-            android:exported="false"
-            android:supportsPictureInPicture="true" />
         <service
             android:name=".feature.proxy.ProxyForegroundService"
             android:exported="false"
@@ -52,18 +24,5 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Maintains a user-initiated local proxy for in-app media playback" />
         </service>
-        <service
-            android:name=".feature.video.FloatingPlayerService"
-            android:exported="false"
-            android:foregroundServiceType="mediaPlayback" />
-        <activity
-            android:name=".feature.main.MainActivity"
-            android:exported="true"
-            android:screenOrientation="portrait">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
     </application>
 </manifest>

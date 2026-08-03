@@ -8,6 +8,19 @@ android {
     namespace = "com.aiyifan.app"
     compileSdk = 36
 
+    flavorDimensions += "device"
+
+    productFlavors {
+        create("mobile") {
+            dimension = "device"
+        }
+        create("tv") {
+            dimension = "device"
+            applicationIdSuffix = ".tv"
+            versionNameSuffix = "-tv"
+        }
+    }
+
     defaultConfig {
         applicationId = "com.aiyifan.app"
         minSdk = 24
