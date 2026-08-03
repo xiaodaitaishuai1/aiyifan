@@ -92,4 +92,10 @@
     <string name="home_vpn_service_failed">VPN 服务启动失败，请重试</string>
     <string name="home_vpn_connection_failed">VPN 连接失败，请在 VPN 设置中检查节点</string>
     <string name="floating_player_restore">恢复悬浮播放器</string>
+    <string name="floating_player_previous_episode">上一集</string>
+    <string name="floating_player_next_episode">下一集</string>
+    <string name="floating_player_restore_app">进入应用</string>
+    <string name="player_gesture_brightness">亮度 %1$d%%</string>
+    <string name="player_gesture_volume">音量 %1$d%%</string>
+    <string name="player_gesture_seek">快进至 %1$s</string>
 </resources>

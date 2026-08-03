@@ -5,7 +5,14 @@
 
     <ImageButton android:id="@+id/floatingCloseButton" android:layout_width="@dimen/dp_36" android:layout_height="@dimen/dp_36" android:layout_gravity="top|end" android:layout_margin="@dimen/dp_6" android:background="@drawable/bg_floating_control" android:contentDescription="@string/hardcoded_text_047" android:padding="@dimen/dp_6" android:src="@drawable/ic_close" />
 
-    <ImageButton android:id="@+id/floatingPlayPauseButton" android:layout_width="@dimen/dp_40" android:layout_height="@dimen/dp_40" android:layout_gravity="bottom|center_horizontal" android:layout_marginBottom="@dimen/dp_8" android:background="@drawable/bg_floating_control" android:contentDescription="@string/hardcoded_text_031" android:padding="@dimen/dp_8" android:src="@drawable/ic_pause" />
+    <LinearLayout android:layout_width="wrap_content" android:layout_height="@dimen/dp_40" android:layout_gravity="bottom|center_horizontal" android:layout_marginBottom="@dimen/dp_8" android:orientation="horizontal">
+
+        <ImageButton android:id="@+id/floatingPreviousEpisodeButton" android:layout_width="@dimen/dp_40" android:layout_height="@dimen/dp_40" android:layout_marginEnd="@dimen/dp_8" android:background="@drawable/bg_floating_control" android:contentDescription="@string/floating_player_previous_episode" android:padding="@dimen/dp_8" android:src="@drawable/ic_skip_previous" />
+
+        <ImageButton android:id="@+id/floatingPlayPauseButton" android:layout_width="@dimen/dp_40" android:layout_height="@dimen/dp_40" android:background="@drawable/bg_floating_control" android:contentDescription="@string/hardcoded_text_031" android:padding="@dimen/dp_8" android:src="@drawable/ic_pause" />
+
+        <ImageButton android:id="@+id/floatingNextEpisodeButton" android:layout_width="@dimen/dp_40" android:layout_height="@dimen/dp_40" android:layout_marginStart="@dimen/dp_8" android:background="@drawable/bg_floating_control" android:contentDescription="@string/floating_player_next_episode" android:padding="@dimen/dp_8" android:src="@drawable/ic_skip_next" />
+    </LinearLayout>
 
     <ImageButton android:id="@+id/floatingRestoreHandle" android:layout_width="@dimen/dp_24" android:layout_height="match_parent" android:layout_gravity="start|center_vertical" android:background="@android:color/black" android:contentDescription="@string/floating_player_restore" android:src="@drawable/ic_back" app:tint="@android:color/white" android:visibility="gone" />
 </FrameLayout>
