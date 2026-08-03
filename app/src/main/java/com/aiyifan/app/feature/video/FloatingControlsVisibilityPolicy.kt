@@ -9,4 +9,7 @@ object FloatingControlsVisibilityPolicy {
         nowMs: Long,
         delayMs: Long,
     ): Boolean = controlsVisible && nowMs - shownAtMs >= delayMs
+
+    fun isEpisodeButtonEnabled(index: Int, count: Int, offset: Int): Boolean =
+        index + offset in 0 until count
 }

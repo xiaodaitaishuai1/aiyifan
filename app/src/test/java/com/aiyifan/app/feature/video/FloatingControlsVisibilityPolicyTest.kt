@@ -39,4 +39,19 @@ class FloatingControlsVisibilityPolicyTest {
             ),
         )
     }
+
+    @Test
+    fun `previous is disabled at first episode`() {
+        assertFalse(FloatingControlsVisibilityPolicy.isEpisodeButtonEnabled(index = 0, count = 3, offset = -1))
+    }
+
+    @Test
+    fun `next is disabled at final episode`() {
+        assertFalse(FloatingControlsVisibilityPolicy.isEpisodeButtonEnabled(index = 2, count = 3, offset = 1))
+    }
+
+    @Test
+    fun `next is enabled from middle episode`() {
+        assertTrue(FloatingControlsVisibilityPolicy.isEpisodeButtonEnabled(index = 1, count = 3, offset = 1))
+    }
 }

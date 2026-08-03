@@ -20,10 +20,16 @@ import android.view.ViewConfiguration
 import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.ImageButton
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.media3.ui.PlayerView
 import com.aiyifan.app.R
 import com.aiyifan.app.core.data.AppGraph
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 
 class FloatingPlayerService : Service() {
     private val windowManager by lazy { getSystemService(WINDOW_SERVICE) as WindowManager }
@@ -38,6 +44,7 @@ class FloatingPlayerService : Service() {
     private var controlsVisible = true
     private var controlsShownAtMs = 0L
     private val controlsAutoHideRunnable = Runnable { hideControlsWhenIdle() }
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -55,6 +62,7 @@ class FloatingPlayerService : Service() {
 
     override fun onDestroy() {
         closeFloatingPlayer(stopService = false)
+        serviceScope.cancel()
         super.onDestroy()
     }
 
@@ -93,6 +101,13 @@ class FloatingPlayerService : Service() {
             playPauseButton.contentDescription = if (controller.isPlaying) "暂停播放" else "继续播放"
         }
 
+        root.findViewById<ImageButton>(R.id.floatingPreviousEpisodeButton).setOnClickListener {
+            switchEpisode(root, offset = -1)
+        }
+        root.findViewById<ImageButton>(R.id.floatingNextEpisodeButton).setOnClickListener {
+            switchEpisode(root, offset = 1)
+        }
+
         val dragTouchListener = DragTouchListener()
         root.setOnTouchListener(dragTouchListener)
         root.findViewById<PlayerView>(R.id.floatingPlayerView).setOnTouchListener(dragTouchListener)
@@ -119,7 +134,21 @@ class FloatingPlayerService : Service() {
         }
     }
 
-    private fun closeFloatingPlayer(stopService: Boolean) {
+    private fun switchEpisode(root: View, offset: Int) {
+        serviceScope.launch {
+            when (controller.switchEpisode(offset)) {
+                is EpisodeSwitchResult.Switched -> showControls(root)
+                EpisodeSwitchResult.Failed -> Toast.makeText(
+                    this@FloatingPlayerService,
+                    R.string.video_stream_load_failed,
+                    Toast.LENGTH_SHORT,
+                ).show()
+                EpisodeSwitchResult.Unavailable -> Unit
+            }
+        }
+    }
+
+    private fun closeFloatingPlayer(stopService: Boolean, releasePlayback: Boolean = true) {
         if (isClosing) return
         isClosing = true
 
@@ -130,7 +159,7 @@ class FloatingPlayerService : Service() {
         if (root != null) {
             runCatching { windowManager.removeView(root) }
         }
-        if (controllerHolder.isInitialized()) {
+        if (controllerHolder.isInitialized() && releasePlayback) {
             FloatingPlayerRecovery.record(this, controller.currentPositionMs)
             controller.saveHistory()
             controller.release()
@@ -172,6 +201,9 @@ class FloatingPlayerService : Service() {
         controlsShownAtMs = SystemClock.elapsedRealtime()
         root.findViewById<View>(R.id.floatingCloseButton).visibility = View.VISIBLE
         root.findViewById<View>(R.id.floatingPlayPauseButton).visibility = View.VISIBLE
+        root.findViewById<View>(R.id.floatingPreviousEpisodeButton).visibility = View.VISIBLE
+        root.findViewById<View>(R.id.floatingNextEpisodeButton).visibility = View.VISIBLE
+        updateEpisodeButtons(root)
         hideRestoreHandle(root)
         root.removeCallbacks(controlsAutoHideRunnable)
         root.postDelayed(controlsAutoHideRunnable, CONTROLS_AUTO_HIDE_DELAY_MS)
@@ -200,6 +232,8 @@ class FloatingPlayerService : Service() {
         controlsVisible = false
         root.findViewById<View>(R.id.floatingCloseButton).visibility = View.GONE
         root.findViewById<View>(R.id.floatingPlayPauseButton).visibility = View.GONE
+        root.findViewById<View>(R.id.floatingPreviousEpisodeButton).visibility = View.GONE
+        root.findViewById<View>(R.id.floatingNextEpisodeButton).visibility = View.GONE
     }
 
     private fun toggleControls(root: View) {
@@ -209,6 +243,32 @@ class FloatingPlayerService : Service() {
             root.removeCallbacks(controlsAutoHideRunnable)
             hideControls(root)
         }
+    }
+
+    private fun updateEpisodeButtons(root: View) {
+        val session = controller.activeSession
+        val index = session?.detail?.episodes?.indexOfFirst { it.episodeKey == session.episode.episodeKey } ?: -1
+        val count = session?.detail?.episodes?.size ?: 0
+        root.findViewById<ImageButton>(R.id.floatingPreviousEpisodeButton).apply {
+            isEnabled = FloatingControlsVisibilityPolicy.isEpisodeButtonEnabled(index, count, -1)
+            alpha = if (isEnabled) 1f else 0.45f
+        }
+        root.findViewById<ImageButton>(R.id.floatingNextEpisodeButton).apply {
+            isEnabled = FloatingControlsVisibilityPolicy.isEpisodeButtonEnabled(index, count, 1)
+            alpha = if (isEnabled) 1f else 0.45f
+        }
+    }
+
+    private fun restorePlayerActivity() {
+        val session = controller.activeSession ?: return
+        FloatingPlayerRecovery.record(this, controller.currentPositionMs)
+        controller.detach()
+        closeFloatingPlayer(stopService = true, releasePlayback = false)
+        startActivity(
+            VideoPlayerActivity.intent(this, session.detail.mediaKey).addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT,
+            ),
+        )
     }
 
     private fun displayMetrics(): DisplayMetrics = DisplayMetrics().also { metrics ->
@@ -309,6 +369,7 @@ class FloatingPlayerService : Service() {
         private var isScaling = false
         private var hasScaled = false
         private var wasHiddenOnDown = false
+        private var lastTapUpTimeMs = 0L
         private val scaleGestureDetector = ScaleGestureDetector(
             this@FloatingPlayerService,
             object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
@@ -389,8 +450,13 @@ class FloatingPlayerService : Service() {
                         if (wasHiddenOnDown) {
                             floatingRoot?.let(::showControls)
                         } else {
-                            view.performClick()
-                            floatingRoot?.let(::toggleControls)
+                            val tapCount = if (event.eventTime - lastTapUpTimeMs <= DOUBLE_TAP_TIMEOUT_MS) 2 else 1
+                            lastTapUpTimeMs = event.eventTime
+                            when (FloatingTapPolicy.action(tapCount, dragged = false, scaled = false)) {
+                                FloatingTapAction.ToggleControls -> floatingRoot?.let(::toggleControls)
+                                FloatingTapAction.RestoreActivity -> restorePlayerActivity()
+                                FloatingTapAction.None -> Unit
+                            }
                         }
                     }
                     return true
@@ -412,6 +478,7 @@ class FloatingPlayerService : Service() {
         private const val HIDE_EDGE_THRESHOLD_DP = 32
         private const val HIDDEN_HANDLE_WIDTH_DP = 24
         private const val CONTROLS_AUTO_HIDE_DELAY_MS = 2_500L
+        private const val DOUBLE_TAP_TIMEOUT_MS = 300L
 
         fun intent(context: Context): Intent = Intent(context, FloatingPlayerService::class.java)
     }

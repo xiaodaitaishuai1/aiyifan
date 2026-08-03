@@ -105,6 +105,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         registerPositionListener()
+        syncFromActivePlaybackSession()
         FloatingPlayerRecovery.consumePosition(this)?.let(::restorePlaybackAfterFloatingWindow)
         if (restoreMiniPlayerOnStart && !isInPictureInPictureMode) {
             restoreMiniPlayerOnStart = false
@@ -404,6 +405,15 @@ class VideoPlayerActivity : AppCompatActivity() {
     }
 
     private fun restorePlaybackAfterFloatingWindow(positionMs: Long) {
+        if (playbackController.activeSession != null) {
+            playbackController.seekTo(positionMs)
+            pendingFloatingRecoveryPositionMs = null
+            isInAppMiniPlayerVisible = false
+            binding.inAppMiniPlayer.isVisible = false
+            binding.playerContainer.isVisible = true
+            attachPlayerToCurrentSurface()
+            return
+        }
         val activeDetail = detail
         val activeEpisode = playingEpisode
         if (activeDetail == null || activeEpisode == null) {
@@ -417,6 +427,18 @@ class VideoPlayerActivity : AppCompatActivity() {
             binding.playerContainer.isVisible = true
             attachPlayerToCurrentSurface()
         }
+    }
+
+    private fun syncFromActivePlaybackSession() {
+        val session = playbackController.activeSession ?: return
+        val sessionDetail = session.detail
+        if (detail?.mediaKey != sessionDetail.mediaKey) {
+            detail = sessionDetail
+            renderDetail(sessionDetail)
+        }
+        selectedEpisode = session.episode
+        playingEpisode = session.episode
+        episodeAdapter.submitList(sessionDetail.episodes, session.episode)
     }
 
     private fun currentDestination(): PlaybackDestination = PlaybackPresentationPolicy.destinationWhenLeaving(
