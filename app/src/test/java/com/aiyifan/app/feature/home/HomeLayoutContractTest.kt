@@ -11,12 +11,54 @@ import org.w3c.dom.Element
 class HomeLayoutContractTest {
 
     @Test
-    fun `home banner reserves a sixteen by seven frame and overlays its title`() {
+    fun `home banner reserves a sixteen by seven carousel frame with pager controls`() {
         val root = root(layout("item_home_banner"))
 
         assertEquals("16", view(root, "bannerFrame").getAttribute("app:ratioWidth"))
         assertEquals("7", view(root, "bannerFrame").getAttribute("app:ratioHeight"))
-        assertEquals("@+id/bannerTitle", view(root, "bannerTitle").getAttribute("android:id"))
+        assertEquals("@+id/bannerPager", view(root, "bannerPager").getAttribute("android:id"))
+        assertEquals(
+            "@+id/bannerPageIndicator",
+            view(root, "bannerPageIndicator").getAttribute("android:id"),
+        )
+    }
+
+    @Test
+    fun `home banner carousel page contains a poster and title`() {
+        val root = root(layout("item_home_banner_page"))
+
+        assertEquals("@+id/bannerPagePoster", view(root, "bannerPagePoster").getAttribute("android:id"))
+        assertEquals("@+id/bannerPageTitle", view(root, "bannerPageTitle").getAttribute("android:id"))
+    }
+
+    @Test
+    fun `home adapter owns a cancellable pager carousel`() {
+        val adapter = source("feature/home/HomeVideoAdapter.kt").readText()
+
+        assertTrue(adapter.contains("ViewPager2"))
+        assertTrue(adapter.contains("HomeBannerCarouselPolicy.nextPage"))
+        assertTrue(adapter.contains("removeCallbacks"))
+        assertTrue(adapter.contains("bannerPageIndicator"))
+        assertTrue(adapter.contains("private var isAttached = false"))
+        assertTrue(adapter.contains("fun setAttached"))
+        assertTrue(adapter.contains("isAttached && isFragmentVisible"))
+        assertTrue(adapter.contains("onViewDetachedFromWindow"))
+        assertTrue(adapter.contains("onViewAttachedToWindow"))
+        val detachedHandler = adapter
+            .substringAfter("override fun onViewDetachedFromWindow")
+            .substringBefore("override fun onViewAttachedToWindow")
+        assertTrue(detachedHandler.contains("currentBannerHolder === holder"))
+        assertTrue(detachedHandler.contains("currentBannerHolder = null"))
+        val attachedHandler = adapter
+            .substringAfter("override fun onViewAttachedToWindow")
+            .substringBefore("override fun getItemCount")
+        assertTrue(attachedHandler.contains("currentBannerHolder = holder"))
+        assertTrue(attachedHandler.contains("holder.setAttached(true, isBannerVisible)"))
+        assertTrue(
+            attachedHandler.indexOf("currentBannerHolder = holder") <
+                attachedHandler.indexOf("holder.setAttached(true, isBannerVisible)"),
+        )
+        assertTrue(detachedHandler.contains("holder.setAttached(false, isBannerVisible)"))
     }
 
     @Test

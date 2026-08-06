@@ -13,31 +13,48 @@ class HomeFeedItemFactoryTest {
     }
 
     @Test
-    fun `first video becomes banner and remaining videos become cards`() {
-        val videos = listOf(video("banner"), video("card-one"), video("card-two"))
+    fun `a single video becomes a banner carousel without cards`() {
+        val videos = listOf(video("banner"))
 
         assertEquals(
             listOf(
-                HomeFeedItem.Banner(videos[0]),
-                HomeFeedItem.Card(videos[1]),
-                HomeFeedItem.Card(videos[2]),
+                HomeFeedItem.Banner(videos),
             ),
             HomeFeedItemFactory.create(videos),
         )
     }
 
     @Test
-    fun `loading state appends a footer after the current home videos`() {
-        val videos = listOf(video("banner"), video("card-one"))
+    fun `first five videos become one banner carousel and remaining videos become cards`() {
+        val videos = (1..7).map { video("video-$it") }
 
         assertEquals(
             listOf(
-                HomeFeedItem.Banner(videos[0]),
-                HomeFeedItem.Card(videos[1]),
+                HomeFeedItem.Banner(videos.take(5)),
+                HomeFeedItem.Card(videos[5]),
+                HomeFeedItem.Card(videos[6]),
+            ),
+            HomeFeedItemFactory.create(videos),
+        )
+    }
+
+    @Test
+    fun `six videos keep the first five in the banner and append a loading footer`() {
+        val videos = (1..6).map { video("video-$it") }
+
+        assertEquals(
+            listOf(
+                HomeFeedItem.Banner(videos.take(5)),
+                HomeFeedItem.Card(videos[5]),
                 HomeFeedItem.Loading,
             ),
             HomeFeedItemFactory.create(videos, isLoadingMore = true),
         )
+    }
+
+    @Test
+    fun `loading more does not create a footer for an empty video list`() {
+        assertTrue(HomeFeedItemFactory.create(emptyList(), isLoadingMore = true).isEmpty())
     }
 
     private fun video(mediaKey: String) = VideoSummary(

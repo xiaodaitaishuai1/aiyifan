@@ -101,7 +101,13 @@ class HomeFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+        adapter.setBannerVisible(true)
         if (_binding != null) renderVpnQuickConnect()
+    }
+
+    override fun onPause() {
+        adapter.setBannerVisible(false)
+        super.onPause()
     }
 
     private fun connectVpnFromHome(view: View) {

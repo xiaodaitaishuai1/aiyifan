@@ -18,6 +18,15 @@ class ThemeResourceContractTest {
         assertTrue(requiredNames.all(dayNames::contains))
     }
 
+    @Test
+    fun `night palette uses pure black for primary surfaces`() {
+        val nightColors = colorValues("values-night")
+
+        assertEquals("#000000", nightColors.getValue("primary"))
+        assertEquals("#000000", nightColors.getValue("page_bg"))
+        assertEquals("#000000", nightColors.getValue("surface"))
+    }
+
     private fun colorNames(directory: String): Set<String> =
         DocumentBuilderFactory.newInstance().newDocumentBuilder()
             .parse(resourceFile(directory))
@@ -27,6 +36,16 @@ class ThemeResourceContractTest {
                     .map { nodes.item(it) as Element }
                     .map { it.getAttribute("name") }
                     .toSet()
+            }
+
+    private fun colorValues(directory: String): Map<String, String> =
+        DocumentBuilderFactory.newInstance().newDocumentBuilder()
+            .parse(resourceFile(directory))
+            .getElementsByTagName("color")
+            .let { nodes ->
+                (0 until nodes.length)
+                    .map { nodes.item(it) as Element }
+                    .associate { it.getAttribute("name") to it.textContent.trim() }
             }
 
     private fun resourceFile(directory: String): File = sequenceOf(

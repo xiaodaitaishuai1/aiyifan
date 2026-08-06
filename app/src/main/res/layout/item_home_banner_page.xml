@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/bannerPagePoster"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_poster"
+        android:clipToOutline="true"
+        android:contentDescription="@string/video_poster"
+        android:scaleType="centerCrop" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_home_banner_scrim" />
+
+    <TextView
+        android:id="@+id/bannerPageTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:ellipsize="end"
+        android:maxLines="2"
+        android:padding="@dimen/dp_14"
+        android:textColor="@color/white"
+        android:textSize="@dimen/sp_20"
+        android:textStyle="bold" />
+</FrameLayout>

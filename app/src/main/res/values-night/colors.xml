@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary">#1D2025</color>
-    <color name="page_bg">#121417</color>
-    <color name="surface">#1D2025</color>
+    <color name="primary">#000000</color>
+    <color name="page_bg">#000000</color>
+    <color name="surface">#000000</color>
     <color name="text_primary">#F2F4F7</color>
     <color name="text_secondary">#AAB2BD</color>
     <color name="text_on_accent">#FFFFFF</color>
