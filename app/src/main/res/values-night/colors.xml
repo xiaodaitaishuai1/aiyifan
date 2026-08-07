@@ -3,11 +3,10 @@
     <color name="primary">#000000</color>
     <color name="page_bg">#000000</color>
     <color name="surface">#000000</color>
-    <color name="text_primary">#F2F4F7</color>
-    <color name="text_secondary">#AAB2BD</color>
+    <color name="text_primary">#C8CDD4</color>
+    <color name="text_secondary">#8D949D</color>
     <color name="text_on_accent">#FFFFFF</color>
-    <color name="accent">#FF8D3A</color>
-    <color name="black">#000000</color>
+    <color name="accent">#B55A24</color>
     <color name="white">#FFFFFF</color>
     <color name="outline">#3A404A</color>
     <color name="field_bg">#292D34</color>

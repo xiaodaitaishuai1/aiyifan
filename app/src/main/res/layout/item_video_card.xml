@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="@dimen/dp_12" android:background="@drawable/bg_surface" android:orientation="horizontal" android:padding="@dimen/dp_10">
 
-    <ImageView android:id="@+id/poster" android:layout_width="@dimen/dp_106" android:layout_height="@dimen/dp_142" android:background="@drawable/bg_poster" android:clipToOutline="true" android:contentDescription="@string/video_poster" android:scaleType="centerCrop" />
+    <FrameLayout android:layout_width="@dimen/dp_106" android:layout_height="@dimen/dp_142">
+
+        <ImageView android:id="@+id/poster" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/bg_poster" android:clipToOutline="true" android:contentDescription="@string/video_poster" android:scaleType="centerCrop" />
+
+        <View android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/bg_poster_bottom_scrim" android:importantForAccessibility="no" />
+    </FrameLayout>
 
     <LinearLayout android:layout_width="@dimen/dp_0" android:layout_height="@dimen/dp_142" android:layout_marginStart="@dimen/dp_12" android:layout_weight="1" android:orientation="vertical">
 

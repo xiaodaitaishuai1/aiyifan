@@ -50,7 +50,6 @@
   <string name="hardcoded_text_021">空状态</string>
   <string name="hardcoded_text_022">开启悬浮窗</string>
   <string name="hardcoded_text_023">全屏播放</string>
-  <string name="hardcoded_text_024">退出全屏</string>
   <string name="hardcoded_text_025">收藏</string>
   <string name="hardcoded_text_026">分享</string>
   <string name="hardcoded_text_027">选集</string>
@@ -74,8 +73,6 @@
   <string name="hardcoded_text_045">查看全部</string>
   <string name="hardcoded_text_046">立即播放</string>
   <string name="hardcoded_text_047">关闭悬浮播放器</string>
-  <string name="hardcoded_text_048">调整悬浮播放器大小</string>
-  <string name="hardcoded_text_049">首页</string>
     <string name="login_agreement_required">请先同意用户协议与隐私政策</string>
     <string name="login_default_account">爱壹帆用户</string>
     <string name="login_success">登录成功</string>
@@ -94,7 +91,6 @@
     <string name="floating_player_restore">恢复悬浮播放器</string>
     <string name="floating_player_previous_episode">上一集</string>
     <string name="floating_player_next_episode">下一集</string>
-    <string name="floating_player_restore_app">进入应用</string>
     <string name="player_gesture_brightness">亮度 %1$d%%</string>
     <string name="player_gesture_volume">音量 %1$d%%</string>
     <string name="player_gesture_seek">快进至 %1$s</string>

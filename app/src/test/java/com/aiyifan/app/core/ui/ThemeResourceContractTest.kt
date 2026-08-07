@@ -27,6 +27,19 @@ class ThemeResourceContractTest {
         assertEquals("#000000", nightColors.getValue("surface"))
     }
 
+    @Test
+    fun `night palette uses a subdued accent for selected controls`() {
+        assertEquals("#B55A24", colorValues("values-night").getValue("accent"))
+    }
+
+    @Test
+    fun `night palette uses softened primary and secondary text`() {
+        val nightColors = colorValues("values-night")
+
+        assertEquals("#C8CDD4", nightColors.getValue("text_primary"))
+        assertEquals("#8D949D", nightColors.getValue("text_secondary"))
+    }
+
     private fun colorNames(directory: String): Set<String> =
         DocumentBuilderFactory.newInstance().newDocumentBuilder()
             .parse(resourceFile(directory))
@@ -62,7 +75,6 @@ class ThemeResourceContractTest {
             "text_secondary",
             "accent",
             "white",
-            "black",
             "outline",
             "field_bg",
             "chip_bg",

@@ -11,16 +11,17 @@ import org.w3c.dom.Element
 class HomeLayoutContractTest {
 
     @Test
-    fun `home banner reserves a sixteen by seven carousel frame with pager controls`() {
+    fun `home banner reserves a taller sixteen by eight carousel frame with pager controls`() {
         val root = root(layout("item_home_banner"))
 
         assertEquals("16", view(root, "bannerFrame").getAttribute("app:ratioWidth"))
-        assertEquals("7", view(root, "bannerFrame").getAttribute("app:ratioHeight"))
+        assertEquals("8", view(root, "bannerFrame").getAttribute("app:ratioHeight"))
         assertEquals("@+id/bannerPager", view(root, "bannerPager").getAttribute("android:id"))
         assertEquals(
             "@+id/bannerPageIndicator",
             view(root, "bannerPageIndicator").getAttribute("android:id"),
         )
+        assertEquals("LinearLayout", view(root, "bannerPageIndicator").tagName)
     }
 
     @Test
@@ -29,6 +30,8 @@ class HomeLayoutContractTest {
 
         assertEquals("@+id/bannerPagePoster", view(root, "bannerPagePoster").getAttribute("android:id"))
         assertEquals("@+id/bannerPageTitle", view(root, "bannerPageTitle").getAttribute("android:id"))
+        assertTrue(layout("item_home_banner_page").readText().contains("@drawable/bg_home_banner_scrim"))
+        assertTrue(drawable("bg_home_banner_scrim").readText().contains("android:startColor=\"#E6000000\""))
     }
 
     @Test
@@ -36,9 +39,11 @@ class HomeLayoutContractTest {
         val adapter = source("feature/home/HomeVideoAdapter.kt").readText()
 
         assertTrue(adapter.contains("ViewPager2"))
+        assertTrue(adapter.contains("bindPoster(binding.bannerPagePoster, video.coverUrl, 16, 8"))
         assertTrue(adapter.contains("HomeBannerCarouselPolicy.nextPage"))
         assertTrue(adapter.contains("removeCallbacks"))
         assertTrue(adapter.contains("bannerPageIndicator"))
+        assertTrue(adapter.contains("renderIndicatorDots"))
         assertTrue(adapter.contains("private var isAttached = false"))
         assertTrue(adapter.contains("fun setAttached"))
         assertTrue(adapter.contains("isAttached && isFragmentVisible"))
@@ -62,12 +67,26 @@ class HomeLayoutContractTest {
     }
 
     @Test
-    fun `home card reserves a sixteen by nine frame and limits title lines`() {
+    fun `home card reserves a two by three portrait frame and limits title lines`() {
         val root = root(layout("item_home_video"))
+        val adapter = source("feature/home/HomeVideoAdapter.kt").readText()
+        val titleRow = view(root, "cardTitle").parentNode as Element
 
-        assertEquals("16", view(root, "cardFrame").getAttribute("app:ratioWidth"))
-        assertEquals("9", view(root, "cardFrame").getAttribute("app:ratioHeight"))
-        assertEquals("2", view(root, "cardTitle").getAttribute("android:maxLines"))
+        assertEquals("2", view(root, "cardFrame").getAttribute("app:ratioWidth"))
+        assertEquals("3", view(root, "cardFrame").getAttribute("app:ratioHeight"))
+        assertEquals("@dimen/dp_6", root.getAttribute("android:layout_marginStart"))
+        assertEquals("@dimen/dp_6", root.getAttribute("android:layout_marginEnd"))
+        assertTrue(adapter.contains("bindPoster(binding.cardPoster, video.coverUrl, 2, 3"))
+        assertEquals("LinearLayout", titleRow.tagName)
+        assertEquals("bottom", titleRow.getAttribute("android:layout_gravity"))
+        assertEquals("@dimen/dp_44", view(root, "cardBottomScrim").getAttribute("android:layout_height"))
+        assertEquals("bottom", view(root, "cardBottomScrim").getAttribute("android:layout_gravity"))
+        assertEquals("@dimen/dp_0", view(root, "cardTitle").getAttribute("android:layout_width"))
+        assertEquals("1", view(root, "cardTitle").getAttribute("android:maxLines"))
+        assertEquals("@color/text_primary", view(root, "cardTitle").getAttribute("android:textColor"))
+        assertEquals("@dimen/sp_12", view(root, "cardTitle").getAttribute("android:textSize"))
+        assertEquals("@color/text_secondary", view(root, "cardMeta").getAttribute("android:textColor"))
+        assertEquals("@dimen/sp_11", view(root, "cardMeta").getAttribute("android:textSize"))
     }
 
     @Test
@@ -108,6 +127,11 @@ class HomeLayoutContractTest {
     private fun layout(name: String): File = sequenceOf(
         File("src/main/res/layout/$name.xml"),
         File("app/src/main/res/layout/$name.xml"),
+    ).first(File::isFile)
+
+    private fun drawable(name: String): File = sequenceOf(
+        File("src/main/res/drawable/$name.xml"),
+        File("app/src/main/res/drawable/$name.xml"),
     ).first(File::isFile)
 
     private fun root(file: File): Element = DocumentBuilderFactory.newInstance()

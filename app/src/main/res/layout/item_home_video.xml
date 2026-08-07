@@ -3,15 +3,18 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="@dimen/dp_4"
+    android:layout_marginTop="@dimen/dp_4"
+    android:layout_marginStart="@dimen/dp_6"
+    android:layout_marginEnd="@dimen/dp_6"
+    android:layout_marginBottom="@dimen/dp_4"
     android:orientation="vertical">
 
     <com.aiyifan.app.core.ui.AspectRatioFrameLayout
         android:id="@+id/cardFrame"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:ratioHeight="9"
-        app:ratioWidth="16">
+        app:ratioHeight="3"
+        app:ratioWidth="2">
 
         <ImageView
             android:id="@+id/cardPoster"
@@ -21,25 +24,46 @@
             android:clipToOutline="true"
             android:contentDescription="@string/video_poster"
             android:scaleType="centerCrop" />
+
+        <View
+            android:id="@+id/cardBottomScrim"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/dp_44"
+            android:layout_gravity="bottom"
+            android:background="@drawable/bg_poster_bottom_scrim"
+            android:importantForAccessibility="no" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/dp_8"
+            android:paddingTop="@dimen/dp_8"
+            android:paddingEnd="@dimen/dp_8"
+            android:paddingBottom="@dimen/dp_8">
+
+            <TextView
+                android:id="@+id/cardTitle"
+                android:layout_width="@dimen/dp_0"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/text_primary"
+                android:textSize="@dimen/sp_12"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/cardMeta"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/dp_6"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/sp_11" />
+        </LinearLayout>
     </com.aiyifan.app.core.ui.AspectRatioFrameLayout>
-
-    <TextView
-        android:id="@+id/cardTitle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/dp_6"
-        android:ellipsize="end"
-        android:maxLines="2"
-        android:textColor="@color/text_primary"
-        android:textSize="@dimen/sp_14"
-        android:textStyle="bold" />
-
-    <TextView
-        android:id="@+id/cardMeta"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:ellipsize="end"
-        android:maxLines="1"
-        android:textColor="@color/text_secondary"
-        android:textSize="@dimen/sp_12" />
 </LinearLayout>

@@ -3,6 +3,9 @@ package com.aiyifan.app.feature.home
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
+import android.widget.LinearLayout
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.aiyifan.app.R
@@ -186,9 +189,38 @@ class HomeVideoAdapter(
 
         private fun updateIndicator(position: Int) {
             binding.bannerPageIndicator.visibility = if (videos.size > 1) View.VISIBLE else View.GONE
-            if (videos.isNotEmpty()) {
-                binding.bannerPageIndicator.text = "${position + 1} / ${videos.size}"
+            if (videos.size > 1) renderIndicatorDots(position) else binding.bannerPageIndicator.removeAllViews()
+        }
+
+        private fun renderIndicatorDots(currentPage: Int) {
+            val density = binding.root.resources.displayMetrics.density
+            binding.bannerPageIndicator.removeAllViews()
+            videos.indices.forEach { index ->
+                val isSelected = index == currentPage
+                val diameter = (INDICATOR_DOT_SIZE_DP * density).toInt()
+                val params = LinearLayout.LayoutParams(
+                    (if (isSelected) INDICATOR_SELECTED_WIDTH_DP else INDICATOR_DOT_SIZE_DP * density).toInt(),
+                    diameter,
+                ).apply {
+                    if (index < videos.lastIndex) marginEnd = (INDICATOR_DOT_MARGIN_DP * density).toInt()
+                }
+                binding.bannerPageIndicator.addView(View(binding.root.context).apply {
+                    layoutParams = params
+                    background = GradientDrawable().apply {
+                        shape = GradientDrawable.RECTANGLE
+                        cornerRadius = diameter / 2f
+                        setColor(if (isSelected) binding.root.context.getColor(R.color.accent) else Color.WHITE)
+                        alpha = if (isSelected) 255 else INDICATOR_INACTIVE_ALPHA
+                    }
+                })
             }
+        }
+
+        private companion object {
+            const val INDICATOR_DOT_SIZE_DP = 6
+            const val INDICATOR_SELECTED_WIDTH_DP = 14
+            const val INDICATOR_DOT_MARGIN_DP = 4
+            const val INDICATOR_INACTIVE_ALPHA = 128
         }
     }
 
@@ -220,7 +252,7 @@ class HomeVideoAdapter(
         private val onClick: (VideoSummary) -> Unit,
     ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(video: VideoSummary) {
-            bindPoster(binding.bannerPagePoster, video.coverUrl, 16, 7, isHighPriority = true)
+            bindPoster(binding.bannerPagePoster, video.coverUrl, 16, 8, isHighPriority = true)
             binding.bannerPageTitle.text = video.title
             binding.root.setOnClickListener { onClick(video) }
         }
@@ -231,7 +263,7 @@ class HomeVideoAdapter(
         private val onClick: (VideoSummary) -> Unit,
     ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(video: VideoSummary, isHighPriority: Boolean) {
-            bindPoster(binding.cardPoster, video.coverUrl, 16, 9, isHighPriority)
+            bindPoster(binding.cardPoster, video.coverUrl, 2, 3, isHighPriority)
             binding.cardTitle.text = video.title
             binding.cardMeta.text = video.updateStatus ?: listOfNotNull(video.year, video.area).joinToString(" / ")
             binding.root.setOnClickListener { onClick(video) }
