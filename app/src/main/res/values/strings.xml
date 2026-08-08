@@ -5,6 +5,10 @@
     <string name="tab_home">首页</string>
     <string name="tab_hot">热门</string>
     <string name="tab_mine">我的</string>
+    <string name="tab_baipiaozhe">白嫖</string>
+    <string name="baipiaozhe_load_failed">加载失败，请检查网络后重试</string>
+    <string name="baipiaozhe_retry">重试</string>
+    <string name="baipiaozhe_unavailable">该片源暂不可播</string>
     <string name="video_not_found">未找到视频</string>
     <string name="video_loading">加载中…</string>
     <string name="video_detail_load_failed">视频详情加载失败</string>

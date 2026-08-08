@@ -58,6 +58,8 @@ class VideoPlayerActivity : AppCompatActivity() {
     private var controllerVisibility = View.GONE
     private lateinit var autoSkipPreferenceStore: AutoSkipPreferenceStore
     private var removePositionListener: (() -> Unit)? = null
+    private var removeErrorListener: (() -> Unit)? = null
+    private var isDirectPlayback = false
     private var hasAutomaticallyAdvancedOutro = false
     private val gestureFeedbackHideRunnable = Runnable { binding.playerGestureFeedback.isVisible = false }
 
@@ -105,7 +107,14 @@ class VideoPlayerActivity : AppCompatActivity() {
             }
         })
         setupStaticLists()
-        loadDetail(intent.getStringExtra(EXTRA_MEDIA_KEY).orEmpty())
+        val directMediaUrl = intent.getStringExtra(EXTRA_DIRECT_MEDIA_URL)
+        if (!directMediaUrl.isNullOrBlank()) {
+            isDirectPlayback = true
+            removeErrorListener = playbackController.addErrorListener(::handleDirectPlaybackFailure)
+            loadDirectPlayback(directMediaUrl)
+        } else {
+            loadDetail(intent.getStringExtra(EXTRA_MEDIA_KEY).orEmpty())
+        }
     }
 
     override fun onStart() {
@@ -251,6 +260,38 @@ class VideoPlayerActivity : AppCompatActivity() {
                     Toast.makeText(this@VideoPlayerActivity, R.string.video_stream_load_failed, Toast.LENGTH_SHORT).show()
                 }
         }
+    }
+
+    private fun loadDirectPlayback(mediaUrl: String) {
+        val title = intent.getStringExtra(EXTRA_DIRECT_TITLE)?.takeIf(String::isNotBlank) ?: getString(R.string.video_loading)
+        val detail = VideoDetail(
+            mediaKey = "baipiaozhe-direct",
+            title = title,
+            coverUrl = "",
+            videoType = 1,
+        )
+        val episode = Episode(
+            episodeKey = "baipiaozhe-direct",
+            episodeTitle = title,
+            uniqueId = 0,
+            mediaUrl = mediaUrl,
+        )
+        this.detail = detail
+        selectedEpisode = episode
+        playingEpisode = episode
+        renderDetail(detail)
+        if (playbackController.prepare(detail, episode)) {
+            attachPlayerToCurrentSurface()
+        } else {
+            handleDirectPlaybackFailure()
+        }
+    }
+
+    private fun handleDirectPlaybackFailure() {
+        if (!isDirectPlayback || isFinishing) return
+
+        setResult(RESULT_DIRECT_PLAYBACK_FAILED)
+        finish()
     }
 
     private fun handlePlaybackPosition(positionMs: Long) {
@@ -476,11 +517,14 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         unregisterPositionListener()
+        removeErrorListener?.invoke()
+        removeErrorListener = null
         binding.playerView.player = null
         binding.inAppMiniPlayerView.player = null
         if (isFinishing && !isInPictureInPictureMode) {
             playbackController.saveHistory()
             playbackController.release()
+            if (isDirectPlayback) AppGraph.playbackHeadersHolder.clear()
         }
         super.onDestroy()
     }
@@ -643,12 +687,20 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     companion object {
         private const val EXTRA_MEDIA_KEY = "mediaKey"
+        private const val EXTRA_DIRECT_MEDIA_URL = "directMediaUrl"
+        private const val EXTRA_DIRECT_TITLE = "directTitle"
+        const val RESULT_DIRECT_PLAYBACK_FAILED = RESULT_FIRST_USER
         private const val NORMAL_PLAYER_HEIGHT_DP = 211
         private const val IN_APP_MINI_MIN_WIDTH_DP = 180
         private const val IN_APP_MINI_MARGIN_DP = 16
         private const val DEFAULT_SYSTEM_BRIGHTNESS = 128
         private const val MAX_SYSTEM_BRIGHTNESS = 255
         private const val GESTURE_FEEDBACK_HIDE_DELAY_MS = 1_500L
+        fun directIntent(context: Context, mediaUrl: String, title: String? = null): Intent =
+            Intent(context, VideoPlayerActivity::class.java)
+                .putExtra(EXTRA_DIRECT_MEDIA_URL, mediaUrl)
+                .putExtra(EXTRA_DIRECT_TITLE, title.orEmpty())
+
         fun intent(context: Context, mediaKey: String): Intent =
             Intent(context, VideoPlayerActivity::class.java).putExtra(EXTRA_MEDIA_KEY, mediaKey)
     }

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_page">
+
+    <WebView
+        android:id="@+id/baipiaozheWebView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <LinearLayout
+        android:id="@+id/baipiaozheErrorView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/surface"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="@dimen/dp_24"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/baipiaozhe_load_failed"
+            android:textColor="@color/text_primary"
+            android:textSize="@dimen/sp_16" />
+
+        <Button
+            android:id="@+id/baipiaozheRetryButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/dp_16"
+            android:background="@drawable/bg_button_outline"
+            android:text="@string/baipiaozhe_retry"
+            android:textColor="@color/accent" />
+    </LinearLayout>
+</FrameLayout>

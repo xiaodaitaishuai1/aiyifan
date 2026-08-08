@@ -9,11 +9,13 @@ import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.Player
+import androidx.media3.common.PlaybackException
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.MediaSession
 import androidx.media3.ui.PlayerView
 import com.aiyifan.app.core.data.CatalogRepository
+import com.aiyifan.app.core.data.baipiaozhe.PlaybackHttpHeaders
 import com.aiyifan.app.core.data.remote.LocalProxyEndpoint
 import com.aiyifan.app.core.data.remote.ProxyConnectionPolicy
 import com.aiyifan.app.core.model.Episode
@@ -32,6 +34,8 @@ interface PlaybackEngine {
     fun seekTo(positionMs: Long)
 
     fun addPositionListener(listener: (Long) -> Unit): () -> Unit
+
+    fun addErrorListener(listener: () -> Unit): () -> Unit
 
     fun play()
 
@@ -150,6 +154,8 @@ class VideoPlaybackController(
 
     fun addPositionListener(listener: (Long) -> Unit): () -> Unit = engine.addPositionListener(listener)
 
+    fun addErrorListener(listener: () -> Unit): () -> Unit = engine.addErrorListener(listener)
+
     fun saveHistory() {
         val detail = activeDetail ?: return
         val episode = activeEpisode ?: return
@@ -178,8 +184,13 @@ class VideoPlaybackController(
             applicationContext: Context,
             repository: CatalogRepository,
             proxyEndpointProvider: () -> LocalProxyEndpoint? = { null },
+            playbackHeadersProvider: () -> PlaybackHttpHeaders = { PlaybackHttpHeaders() },
         ): VideoPlaybackController {
-            val dataSourceFactory = ProxyAwareDataSourceFactory(applicationContext, proxyEndpointProvider)
+            val dataSourceFactory = ProxyAwareDataSourceFactory(
+                applicationContext,
+                proxyEndpointProvider,
+                playbackHeadersProvider,
+            )
             val player = ExoPlayer.Builder(applicationContext)
                 .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
                 .build()
@@ -210,13 +221,16 @@ class VideoPlaybackControllerProvider(
 private class ProxyAwareDataSourceFactory(
     private val context: Context,
     private val proxyEndpointProvider: () -> LocalProxyEndpoint?,
+    private val playbackHeadersProvider: () -> PlaybackHttpHeaders,
 ) : DataSource.Factory {
     @AndroidxOptIn(markerClass = [UnstableApi::class])
     override fun createDataSource(): DataSource {
         val httpClient = OkHttpClient.Builder().apply {
             ProxyConnectionPolicy.select(proxyEndpointProvider())?.let(::proxy)
         }.build()
-        return DefaultDataSource.Factory(context, OkHttpDataSource.Factory(httpClient)).createDataSource()
+        val httpDataSourceFactory = OkHttpDataSource.Factory(httpClient)
+            .setDefaultRequestProperties(playbackHeadersProvider().entries)
+        return DefaultDataSource.Factory(context, httpDataSourceFactory).createDataSource()
     }
 }
 
@@ -225,6 +239,7 @@ private class Media3PlaybackEngine(
 ) : PlaybackEngine {
     private var attachedPlayerView: PlayerView? = null
     private val positionListeners = linkedSetOf<(Long) -> Unit>()
+    private val errorListeners = linkedSetOf<() -> Unit>()
     private val positionHandler = Handler(Looper.getMainLooper())
     private val positionRunnable = object : Runnable {
         override fun run() {
@@ -237,6 +252,10 @@ private class Media3PlaybackEngine(
     private val playerListener = object : Player.Listener {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             if (isPlaying) startPositionUpdates() else positionHandler.removeCallbacks(positionRunnable)
+        }
+
+        override fun onPlayerError(error: PlaybackException) {
+            errorListeners.forEach { listener -> listener() }
         }
     }
 
@@ -274,6 +293,11 @@ private class Media3PlaybackEngine(
         }
     }
 
+    override fun addErrorListener(listener: () -> Unit): () -> Unit {
+        errorListeners += listener
+        return { errorListeners -= listener }
+    }
+
     override fun play() {
         player.play()
         startPositionUpdates()
@@ -299,6 +323,7 @@ private class Media3PlaybackEngine(
     override fun release() {
         positionHandler.removeCallbacks(positionRunnable)
         positionListeners.clear()
+        errorListeners.clear()
         player.removeListener(playerListener)
         player.release()
     }

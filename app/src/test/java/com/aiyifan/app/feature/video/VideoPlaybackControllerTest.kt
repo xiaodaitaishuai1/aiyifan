@@ -26,6 +26,20 @@ class VideoPlaybackControllerTest {
     }
 
     @Test
+    fun `forwards playback errors from the engine`() {
+        val engine = FakePlaybackEngine()
+        val controller = VideoPlaybackController(engine, FakeCatalogRepository(), FakePlaybackSession())
+        var errorCount = 0
+        val removeListener = controller.addErrorListener { errorCount++ }
+
+        engine.dispatchError()
+        removeListener()
+        engine.dispatchError()
+
+        assertEquals(1, errorCount)
+    }
+
+    @Test
     fun `provider recreates a controller after its cached controller is released`() {
         val engines = mutableListOf<FakePlaybackEngine>()
         val provider = VideoPlaybackControllerProvider {
@@ -170,6 +184,7 @@ class VideoPlaybackControllerTest {
         var releaseCalls = 0
         var seekPositionMs = 0L
         private var positionListener: ((Long) -> Unit)? = null
+        private var errorListener: (() -> Unit)? = null
 
         override fun setMediaUrl(mediaUrl: String) {
             setMediaCalls++
@@ -186,9 +201,18 @@ class VideoPlaybackControllerTest {
             return { positionListener = null }
         }
 
+        override fun addErrorListener(listener: () -> Unit): () -> Unit {
+            errorListener = listener
+            return { errorListener = null }
+        }
+
         fun dispatchPosition(positionMs: Long) {
             currentPosition = positionMs
             positionListener?.invoke(positionMs)
+        }
+
+        fun dispatchError() {
+            errorListener?.invoke()
         }
 
         override fun play() {

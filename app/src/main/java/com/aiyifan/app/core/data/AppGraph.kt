@@ -3,6 +3,7 @@ package com.aiyifan.app.core.data
 import android.content.Context
 import com.aiyifan.app.core.data.remote.RemoteCatalogRepository
 import com.aiyifan.app.core.data.remote.RemoteConfigResolver
+import com.aiyifan.app.core.data.baipiaozhe.PlaybackHttpHeadersHolder
 import com.aiyifan.app.core.data.remote.UrlConnectionHttpFetcher
 import com.aiyifan.app.feature.proxy.EncryptedProxySettingsStore
 import com.aiyifan.app.feature.proxy.HttpSubscriptionContentLoader
@@ -19,6 +20,7 @@ import com.aiyifan.app.feature.video.VideoPlaybackControllerProvider
 object AppGraph {
     private lateinit var applicationContext: Context
 
+    val playbackHeadersHolder by lazy { PlaybackHttpHeadersHolder() }
     val proxyManager: ProxyManager by lazy {
         ProxyManager(
             parser = ProxySubscriptionParser(),
@@ -64,6 +66,7 @@ object AppGraph {
                 applicationContext = applicationContext,
                 repository = catalogRepository,
                 proxyEndpointProvider = { proxyManager.activeEndpoint },
+                playbackHeadersProvider = { playbackHeadersHolder.current() },
             )
         }
     }
