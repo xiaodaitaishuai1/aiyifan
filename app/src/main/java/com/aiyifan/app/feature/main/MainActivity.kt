@@ -22,9 +22,13 @@ class MainActivity : AppCompatActivity() {
         binding.fragmentContainer.applySystemBarsPadding(left = true, top = true, right = true)
         binding.bottomTabs.applySystemBarsPadding(left = true, right = true, bottom = true, growHeight = true)
 
-        val selectedTabPosition = savedInstanceState?.getInt(KEY_SELECTED_TAB) ?: 0
+        val selectedTabPosition = (savedInstanceState?.getInt(KEY_SELECTED_TAB) ?: 0).takeIf {
+            it in 0 until binding.bottomTabs.tabCount
+        } ?: 0
         binding.bottomTabs.getTabAt(selectedTabPosition)?.select()
-        show(fragmentFor(selectedTabPosition))
+        if (savedInstanceState == null) {
+            show(fragmentFor(selectedTabPosition))
+        }
         binding.bottomTabs.addOnTabSelectedListener(object : com.google.android.material.tabs.TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: com.google.android.material.tabs.TabLayout.Tab) {
                 show(fragmentFor(tab.position))

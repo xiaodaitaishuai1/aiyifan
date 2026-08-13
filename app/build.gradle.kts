@@ -4,6 +4,19 @@ plugins {
     id("org.jetbrains.kotlin.kapt")
 }
 
+fun signingValue(name: String): String? =
+    providers.gradleProperty(name).orNull
+        ?: System.getenv(name.uppercase().replace('.', '_'))
+
+val releaseSigningPropertyNames = listOf(
+    "release.keystore.path",
+    "release.key.alias",
+    "release.store.password",
+    "release.key.password",
+)
+val releaseSigningValues = releaseSigningPropertyNames.associateWith(::signingValue)
+val hasReleaseSigning = releaseSigningValues.values.all { !it.isNullOrBlank() }
+
 android {
     namespace = "com.aiyifan.app"
     compileSdk = 36
@@ -22,16 +35,20 @@ android {
     }
 
     signingConfigs {
-        create("release") {
-            keyAlias = "aiyifan"
-            keyPassword = "aiyifan"
-            storeFile = file("aiyifan.jks")
-            storePassword = "aiyifan"
+        if (hasReleaseSigning) {
+            create("release") {
+                keyAlias = releaseSigningValues.getValue("release.key.alias")
+                keyPassword = releaseSigningValues.getValue("release.key.password")
+                storeFile = file(releaseSigningValues.getValue("release.keystore.path"))
+                storePassword = releaseSigningValues.getValue("release.store.password")
+            }
         }
     }
     buildTypes {
         getByName("release") {
-            signingConfig = signingConfigs.getByName("release")
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 
@@ -47,6 +64,21 @@ android {
     kotlin {
         compilerOptions {
             jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        }
+    }
+}
+
+tasks.configureEach {
+    if (!hasReleaseSigning && name in setOf(
+            "packageRelease",
+            "bundleRelease",
+            "validateSigningRelease",
+        )
+    ) {
+        doFirst {
+            throw GradleException(
+                "Release signing requires: ${releaseSigningPropertyNames.joinToString()}",
+            )
         }
     }
 }

@@ -24,3 +24,7 @@ CommitNoteAI.md
 /app/src/test/
 /apktool_6_base
 /release
+*.jks
+*.keystore
+keystore.properties
+*.apk

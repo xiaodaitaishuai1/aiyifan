@@ -23,6 +23,7 @@ import com.aiyifan.app.core.ui.applySystemBarsPadding
 import com.aiyifan.app.core.ui.setupEdgeToEdge
 import com.aiyifan.app.databinding.ActivitySearchBinding
 import com.aiyifan.app.feature.video.VideoPlayerActivity
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -114,7 +115,8 @@ class SearchActivity : AppCompatActivity() {
                         suggestionAdapter.submitList(suggestions)
                     }
                 }
-                .onFailure {
+                .onFailure { error ->
+                    if (error is CancellationException) throw error
                     if (binding.searchEdit.text.toString().trim() == keyword) {
                         suggestionAdapter.submitList(emptyList())
                     }
@@ -143,7 +145,8 @@ class SearchActivity : AppCompatActivity() {
                         results,
                     )
                 }
-                .onFailure {
+                .onFailure { error ->
+                    if (error is CancellationException) throw error
                     renderSearchState(SearchPageState.Failure)
                 }
         }

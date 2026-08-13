@@ -194,21 +194,23 @@ class HomeVideoAdapter(
 
         private fun renderIndicatorDots(currentPage: Int) {
             val density = binding.root.resources.displayMetrics.density
+            val dotSize = HomePosterSizePolicy.pxFromDp(INDICATOR_DOT_SIZE_DP, density)
+            val selectedWidth = HomePosterSizePolicy.pxFromDp(INDICATOR_SELECTED_WIDTH_DP, density)
+            val dotMargin = HomePosterSizePolicy.pxFromDp(INDICATOR_DOT_MARGIN_DP, density)
             binding.bannerPageIndicator.removeAllViews()
             videos.indices.forEach { index ->
                 val isSelected = index == currentPage
-                val diameter = (INDICATOR_DOT_SIZE_DP * density).toInt()
                 val params = LinearLayout.LayoutParams(
-                    (if (isSelected) INDICATOR_SELECTED_WIDTH_DP else INDICATOR_DOT_SIZE_DP * density).toInt(),
-                    diameter,
+                    if (isSelected) selectedWidth else dotSize,
+                    dotSize,
                 ).apply {
-                    if (index < videos.lastIndex) marginEnd = (INDICATOR_DOT_MARGIN_DP * density).toInt()
+                    if (index < videos.lastIndex) marginEnd = dotMargin
                 }
                 binding.bannerPageIndicator.addView(View(binding.root.context).apply {
                     layoutParams = params
                     background = GradientDrawable().apply {
                         shape = GradientDrawable.RECTANGLE
-                        cornerRadius = diameter / 2f
+                        cornerRadius = dotSize / 2f
                         setColor(if (isSelected) binding.root.context.getColor(R.color.accent) else Color.WHITE)
                         alpha = if (isSelected) 255 else INDICATOR_INACTIVE_ALPHA
                     }
@@ -252,7 +254,7 @@ class HomeVideoAdapter(
         private val onClick: (VideoSummary) -> Unit,
     ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(video: VideoSummary) {
-            bindPoster(binding.bannerPagePoster, video.coverUrl, 16, 8, isHighPriority = true)
+            bindBannerPoster(binding.bannerPagePoster, video.coverUrl)
             binding.bannerPageTitle.text = video.title
             binding.root.setOnClickListener { onClick(video) }
         }
@@ -263,7 +265,7 @@ class HomeVideoAdapter(
         private val onClick: (VideoSummary) -> Unit,
     ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(video: VideoSummary, isHighPriority: Boolean) {
-            bindPoster(binding.cardPoster, video.coverUrl, 2, 3, isHighPriority)
+            bindCardPoster(binding.cardPoster, video.coverUrl, isHighPriority)
             binding.cardTitle.text = video.title
             binding.cardMeta.text = video.updateStatus ?: listOfNotNull(video.year, video.area).joinToString(" / ")
             binding.root.setOnClickListener { onClick(video) }
@@ -281,28 +283,41 @@ class HomeVideoAdapter(
         const val HIGH_PRIORITY_ITEM_COUNT = 6
         const val AUTO_SCROLL_DELAY_MS = 5_000L
 
-        fun bindPoster(
+        fun bindBannerPoster(
             view: android.widget.ImageView,
             coverUrl: String,
-            ratioWidth: Int,
-            ratioHeight: Int,
+        ) = bindPoster(view, coverUrl, isHighPriority = true, HomePosterSizePolicy::banner)
+
+        fun bindCardPoster(
+            view: android.widget.ImageView,
+            coverUrl: String,
             isHighPriority: Boolean,
+        ) = bindPoster(view, coverUrl, isHighPriority, HomePosterSizePolicy::card)
+
+        private fun bindPoster(
+            view: android.widget.ImageView,
+            coverUrl: String,
+            isHighPriority: Boolean,
+            sizeForWidth: (Int) -> HomeImageSize,
         ) {
+            view.tag = coverUrl
             if (coverUrl.isBlank()) {
                 Glide.with(view).clear(view)
             } else {
-                val targetWidth = (view.resources.displayMetrics.widthPixels / 2).coerceAtLeast(1)
-                val targetHeight = (targetWidth * ratioHeight / ratioWidth).coerceAtLeast(1)
-                Glide.with(view)
-                    .load(coverUrl)
-                    .placeholder(R.drawable.bg_poster)
-                    .error(R.drawable.bg_poster)
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .priority(if (isHighPriority) Priority.HIGH else Priority.NORMAL)
-                    .override(targetWidth, targetHeight)
-                    .transition(DrawableTransitionOptions.withCrossFade(160))
-                    .centerCrop()
-                    .into(view)
+                view.post {
+                    if (view.tag != coverUrl) return@post
+                    val size = sizeForWidth(view.width)
+                    Glide.with(view)
+                        .load(coverUrl)
+                        .placeholder(R.drawable.bg_poster)
+                        .error(R.drawable.bg_poster)
+                        .diskCacheStrategy(DiskCacheStrategy.ALL)
+                        .priority(if (isHighPriority) Priority.HIGH else Priority.NORMAL)
+                        .override(size.width, size.height)
+                        .transition(DrawableTransitionOptions.withCrossFade(160))
+                        .centerCrop()
+                        .into(view)
+                }
             }
         }
 

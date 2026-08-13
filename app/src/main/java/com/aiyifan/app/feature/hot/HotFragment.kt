@@ -13,6 +13,7 @@ import com.aiyifan.app.core.ui.VideoListAdapter
 import com.aiyifan.app.databinding.FragmentHotBinding
 import com.aiyifan.app.feature.proxy.ProxyConnectionObserver
 import com.aiyifan.app.feature.video.VideoPlayerActivity
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
 class HotFragment : Fragment() {
@@ -57,7 +58,8 @@ class HotFragment : Fragment() {
                 .onSuccess { videos ->
                     if (requestVersion == hotRequestVersion) adapter.submitList(videos)
                 }
-                .onFailure {
+                .onFailure { error ->
+                    if (error is CancellationException) throw error
                     if (requestVersion == hotRequestVersion) {
                         Toast.makeText(requireContext(), "热门数据加载失败", Toast.LENGTH_SHORT).show()
                     }

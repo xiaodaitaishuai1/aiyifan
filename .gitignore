@@ -27,3 +27,7 @@ CommitNoteAI.md
 /app/libs/libbox.aar
 /graphify-out
 /docs
+*.jks
+*.keystore
+keystore.properties
+*.apk

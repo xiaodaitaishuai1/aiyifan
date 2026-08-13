@@ -40,6 +40,7 @@ import com.aiyifan.app.core.ui.VideoListAdapter
 import com.aiyifan.app.core.ui.applySystemBarsPadding
 import com.aiyifan.app.core.ui.setupEdgeToEdge
 import com.aiyifan.app.databinding.ActivityVideoPlayerBinding
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
@@ -154,7 +155,8 @@ class VideoPlayerActivity : AppCompatActivity() {
                         loadEpisodePlayback(loadedDetail, episode)
                     }
                 }
-                .onFailure {
+                .onFailure { error ->
+                    if (error is CancellationException) throw error
                     Toast.makeText(this@VideoPlayerActivity, R.string.video_detail_load_failed, Toast.LENGTH_SHORT).show()
                     finish()
                 }
@@ -247,7 +249,8 @@ class VideoPlayerActivity : AppCompatActivity() {
                         getString(R.string.video_play_count, detail.playCount),
                     ).joinToString(" / ")
                 }
-                .onFailure {
+                .onFailure { error ->
+                    if (error is CancellationException) throw error
                     Toast.makeText(this@VideoPlayerActivity, R.string.video_stream_load_failed, Toast.LENGTH_SHORT).show()
                 }
         }

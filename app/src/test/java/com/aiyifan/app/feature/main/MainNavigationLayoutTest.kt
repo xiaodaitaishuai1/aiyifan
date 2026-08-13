@@ -30,6 +30,14 @@ class MainNavigationLayoutTest {
         assertTrue(activity.contains("savedInstanceState?.getInt(KEY_SELECTED_TAB) ?: 0"))
     }
 
+    @Test
+    fun `activity creates a fragment only for the first instance`() {
+        val activity = sourceFile("feature/main/MainActivity.kt").readText()
+
+        assertTrue(activity.contains("if (savedInstanceState == null)"))
+        assertTrue(activity.contains("show(fragmentFor(selectedTabPosition))"))
+    }
+
     private fun layoutFile(): File = sequenceOf(
         File("src/main/res/layout/activity_main.xml"),
         File("app/src/main/res/layout/activity_main.xml"),

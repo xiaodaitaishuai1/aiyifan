@@ -21,6 +21,14 @@ class HotFragmentRefreshContractTest {
         assertTrue(source.contains("loadHot()"))
     }
 
+    @Test
+    fun `hot request propagates cancellation before rendering failure`() {
+        val source = hotFragmentSource()
+
+        assertTrue(source.contains(".onFailure { error ->"))
+        assertTrue(source.contains("if (error is CancellationException) throw error"))
+    }
+
     private fun hotFragmentSource(): String = sequenceOf(
         File("src/main/java/com/aiyifan/app/feature/hot/HotFragment.kt"),
         File("app/src/main/java/com/aiyifan/app/feature/hot/HotFragment.kt"),
