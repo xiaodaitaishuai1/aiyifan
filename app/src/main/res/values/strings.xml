@@ -94,4 +94,15 @@
     <string name="player_gesture_brightness">亮度 %1$d%%</string>
     <string name="player_gesture_volume">音量 %1$d%%</string>
     <string name="player_gesture_seek">快进至 %1$s</string>
+    <string name="local_media_tab">本地媒体</string>
+    <string name="local_media_title">本地媒体</string>
+    <string name="local_media_search_hint">搜索本地视频</string>
+    <string name="local_media_all">全部</string>
+    <string name="local_media_recent_added">最近添加</string>
+    <string name="local_media_recent_played">最近播放</string>
+    <string name="local_media_permission_required">需要视频读取权限才能扫描本地视频</string>
+    <string name="local_media_grant_permission">授予权限</string>
+    <string name="local_media_empty">没有找到本地视频</string>
+    <string name="local_media_play">播放</string>
+    <string name="local_media_speed">速度</string>
 </resources>

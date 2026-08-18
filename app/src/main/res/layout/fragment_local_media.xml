@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_page"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_56"
+        android:background="@color/surface"
+        android:gravity="center_vertical"
+        android:paddingStart="@dimen/dp_16"
+        android:text="@string/local_media_title"
+        android:textColor="@color/text_primary"
+        android:textSize="@dimen/sp_20"
+        android:textStyle="bold" />
+
+    <EditText
+        android:id="@+id/localSearch"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_48"
+        android:layout_marginHorizontal="@dimen/dp_12"
+        android:layout_marginTop="@dimen/dp_12"
+        android:background="@drawable/bg_search"
+        android:hint="@string/local_media_search_hint"
+        android:imeOptions="actionSearch"
+        android:inputType="text"
+        android:paddingStart="@dimen/dp_16"
+        android:paddingEnd="@dimen/dp_16"
+        android:singleLine="true"
+        android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_secondary"
+        android:textSize="@dimen/sp_14" />
+
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/localTabs"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_48"
+        android:layout_marginTop="@dimen/dp_8"
+        android:background="@color/surface"
+        app:tabIndicatorColor="@color/accent"
+        app:tabIndicatorHeight="@dimen/dp_2"
+        app:tabMode="fixed"
+        app:tabSelectedTextColor="@color/accent"
+        app:tabTextColor="@color/text_secondary">
+
+        <com.google.android.material.tabs.TabItem android:text="@string/local_media_all" />
+        <com.google.android.material.tabs.TabItem android:text="@string/local_media_recent_added" />
+        <com.google.android.material.tabs.TabItem android:text="@string/local_media_recent_played" />
+    </com.google.android.material.tabs.TabLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/localRecycler"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:padding="@dimen/dp_12" />
+
+        <LinearLayout
+            android:id="@+id/localPermissionState"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="@dimen/dp_24"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="@dimen/dp_120"
+                android:layout_height="@dimen/dp_120"
+                android:contentDescription="@string/local_media_permission_required"
+                android:src="@drawable/ic_empty_history" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/dp_16"
+                android:gravity="center"
+                android:text="@string/local_media_permission_required"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/sp_15" />
+
+            <Button
+                android:id="@+id/localPermissionButton"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/dp_44"
+                android:layout_marginTop="@dimen/dp_16"
+                android:background="@drawable/bg_button_primary"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:paddingStart="@dimen/dp_24"
+                android:paddingEnd="@dimen/dp_24"
+                android:text="@string/local_media_grant_permission"
+                android:textColor="@color/text_on_accent"
+                app:backgroundTint="@null" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/localEmptyState"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="@dimen/dp_24"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="@dimen/dp_120"
+                android:layout_height="@dimen/dp_120"
+                android:contentDescription="@string/local_media_empty"
+                android:src="@drawable/ic_empty_history" />
+
+            <TextView
+                android:id="@+id/localEmptyText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/dp_16"
+                android:gravity="center"
+                android:text="@string/local_media_empty"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/sp_15" />
+        </LinearLayout>
+    </FrameLayout>
+</LinearLayout>

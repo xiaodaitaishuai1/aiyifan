@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_player">
+
+    <androidx.media3.ui.PlayerView
+        android:id="@+id/localPlayerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:show_timeout="3000"
+        app:use_artwork="false" />
+
+    <LinearLayout
+        android:id="@+id/localPlayerTopBar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_56"
+        android:background="@color/surface"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/localBackButton"
+            android:layout_width="@dimen/dp_56"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:contentDescription="@string/hardcoded_text_001"
+            android:src="@drawable/ic_back"
+            android:padding="@dimen/dp_16" />
+
+        <TextView
+            android:id="@+id/localVideoTitle"
+            android:layout_width="@dimen/dp_0"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:gravity="center_vertical"
+            android:maxLines="1"
+            android:textColor="@color/text_primary"
+            android:textSize="@dimen/sp_16"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/localSpeedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/dp_44"
+            android:layout_marginEnd="@dimen/dp_8"
+            android:background="@drawable/bg_button_outline"
+            android:minWidth="0dp"
+            android:text="@string/local_media_speed"
+            android:textColor="@color/text_primary"
+            android:textSize="@dimen/sp_13" />
+
+        <ImageButton
+            android:id="@+id/localFullScreenButton"
+            android:layout_width="@dimen/dp_56"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:contentDescription="@string/hardcoded_text_023"
+            android:src="@drawable/ic_fullscreen"
+            android:padding="@dimen/dp_16" />
+    </LinearLayout>
+</FrameLayout>

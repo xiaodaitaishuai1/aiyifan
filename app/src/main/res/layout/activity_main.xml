@@ -26,7 +26,7 @@
         app:tabTextColor="@color/text_secondary">
 
         <com.google.android.material.tabs.TabItem android:text="@string/tab_home" />
-        <com.google.android.material.tabs.TabItem android:text="@string/tab_hot" />
+        <com.google.android.material.tabs.TabItem android:text="@string/local_media_tab" />
         <com.google.android.material.tabs.TabItem android:text="@string/tab_mine" />
     </com.google.android.material.tabs.TabLayout>
 </LinearLayout>

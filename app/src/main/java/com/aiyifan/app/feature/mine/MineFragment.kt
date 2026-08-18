@@ -12,6 +12,7 @@ import com.aiyifan.app.core.ui.ThemePreferenceStore
 import com.aiyifan.app.databinding.FragmentMineBinding
 import com.aiyifan.app.feature.collection.CollectionActivity
 import com.aiyifan.app.feature.history.HistoryActivity
+import com.aiyifan.app.feature.hot.HotActivity
 import com.aiyifan.app.feature.proxy.ProxySettingsActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
@@ -29,6 +30,7 @@ class MineFragment : Fragment() {
         binding.themeSettingsSummary.setText(themePreferenceStore.currentMode().labelRes)
         binding.historyButton.setOnClickListener { startActivity(Intent(requireContext(), HistoryActivity::class.java)) }
         binding.collectionButton.setOnClickListener { startActivity(Intent(requireContext(), CollectionActivity::class.java)) }
+        binding.hotButton.setOnClickListener { startActivity(Intent(requireContext(), HotActivity::class.java)) }
         binding.proxySettingsButton.setOnClickListener {
             startActivity(Intent(requireContext(), ProxySettingsActivity::class.java))
         }

@@ -28,6 +28,16 @@
 
                 <ImageView android:layout_width="@dimen/dp_20" android:layout_height="@dimen/dp_20" android:contentDescription="@string/hardcoded_text_042" android:src="@drawable/ic_chevron_right" />
             </LinearLayout>
+            <View android:layout_width="match_parent" android:layout_height="@dimen/dp_1" android:layout_marginStart="@dimen/dp_54" android:background="@color/outline" />
+
+            <LinearLayout android:id="@+id/hotButton" android:layout_width="match_parent" android:layout_height="@dimen/dp_56" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="@dimen/dp_16" android:paddingEnd="@dimen/dp_14">
+
+                <ImageView android:layout_width="@dimen/dp_24" android:layout_height="@dimen/dp_24" android:contentDescription="@string/tab_hot" android:src="@drawable/ic_history" />
+
+                <TextView android:layout_width="@dimen/dp_0" android:layout_height="wrap_content" android:layout_marginStart="@dimen/dp_14" android:layout_weight="1" android:text="@string/tab_hot" android:textColor="@color/text_primary" android:textSize="@dimen/sp_16" />
+
+                <ImageView android:layout_width="@dimen/dp_20" android:layout_height="@dimen/dp_20" android:contentDescription="@string/tab_hot" android:src="@drawable/ic_chevron_right" />
+            </LinearLayout>
         </LinearLayout>
 
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="@dimen/dp_4" android:layout_marginTop="@dimen/dp_24" android:layout_marginBottom="@dimen/dp_8" android:paddingStart="@dimen/dp_16" android:text="@string/hardcoded_text_043" android:textColor="@color/text_secondary" android:textSize="@dimen/sp_13" />

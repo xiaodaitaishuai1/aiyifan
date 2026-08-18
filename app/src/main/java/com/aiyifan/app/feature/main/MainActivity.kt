@@ -8,7 +8,7 @@ import com.aiyifan.app.core.ui.applySystemBarsPadding
 import com.aiyifan.app.core.ui.setupEdgeToEdge
 import com.aiyifan.app.databinding.ActivityMainBinding
 import com.aiyifan.app.feature.home.HomeFragment
-import com.aiyifan.app.feature.hot.HotFragment
+import com.aiyifan.app.feature.localmedia.LocalMediaFragment
 import com.aiyifan.app.feature.mine.MineFragment
 
 class MainActivity : AppCompatActivity() {
@@ -46,7 +46,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun fragmentFor(position: Int): Fragment = when (position) {
-        1 -> HotFragment()
+        1 -> LocalMediaFragment()
         2 -> MineFragment()
         else -> HomeFragment()
     }
