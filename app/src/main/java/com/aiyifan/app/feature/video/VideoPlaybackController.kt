@@ -18,6 +18,7 @@ import com.aiyifan.app.core.data.remote.LocalProxyEndpoint
 import com.aiyifan.app.core.data.remote.ProxyConnectionPolicy
 import com.aiyifan.app.core.model.Episode
 import com.aiyifan.app.core.model.VideoDetail
+import com.aiyifan.app.core.ui.PlaybackScreenAwakeController
 import okhttp3.OkHttpClient
 
 interface PlaybackEngine {
@@ -224,6 +225,7 @@ private class Media3PlaybackEngine(
     private val player: ExoPlayer,
 ) : PlaybackEngine {
     private var attachedPlayerView: PlayerView? = null
+    private var screenAwakeController: PlaybackScreenAwakeController? = null
     private val positionListeners = linkedSetOf<(Long) -> Unit>()
     private val positionHandler = Handler(Looper.getMainLooper())
     private val positionRunnable = object : Runnable {
@@ -236,6 +238,7 @@ private class Media3PlaybackEngine(
     }
     private val playerListener = object : Player.Listener {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
+            screenAwakeController?.onIsPlayingChanged(isPlaying)
             if (isPlaying) startPositionUpdates() else positionHandler.removeCallbacks(positionRunnable)
         }
     }
@@ -286,17 +289,24 @@ private class Media3PlaybackEngine(
     override fun attach(playerView: PlayerView) {
         if (attachedPlayerView === playerView) return
 
+        screenAwakeController?.detach()
         attachedPlayerView?.player = null
         playerView.player = player
         attachedPlayerView = playerView
+        screenAwakeController = PlaybackScreenAwakeController(playerView::setKeepScreenOn).also {
+            it.attach(player.isPlaying)
+        }
     }
 
     override fun detach() {
+        screenAwakeController?.detach()
+        screenAwakeController = null
         attachedPlayerView?.player = null
         attachedPlayerView = null
     }
 
     override fun release() {
+        detach()
         positionHandler.removeCallbacks(positionRunnable)
         positionListeners.clear()
         player.removeListener(playerListener)

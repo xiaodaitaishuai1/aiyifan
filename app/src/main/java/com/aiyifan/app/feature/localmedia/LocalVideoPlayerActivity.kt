@@ -15,6 +15,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import com.aiyifan.app.R
 import com.aiyifan.app.core.ui.applySystemBarsPadding
+import com.aiyifan.app.core.ui.PlaybackScreenAwakeController
 import com.aiyifan.app.core.ui.setupEdgeToEdge
 import com.aiyifan.app.databinding.ActivityLocalVideoPlayerBinding
 import com.aiyifan.app.feature.localmedia.data.LocalPlaybackStore
@@ -24,6 +25,7 @@ class LocalVideoPlayerActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLocalVideoPlayerBinding
     private lateinit var player: ExoPlayer
     private lateinit var playbackStore: LocalPlaybackStore
+    private lateinit var screenAwakeController: PlaybackScreenAwakeController
     private var video: LocalVideo? = null
     private var isFullScreen = false
     private var finishedPlayback = false
@@ -33,6 +35,7 @@ class LocalVideoPlayerActivity : AppCompatActivity() {
         setupEdgeToEdge()
         binding = ActivityLocalVideoPlayerBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        screenAwakeController = PlaybackScreenAwakeController(binding.localPlayerView::setKeepScreenOn)
         binding.localPlayerTopBar.applySystemBarsPadding(top = true, growHeight = true)
 
         playbackStore = LocalPlaybackStore(this)
@@ -45,6 +48,7 @@ class LocalVideoPlayerActivity : AppCompatActivity() {
 
         player = ExoPlayer.Builder(this).build()
         binding.localPlayerView.player = player
+        screenAwakeController.attach(player.isPlaying)
         player.setMediaItem(MediaItem.fromUri(parsed.contentUri))
         player.playWhenReady = true
 
@@ -61,18 +65,25 @@ class LocalVideoPlayerActivity : AppCompatActivity() {
         binding.localSpeedButton.setOnClickListener { showSpeedDialog() }
 
         player.addListener(object : Player.Listener {
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                screenAwakeController.onIsPlayingChanged(isPlaying)
+            }
+
             override fun onPlaybackStateChanged(playbackState: Int) {
                 if (playbackState == Player.STATE_ENDED) {
+                    screenAwakeController.onIsPlayingChanged(false)
                     finishedPlayback = true
                     persistPosition(0L)
                 }
             }
 
             override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+                screenAwakeController.onIsPlayingChanged(false)
                 persistPosition(player.currentPosition)
                 finish()
             }
         })
+        screenAwakeController.onIsPlayingChanged(player.isPlaying)
 
         binding.localPlayerView.setControllerVisibilityListener(
             PlayerView.ControllerVisibilityListener { visible ->
@@ -96,6 +107,9 @@ class LocalVideoPlayerActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        if (::screenAwakeController.isInitialized) {
+            screenAwakeController.detach()
+        }
         if (::player.isInitialized) {
             binding.localPlayerView.player = null
             player.release()
