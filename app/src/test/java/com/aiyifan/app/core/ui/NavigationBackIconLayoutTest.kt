@@ -38,7 +38,6 @@ class NavigationBackIconLayoutTest {
     private companion object {
         val layoutNames = listOf(
             "activity_login",
-            "activity_proxy_settings",
             "activity_search",
             "activity_simple_list",
             "activity_video_player",

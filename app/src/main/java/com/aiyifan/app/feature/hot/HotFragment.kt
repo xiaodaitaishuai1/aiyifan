@@ -11,7 +11,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.aiyifan.app.core.data.AppGraph
 import com.aiyifan.app.core.ui.VideoListAdapter
 import com.aiyifan.app.databinding.FragmentHotBinding
-import com.aiyifan.app.feature.proxy.ProxyConnectionObserver
 import com.aiyifan.app.feature.video.VideoPlayerActivity
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
@@ -21,11 +20,6 @@ class HotFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var adapter: VideoListAdapter
     private var hotRequestVersion = 0L
-    private val proxyConnectionObserver = ProxyConnectionObserver {
-        if (_binding != null) {
-            viewLifecycleOwner.lifecycleScope.launch { loadHot() }
-        }
-    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentHotBinding.inflate(inflater, container, false)
@@ -39,16 +33,6 @@ class HotFragment : Fragment() {
         binding.hotRecycler.layoutManager = LinearLayoutManager(requireContext())
         binding.hotRecycler.adapter = adapter
         loadHot()
-    }
-
-    override fun onStart() {
-        super.onStart()
-        AppGraph.proxyManager.addConnectionObserver(proxyConnectionObserver)
-    }
-
-    override fun onStop() {
-        AppGraph.proxyManager.removeConnectionObserver(proxyConnectionObserver)
-        super.onStop()
     }
 
     private fun loadHot() {

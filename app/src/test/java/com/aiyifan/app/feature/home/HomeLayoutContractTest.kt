@@ -119,12 +119,11 @@ class HomeLayoutContractTest {
     }
 
     @Test
-    fun `home contains a hidden VPN quick connect button`() {
-        val home = root(layout("fragment_home"))
-        val button = view(home, "vpnQuickConnectButton")
+    fun `home does not contain VPN quick connect UI`() {
+        val home = layout("fragment_home").readText()
 
-        assertEquals("gone", button.getAttribute("android:visibility"))
-        assertEquals("@string/home_vpn_connect", button.getAttribute("android:text"))
+        assertFalse(home.contains("vpnQuickConnectButton"))
+        assertFalse(home.contains("home_vpn"))
     }
 
     private fun layout(name: String): File = sequenceOf(

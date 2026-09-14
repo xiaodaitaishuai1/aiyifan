@@ -7,7 +7,6 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
-import java.net.Proxy
 import java.net.URLEncoder
 import java.net.URL
 
@@ -21,8 +20,6 @@ data class HttpResponse(
 interface HttpFetcher {
     suspend fun get(url: String): HttpResponse
 
-    suspend fun getDirect(url: String): HttpResponse = get(url)
-
     suspend fun postForm(url: String, params: Map<String, String>): HttpResponse =
         throw UnsupportedOperationException("Form POST is not supported")
 
@@ -31,24 +28,20 @@ interface HttpFetcher {
 }
 
 fun interface HttpConnectionOpener {
-    fun open(url: URL, proxy: Proxy?): HttpURLConnection
+    fun open(url: URL): HttpURLConnection
 }
 
 class UrlConnectionHttpFetcher(
-    private val endpointProvider: () -> LocalProxyEndpoint? = { null },
-    private val connectionOpener: HttpConnectionOpener = HttpConnectionOpener { url, proxy ->
-        (proxy?.let(url::openConnection) ?: url.openConnection()) as HttpURLConnection
+    private val connectionOpener: HttpConnectionOpener = HttpConnectionOpener { url ->
+        url.openConnection() as HttpURLConnection
     },
 ) : HttpFetcher {
     override suspend fun get(url: String): HttpResponse =
-        get(url, ProxyConnectionPolicy.select(endpointProvider()))
+        executeGet(url)
 
-    override suspend fun getDirect(url: String): HttpResponse =
-        get(url, proxy = null)
-
-    private suspend fun get(url: String, proxy: Proxy?): HttpResponse =
+    private suspend fun executeGet(url: String): HttpResponse =
         withContext(Dispatchers.IO) {
-            val connection = connectionOpener.open(URL(url), proxy).apply {
+            val connection = connectionOpener.open(URL(url)).apply {
                 requestMethod = "GET"
                 connectTimeout = 10_000
                 readTimeout = 10_000
@@ -75,10 +68,7 @@ class UrlConnectionHttpFetcher(
 
     override suspend fun postForm(url: String, params: Map<String, String>): HttpResponse =
         withContext(Dispatchers.IO) {
-            val connection = connectionOpener.open(
-                URL(url),
-                ProxyConnectionPolicy.select(endpointProvider()),
-            ).apply {
+            val connection = connectionOpener.open(URL(url)).apply {
                 requestMethod = "POST"
                 connectTimeout = 10_000
                 readTimeout = 10_000
@@ -114,10 +104,7 @@ class UrlConnectionHttpFetcher(
 
     override suspend fun postJson(url: String, body: String): HttpResponse =
         withContext(Dispatchers.IO) {
-            val connection = connectionOpener.open(
-                URL(url),
-                ProxyConnectionPolicy.select(endpointProvider()),
-            ).apply {
+            val connection = connectionOpener.open(URL(url)).apply {
                 requestMethod = "POST"
                 connectTimeout = 10_000
                 readTimeout = 10_000

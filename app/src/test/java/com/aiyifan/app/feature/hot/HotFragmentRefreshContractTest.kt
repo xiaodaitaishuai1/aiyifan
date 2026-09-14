@@ -7,17 +7,12 @@ import org.junit.Test
 class HotFragmentRefreshContractTest {
 
     @Test
-    fun `hot page refreshes through a shared loader after a proxy connection`() {
+    fun `hot page refreshes through a shared loader`() {
         val source = hotFragmentSource()
 
-        assertTrue(source.contains("override fun onStart()"))
-        assertTrue(source.contains("override fun onStop()"))
         assertTrue(source.contains("private fun loadHot()"))
         assertTrue(source.contains("val requestVersion = ++hotRequestVersion"))
         assertTrue(source.contains("requestVersion == hotRequestVersion"))
-        assertTrue(source.contains("proxyManager.addConnectionObserver"))
-        assertTrue(source.contains("proxyManager.removeConnectionObserver"))
-        assertTrue(source.contains("viewLifecycleOwner.lifecycleScope.launch { loadHot() }"))
         assertTrue(source.contains("loadHot()"))
     }
 

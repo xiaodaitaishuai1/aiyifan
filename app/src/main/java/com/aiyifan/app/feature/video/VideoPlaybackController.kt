@@ -5,8 +5,6 @@ import android.os.Handler
 import android.os.Looper
 import androidx.annotation.OptIn as AndroidxOptIn
 import androidx.media3.datasource.DefaultDataSource
-import androidx.media3.datasource.DataSource
-import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
@@ -14,12 +12,9 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.MediaSession
 import androidx.media3.ui.PlayerView
 import com.aiyifan.app.core.data.CatalogRepository
-import com.aiyifan.app.core.data.remote.LocalProxyEndpoint
-import com.aiyifan.app.core.data.remote.ProxyConnectionPolicy
 import com.aiyifan.app.core.model.Episode
 import com.aiyifan.app.core.model.VideoDetail
 import com.aiyifan.app.core.ui.PlaybackScreenAwakeController
-import okhttp3.OkHttpClient
 
 interface PlaybackEngine {
     val isPlaying: Boolean
@@ -178,11 +173,9 @@ class VideoPlaybackController(
         fun create(
             applicationContext: Context,
             repository: CatalogRepository,
-            proxyEndpointProvider: () -> LocalProxyEndpoint? = { null },
         ): VideoPlaybackController {
-            val dataSourceFactory = ProxyAwareDataSourceFactory(applicationContext, proxyEndpointProvider)
             val player = ExoPlayer.Builder(applicationContext)
-                .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
+                .setMediaSourceFactory(DefaultMediaSourceFactory(DefaultDataSource.Factory(applicationContext)))
                 .build()
             val session = MediaSession.Builder(applicationContext, player).build()
             return VideoPlaybackController(
@@ -205,19 +198,6 @@ class VideoPlaybackControllerProvider(
         if (activeController != null && !activeController.isReleased) return activeController
 
         return createController().also { controller = it }
-    }
-}
-
-private class ProxyAwareDataSourceFactory(
-    private val context: Context,
-    private val proxyEndpointProvider: () -> LocalProxyEndpoint?,
-) : DataSource.Factory {
-    @AndroidxOptIn(markerClass = [UnstableApi::class])
-    override fun createDataSource(): DataSource {
-        val httpClient = OkHttpClient.Builder().apply {
-            ProxyConnectionPolicy.select(proxyEndpointProvider())?.let(::proxy)
-        }.build()
-        return DefaultDataSource.Factory(context, OkHttpDataSource.Factory(httpClient)).createDataSource()
     }
 }
 

@@ -20,9 +20,10 @@ class MineLayoutTest {
         assertEquals("TextView", viewWithId(root, "themeSettingsSummary").tagName)
         assertFalse(hasViewWithId(root, "profileCard"))
         assertFalse(hasViewWithId(root, "loginButton"))
-        listOf("historyButton", "collectionButton", "proxySettingsButton").forEach { id ->
+        listOf("historyButton", "collectionButton").forEach { id ->
             assertEquals("LinearLayout", viewWithId(root, id).tagName)
         }
+        assertFalse(hasViewWithId(root, "proxySettingsButton"))
     }
 
     private fun parseLayout(): Element = DocumentBuilderFactory.newInstance()
