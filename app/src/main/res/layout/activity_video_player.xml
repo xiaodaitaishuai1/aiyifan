@@ -16,7 +16,7 @@
 
         <FrameLayout android:id="@+id/playerContainer" android:layout_width="match_parent" android:layout_height="@dimen/dp_211" android:background="@drawable/bg_player">
 
-            <androidx.media3.ui.PlayerView android:id="@+id/playerView" android:layout_width="match_parent" android:layout_height="match_parent" app:show_buffering="when_playing" app:use_controller="true" />
+            <androidx.media3.ui.PlayerView android:id="@+id/playerView" android:layout_width="match_parent" android:layout_height="match_parent" app:show_buffering="when_playing" app:use_controller="true" app:controller_layout_id="@layout/view_video_controls" />
 
             <LinearLayout android:id="@+id/fullScreenTitleBar" android:layout_width="match_parent" android:layout_height="@dimen/dp_48" android:layout_gravity="top" android:background="#99000000" android:gravity="center_vertical" android:orientation="horizontal" android:visibility="gone">
 

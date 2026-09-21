@@ -16,6 +16,7 @@ import androidx.media3.ui.PlayerView
 import com.aiyifan.app.R
 import com.aiyifan.app.core.ui.applySystemBarsPadding
 import com.aiyifan.app.core.ui.PlaybackScreenAwakeController
+import com.aiyifan.app.core.ui.ScreenOffPlaybackObserver
 import com.aiyifan.app.core.ui.setupEdgeToEdge
 import com.aiyifan.app.databinding.ActivityLocalVideoPlayerBinding
 import com.aiyifan.app.feature.localmedia.data.LocalPlaybackStore
@@ -29,6 +30,7 @@ class LocalVideoPlayerActivity : AppCompatActivity() {
     private var video: LocalVideo? = null
     private var isFullScreen = false
     private var finishedPlayback = false
+    private var screenObserver: ScreenOffPlaybackObserver? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,7 +52,7 @@ class LocalVideoPlayerActivity : AppCompatActivity() {
         binding.localPlayerView.player = player
         screenAwakeController.attach(player.isPlaying)
         player.setMediaItem(MediaItem.fromUri(parsed.contentUri))
-        player.playWhenReady = true
+        player.playWhenReady = ScreenOffPlaybackObserver.canPlay(this)
 
         val resumePosition = LocalPlayerPositionPolicy.clampPosition(
             playbackStore.load().firstOrNull { it.mediaStoreId == parsed.id }?.positionMs ?: 0L,
@@ -58,6 +60,7 @@ class LocalVideoPlayerActivity : AppCompatActivity() {
         )
         if (resumePosition > 0L) player.seekTo(resumePosition)
         player.prepare()
+        screenObserver = ScreenOffPlaybackObserver(this) { pausePlayback() }
 
         binding.localVideoTitle.text = parsed.displayName
         binding.localBackButton.setOnClickListener { finish() }
@@ -65,6 +68,11 @@ class LocalVideoPlayerActivity : AppCompatActivity() {
         binding.localSpeedButton.setOnClickListener { showSpeedDialog() }
 
         player.addListener(object : Player.Listener {
+            override fun onEvents(player: Player, events: Player.Events) {
+                if (player.playWhenReady && !ScreenOffPlaybackObserver.canPlay(this@LocalVideoPlayerActivity)) {
+                    pausePlayback()
+                }
+            }
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 screenAwakeController.onIsPlayingChanged(isPlaying)
             }
@@ -100,6 +108,7 @@ class LocalVideoPlayerActivity : AppCompatActivity() {
     }
 
     override fun onStop() {
+        if (::player.isInitialized) player.pause()
         if (::player.isInitialized && !finishedPlayback) {
             persistPosition(player.currentPosition)
         }
@@ -107,6 +116,7 @@ class LocalVideoPlayerActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        screenObserver?.release()
         if (::screenAwakeController.isInitialized) {
             screenAwakeController.detach()
         }
@@ -153,6 +163,12 @@ class LocalVideoPlayerActivity : AppCompatActivity() {
                 updatedAt = System.currentTimeMillis(),
             ),
         )
+    }
+
+    private fun pausePlayback() {
+        if (!::player.isInitialized) return
+        player.pause()
+        if (!finishedPlayback) persistPosition(player.currentPosition)
     }
 
     private fun parseVideo(intent: Intent): LocalVideo? {

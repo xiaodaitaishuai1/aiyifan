@@ -35,6 +35,10 @@ class HistoryActivity : AppCompatActivity() {
         }
         binding.recycler.layoutManager = LinearLayoutManager(this)
         binding.recycler.adapter = adapter
+    }
+
+    override fun onResume() {
+        super.onResume()
         render()
     }
 

@@ -41,6 +41,7 @@ class FloatingPlayerService : Service() {
     private var layoutParams: WindowManager.LayoutParams? = null
     private var hiddenEdge: FloatingWindowEdge? = null
     private var isClosing = false
+    private var removeStateListener: (() -> Unit)? = null
     private var controlsVisible = true
     private var controlsShownAtMs = 0L
     private val controlsAutoHideRunnable = Runnable { hideControlsWhenIdle() }
@@ -61,7 +62,7 @@ class FloatingPlayerService : Service() {
     }
 
     override fun onDestroy() {
-        closeFloatingPlayer(stopService = false)
+        closeFloatingPlayer(stopService = false, releasePlayback = controllerHolder.isInitialized() && controller.hasOverlayOwner)
         serviceScope.cancel()
         super.onDestroy()
     }
@@ -80,7 +81,17 @@ class FloatingPlayerService : Service() {
         try {
             controller.attach(root.findViewById<PlayerView>(R.id.floatingPlayerView))
             windowManager.addView(root, params)
+            controller.hasOverlayOwner = true
+            removeStateListener = controller.addStateListener {
+                updateEpisodeButtons(root)
+                root.findViewById<ImageButton>(R.id.floatingPlayPauseButton).apply {
+                    setImageResource(if (controller.playWhenReady) R.drawable.ic_pause else R.drawable.ic_play)
+                    contentDescription = if (controller.playWhenReady) "暂停播放" else "继续播放"
+                }
+            }
         } catch (exception: RuntimeException) {
+            controller.hasOverlayOwner = false
+            controller.pause()
             controller.detach()
             floatingRoot = null
             layoutParams = null
@@ -97,8 +108,8 @@ class FloatingPlayerService : Service() {
         val playPauseButton = root.findViewById<ImageButton>(R.id.floatingPlayPauseButton)
         playPauseButton.setOnClickListener {
             controller.togglePlayPause()
-            playPauseButton.setImageResource(if (controller.isPlaying) R.drawable.ic_pause else R.drawable.ic_play)
-            playPauseButton.contentDescription = if (controller.isPlaying) "暂停播放" else "继续播放"
+            playPauseButton.setImageResource(if (controller.playWhenReady) R.drawable.ic_pause else R.drawable.ic_play)
+            playPauseButton.contentDescription = if (controller.playWhenReady) "暂停播放" else "继续播放"
         }
 
         root.findViewById<ImageButton>(R.id.floatingPreviousEpisodeButton).setOnClickListener {
@@ -135,6 +146,7 @@ class FloatingPlayerService : Service() {
     }
 
     private fun switchEpisode(root: View, offset: Int) {
+        if (controller.isLoading) return
         serviceScope.launch {
             when (controller.switchEpisode(offset)) {
                 is EpisodeSwitchResult.Switched -> showControls(root)
@@ -151,6 +163,9 @@ class FloatingPlayerService : Service() {
     private fun closeFloatingPlayer(stopService: Boolean, releasePlayback: Boolean = true) {
         if (isClosing) return
         isClosing = true
+        removeStateListener?.invoke()
+        removeStateListener = null
+        if (controllerHolder.isInitialized()) controller.hasOverlayOwner = false
 
         val root = floatingRoot
         floatingRoot = null
@@ -160,7 +175,6 @@ class FloatingPlayerService : Service() {
             runCatching { windowManager.removeView(root) }
         }
         if (controllerHolder.isInitialized() && releasePlayback) {
-            FloatingPlayerRecovery.record(this, controller.currentPositionMs)
             controller.saveHistory()
             controller.release()
         }
@@ -250,11 +264,11 @@ class FloatingPlayerService : Service() {
         val index = session?.detail?.episodes?.indexOfFirst { it.episodeKey == session.episode.episodeKey } ?: -1
         val count = session?.detail?.episodes?.size ?: 0
         root.findViewById<ImageButton>(R.id.floatingPreviousEpisodeButton).apply {
-            isEnabled = FloatingControlsVisibilityPolicy.isEpisodeButtonEnabled(index, count, -1)
+            isEnabled = !controller.isLoading && FloatingControlsVisibilityPolicy.isEpisodeButtonEnabled(index, count, -1)
             alpha = if (isEnabled) 1f else 0.45f
         }
         root.findViewById<ImageButton>(R.id.floatingNextEpisodeButton).apply {
-            isEnabled = FloatingControlsVisibilityPolicy.isEpisodeButtonEnabled(index, count, 1)
+            isEnabled = !controller.isLoading && FloatingControlsVisibilityPolicy.isEpisodeButtonEnabled(index, count, 1)
             alpha = if (isEnabled) 1f else 0.45f
         }
     }

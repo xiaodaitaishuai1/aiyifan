@@ -6,6 +6,10 @@ enum class PlayerGestureKind {
 }
 
 object PlayerGesturePolicy {
+    fun brightnessPercent(windowBrightness: Float, systemBrightness: Int): Int =
+        (if (windowBrightness >= 0f) (windowBrightness * 100).toInt()
+        else systemBrightness.coerceIn(0, 255) * 100 / 255).coerceIn(1, 100)
+
     const val LONG_PRESS_MS = 2_000L
     private const val MAX_SEEK_OFFSET_MS = 120_000L
 

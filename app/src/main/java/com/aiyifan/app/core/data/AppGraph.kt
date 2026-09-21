@@ -14,6 +14,9 @@ object AppGraph {
         RemoteCatalogRepository(
             configResolver = RemoteConfigResolver(UrlConnectionHttpFetcher()),
             fetcher = UrlConnectionHttpFetcher(),
+            historyStore = SharedPreferencesWatchHistoryStore(
+                applicationContext.getSharedPreferences("watch_history", Context.MODE_PRIVATE),
+            ),
         )
     }
 

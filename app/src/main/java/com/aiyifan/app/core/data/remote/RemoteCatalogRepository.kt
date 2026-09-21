@@ -3,6 +3,8 @@ package com.aiyifan.app.core.data.remote
 import com.aiyifan.app.core.data.CatalogRepository
 import com.aiyifan.app.core.data.FakeCatalogRepository
 import com.aiyifan.app.core.data.HomeVideoPage
+import com.aiyifan.app.core.data.InMemoryWatchHistoryStore
+import com.aiyifan.app.core.data.WatchHistoryStore
 import com.aiyifan.app.core.model.Category
 import com.aiyifan.app.core.model.Comment
 import com.aiyifan.app.core.model.Episode
@@ -22,6 +24,8 @@ class RemoteCatalogRepository(
     private val fallback: FakeCatalogRepository = FakeCatalogRepository(),
     private val configResolver: RemoteConfigResolver = RemoteConfigResolver(UrlConnectionHttpFetcher()),
     private val fetcher: HttpFetcher = UrlConnectionHttpFetcher(),
+    private val historyStore: WatchHistoryStore = InMemoryWatchHistoryStore(),
+    private val clock: () -> Long = System::currentTimeMillis,
 ) : CatalogRepository {
     private val cacheLock = Mutex()
     private val detailLock = Mutex()
@@ -180,13 +184,24 @@ class RemoteCatalogRepository(
     override fun getComments(mediaKey: String): List<Comment> = fallback.getComments(mediaKey)
 
     override fun saveHistory(detail: VideoDetail, episode: Episode, progressMs: Long, durationMs: Long) {
-        fallback.saveHistory(detail, episode, progressMs, durationMs)
+        historyStore.save(
+            WatchHistory(
+                mediaKey = detail.mediaKey,
+                episodeKey = episode.episodeKey,
+                title = detail.title,
+                coverUrl = detail.coverUrl,
+                videoType = detail.videoType,
+                progressMs = progressMs,
+                durationMs = durationMs,
+                updatedAt = clock(),
+            ),
+        )
     }
 
-    override fun getHistory(): List<WatchHistory> = fallback.getHistory()
+    override fun getHistory(): List<WatchHistory> = historyStore.getHistory()
 
     override fun clearHistory() {
-        fallback.clearHistory()
+        historyStore.clear()
     }
 
     override fun toggleFavorite(detail: VideoDetail): Boolean = fallback.toggleFavorite(detail)

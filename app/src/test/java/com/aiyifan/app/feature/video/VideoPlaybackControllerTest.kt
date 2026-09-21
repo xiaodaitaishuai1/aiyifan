@@ -4,6 +4,10 @@ import com.aiyifan.app.core.data.FakeCatalogRepository
 import com.aiyifan.app.core.model.Episode
 import com.aiyifan.app.core.model.VideoDetail
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
+import com.aiyifan.app.core.data.CatalogRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotSame
@@ -143,6 +147,146 @@ class VideoPlaybackControllerTest {
         assertEquals(first, controller.activeSession?.episode)
     }
 
+    @Test
+    fun `switch saves the outgoing episode before replacing media`() = runBlocking {
+        val first = sampleEpisode(key = "first")
+        val second = sampleEpisode(key = "second")
+        val repository = FakeCatalogRepository()
+        val engine = FakePlaybackEngine(currentPosition = 42_000L, duration = 100_000L)
+        val controller = VideoPlaybackController(engine, repository, FakePlaybackSession())
+        controller.prepare(sampleDetail(listOf(first, second)), first)
+
+        controller.switchEpisode(1)
+
+        assertEquals("first", repository.getHistory().single().episodeKey)
+        assertEquals(42_000L, repository.getHistory().single().progressMs)
+    }
+
+    @Test
+    fun `unknown active episode cannot jump to the first episode`() = runBlocking {
+        val controller = VideoPlaybackController(FakePlaybackEngine(), FakeCatalogRepository(), FakePlaybackSession())
+        controller.prepare(sampleDetail(listOf(sampleEpisode(key = "first"))), sampleEpisode(key = "missing"))
+
+        assertEquals(EpisodeSwitchResult.Unavailable, controller.switchEpisode(1))
+    }
+
+    @Test
+    fun `release persists the final position`() {
+        val repository = FakeCatalogRepository()
+        val controller = VideoPlaybackController(FakePlaybackEngine(currentPosition = 9_000L), repository, FakePlaybackSession())
+        controller.prepare(sampleDetail(), sampleEpisode())
+        controller.release()
+
+        assertEquals(9_000L, repository.getHistory().single().progressMs)
+    }
+
+    @Test
+    fun `pause during resolution prevents late autoplay`() = runBlocking {
+        val gate = CompletableDeferred<Episode>()
+        val repository = object : CatalogRepository by FakeCatalogRepository() {
+            override suspend fun resolvePlayback(detail: VideoDetail, episode: Episode, forceRefresh: Boolean): Episode = gate.await()
+        }
+        val engine = FakePlaybackEngine()
+        val controller = VideoPlaybackController(engine, repository, FakePlaybackSession())
+        val episode = sampleEpisode()
+        val request = async(start = CoroutineStart.UNDISPATCHED) { controller.loadEpisode(sampleDetail(), episode) }
+        controller.pause()
+        gate.complete(episode)
+
+        assertTrue(request.await() is EpisodeSwitchResult.Switched)
+        assertFalse(engine.isPlaying)
+    }
+
+    @Test
+    fun `duplicate switches are ignored and stale response cannot replace a new session`() = runBlocking {
+        val gate = CompletableDeferred<Episode>()
+        val repository = object : CatalogRepository by FakeCatalogRepository() {
+            override suspend fun resolvePlayback(detail: VideoDetail, episode: Episode, forceRefresh: Boolean): Episode = gate.await()
+        }
+        val controller = VideoPlaybackController(FakePlaybackEngine(), repository, FakePlaybackSession())
+        val first = sampleEpisode(key = "first")
+        val second = sampleEpisode(key = "second")
+        controller.prepare(sampleDetail(listOf(first, second)), first)
+        val request = async(start = CoroutineStart.UNDISPATCHED) { controller.switchEpisode(1) }
+        assertEquals(EpisodeSwitchResult.Unavailable, controller.switchEpisode(1))
+        controller.prepare(sampleDetail(), sampleEpisode(key = "new"))
+        gate.complete(second)
+
+        assertEquals(EpisodeSwitchResult.Unavailable, request.await())
+        assertEquals("new", controller.activeSession?.episode?.episodeKey)
+    }
+
+    @Test
+    fun `buffering play intent can be paused without toggling back to play`() {
+        val engine = FakePlaybackEngine()
+        val controller = VideoPlaybackController(engine, FakeCatalogRepository(), FakePlaybackSession())
+        controller.prepare(sampleDetail(), sampleEpisode())
+        engine.isPlaying = false
+        controller.togglePlayPause()
+
+        assertFalse(engine.playWhenReady)
+    }
+
+    @Test
+    fun `progress is persisted every five seconds even without a page listener`() {
+        var now = 1_000L
+        val repository = FakeCatalogRepository()
+        val engine = FakePlaybackEngine()
+        val controller = VideoPlaybackController(engine, repository, FakePlaybackSession(), clock = { now })
+        controller.prepare(sampleDetail(), sampleEpisode())
+        now = 5_999L
+        engine.dispatchPosition(4_999L)
+        assertTrue(repository.getHistory().isEmpty())
+        now = 6_000L
+        engine.dispatchPosition(5_000L)
+        assertEquals(5_000L, repository.getHistory().single().progressMs)
+        controller.seekTo(8_000L)
+        assertEquals(8_000L, repository.getHistory().single().progressMs)
+    }
+
+    @Test
+    fun `screen locked at prepare stays paused after screen becomes interactive`() {
+        var interactive = false
+        val engine = FakePlaybackEngine()
+        val controller = VideoPlaybackController(engine, FakeCatalogRepository(), FakePlaybackSession(), canPlay = { interactive })
+        controller.prepare(sampleDetail(), sampleEpisode())
+        assertFalse(engine.playWhenReady)
+        interactive = true
+        assertFalse(controller.playWhenReady)
+        controller.togglePlayPause()
+        assertTrue(engine.playWhenReady)
+    }
+
+    @Test
+    fun `cancellation propagates and releases the loading guard`() = runBlocking {
+        val repository = object : CatalogRepository by FakeCatalogRepository() {
+            override suspend fun resolvePlayback(detail: VideoDetail, episode: Episode, forceRefresh: Boolean): Episode {
+                throw kotlinx.coroutines.CancellationException("cancelled")
+            }
+        }
+        val controller = VideoPlaybackController(FakePlaybackEngine(), repository, FakePlaybackSession())
+        var cancelled = false
+        try { controller.loadEpisode(sampleDetail(), sampleEpisode()) }
+        catch (_: kotlinx.coroutines.CancellationException) { cancelled = true }
+        assertTrue(cancelled)
+        assertFalse(controller.isLoading)
+        assertFalse(controller.isPrepared)
+    }
+
+    @Test
+    fun `old video cannot switch episodes while a new video detail is loading`() = runBlocking {
+        val first = sampleEpisode(key = "first")
+        val second = sampleEpisode(key = "second")
+        val controller = VideoPlaybackController(FakePlaybackEngine(), FakeCatalogRepository(), FakePlaybackSession())
+        controller.openVideo("video-1")
+        controller.prepare(sampleDetail(listOf(first, second)), first)
+        controller.openVideo("video-2")
+
+        assertEquals(EpisodeSwitchResult.Unavailable, controller.switchEpisode(1))
+        assertFalse(controller.isLoading)
+        assertFalse(controller.playWhenReady)
+    }
+
     private fun sampleDetail(episodes: List<Episode> = emptyList()) = VideoDetail(
         mediaKey = "video-1",
         title = "Sample video",
@@ -166,10 +310,11 @@ class VideoPlaybackControllerTest {
         override var duration: Long = 0L,
     ) : PlaybackEngine {
         override var isPlaying = false
+        override var playWhenReady = false
         var setMediaCalls = 0
         var releaseCalls = 0
         var seekPositionMs = 0L
-        private var positionListener: ((Long) -> Unit)? = null
+        private val positionListeners = linkedSetOf<(Long) -> Unit>()
 
         override fun setMediaUrl(mediaUrl: String) {
             setMediaCalls++
@@ -179,24 +324,27 @@ class VideoPlaybackControllerTest {
 
         override fun seekTo(positionMs: Long) {
             seekPositionMs = positionMs
+            currentPosition = positionMs
         }
 
         override fun addPositionListener(listener: (Long) -> Unit): () -> Unit {
-            positionListener = listener
-            return { positionListener = null }
+            positionListeners += listener
+            return { positionListeners -= listener }
         }
 
         fun dispatchPosition(positionMs: Long) {
             currentPosition = positionMs
-            positionListener?.invoke(positionMs)
+            positionListeners.toList().forEach { it(positionMs) }
         }
 
         override fun play() {
             isPlaying = true
+            playWhenReady = true
         }
 
         override fun pause() {
             isPlaying = false
+            playWhenReady = false
         }
 
         override fun attach(playerView: androidx.media3.ui.PlayerView) = Unit

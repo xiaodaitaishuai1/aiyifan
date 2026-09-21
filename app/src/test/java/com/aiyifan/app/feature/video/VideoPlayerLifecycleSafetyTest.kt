@@ -11,7 +11,7 @@ class VideoPlayerLifecycleSafetyTest {
         val source = videoPlayerSource()
 
         assertTrue(source.contains("getVideoDetail(mediaKey)"))
-        assertTrue(source.contains("resolvePlayback(detail, episode)"))
+        assertTrue(source.contains("playbackController.loadEpisode(detail, episode, resumePositionMs)"))
         assertTrue(source.contains(".onFailure { error ->"))
         assertTrue(source.contains("if (error is CancellationException) throw error"))
     }

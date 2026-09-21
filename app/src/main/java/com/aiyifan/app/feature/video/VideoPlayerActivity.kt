@@ -17,6 +17,7 @@ import android.view.ViewConfiguration
 import android.media.AudioManager
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import android.widget.ImageButton
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
@@ -39,15 +40,16 @@ import com.aiyifan.app.core.ui.EpisodeAdapter
 import com.aiyifan.app.core.ui.VideoListAdapter
 import com.aiyifan.app.core.ui.applySystemBarsPadding
 import com.aiyifan.app.core.ui.setupEdgeToEdge
+import com.aiyifan.app.core.ui.ScreenOffPlaybackObserver
 import com.aiyifan.app.databinding.ActivityVideoPlayerBinding
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
 import kotlin.math.abs
 
 class VideoPlayerActivity : AppCompatActivity() {
     private lateinit var binding: ActivityVideoPlayerBinding
-    private val playbackController: VideoPlaybackController
-        get() = AppGraph.videoPlaybackController
+    private lateinit var playbackController: VideoPlaybackController
     private var detail: VideoDetail? = null
     private var selectedEpisode: Episode? = null
     private var playingEpisode: Episode? = null
@@ -55,10 +57,14 @@ class VideoPlayerActivity : AppCompatActivity() {
     private var isFullScreen = false
     private var isInAppMiniPlayerVisible = false
     private var restoreMiniPlayerOnStart = false
-    private var pendingFloatingRecoveryPositionMs: Long? = null
     private var controllerVisibility = View.GONE
     private lateinit var autoSkipPreferenceStore: AutoSkipPreferenceStore
     private var removePositionListener: (() -> Unit)? = null
+    private var removeStateListener: (() -> Unit)? = null
+    private var playbackJob: Job? = null
+    private var detailJob: Job? = null
+    private var overlayHandoffPending = false
+    private var playerBrightness = -1f
     private var hasAutomaticallyAdvancedOutro = false
     private val gestureFeedbackHideRunnable = Runnable { binding.playerGestureFeedback.isVisible = false }
 
@@ -68,6 +74,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         setupEdgeToEdge()
         binding = ActivityVideoPlayerBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        playbackController = AppGraph.videoPlaybackController
         autoSkipPreferenceStore = AutoSkipPreferenceStore(this)
         binding.pageContent.applySystemBarsPadding(
             left = true,
@@ -87,6 +94,8 @@ class VideoPlayerActivity : AppCompatActivity() {
             },
         )
         binding.playerView.setOnTouchListener(PlayerGestureTouchListener())
+        binding.playerView.findViewById<ImageButton>(R.id.playerPreviousEpisodeButton).setOnClickListener { switchEpisode(-1) }
+        binding.playerView.findViewById<ImageButton>(R.id.playerNextEpisodeButton).setOnClickListener { switchEpisode(1) }
         binding.floatingWindowButton.setOnClickListener { showFloatingPresentation() }
         binding.autoSkipIntroOutroSwitch.apply {
             isChecked = autoSkipPreferenceStore.isEnabled()
@@ -106,14 +115,36 @@ class VideoPlayerActivity : AppCompatActivity() {
             }
         })
         setupStaticLists()
-        loadDetail(intent.getStringExtra(EXTRA_MEDIA_KEY).orEmpty())
     }
 
     override fun onStart() {
         super.onStart()
+        if (playbackController.isReleased) playbackController = AppGraph.videoPlaybackController
+        if (playbackController.hasOverlayOwner) {
+            playbackController.hasOverlayOwner = false
+            stopService(FloatingPlayerService.intent(this))
+        }
+        val mediaKey = intent.getStringExtra(EXTRA_MEDIA_KEY).orEmpty()
+        val needsLoad = playbackController.requestedMediaKey != mediaKey || playbackController.activeSession == null && !playbackController.isLoading
+        playbackController.openVideo(mediaKey)
+        overlayHandoffPending = false
+        window.attributes = window.attributes.apply { screenBrightness = playerBrightness }
         registerPositionListener()
+        removeStateListener = playbackController.addStateListener {
+            syncFromActivePlaybackSession()
+            updateEpisodeButtons()
+            updateInAppMiniPlayPauseButton()
+        }
         syncFromActivePlaybackSession()
-        FloatingPlayerRecovery.consumePosition(this)?.let(::restorePlaybackAfterFloatingWindow)
+        if (needsLoad) loadDetail(mediaKey)
+        val recovery = FloatingPlayerRecovery.consumePosition(this)
+        if (playbackController.activeSession?.detail?.mediaKey == intent.getStringExtra(EXTRA_MEDIA_KEY)) {
+            if (recovery != null || playbackController.hasOverlayOwner) {
+                playbackController.hasOverlayOwner = false
+                stopService(FloatingPlayerService.intent(this))
+            }
+            attachPlayerToCurrentSurface()
+        }
         if (restoreMiniPlayerOnStart && !isInPictureInPictureMode) {
             restoreMiniPlayerOnStart = false
             showInAppMiniPlayer()
@@ -122,9 +153,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     private fun setupStaticLists() {
         episodeAdapter = EpisodeAdapter { episode ->
-            selectedEpisode = episode
             detail?.let { currentDetail ->
-                episodeAdapter.submitList(currentDetail.episodes, episode)
                 loadEpisodePlayback(currentDetail, episode)
             }
         }
@@ -141,22 +170,30 @@ class VideoPlayerActivity : AppCompatActivity() {
             finish()
             return
         }
+        if (playbackController.activeSession?.detail?.mediaKey == mediaKey) {
+            syncFromActivePlaybackSession()
+            attachPlayerToCurrentSurface()
+            return
+        }
         binding.title.setText(R.string.video_loading)
         binding.videoTitle.setText(R.string.video_loading)
         binding.fullScreenVideoTitle.setText(R.string.video_loading)
-        lifecycleScope.launch {
+        detailJob?.cancel()
+        detailJob = lifecycleScope.launch {
             runCatching { AppGraph.catalogRepository.getVideoDetail(mediaKey) }
                 .onSuccess { loadedDetail ->
+                    if (playbackController.requestedMediaKey != mediaKey) return@onSuccess
                     detail = loadedDetail
-                    selectedEpisode = loadedDetail.defaultEpisode
                     renderDetail(loadedDetail)
-                    loadedDetail.defaultEpisode?.let { episode ->
-                        episodeAdapter.submitList(loadedDetail.episodes, episode)
-                        loadEpisodePlayback(loadedDetail, episode)
+                    val history = AppGraph.catalogRepository.getHistory().firstOrNull { it.mediaKey == mediaKey }
+                    PlaybackResumePolicy.target(loadedDetail, history)?.let { target ->
+                        episodeAdapter.submitList(loadedDetail.episodes, target.episode)
+                        loadEpisodePlayback(loadedDetail, target.episode, resumePositionMs = target.positionMs)
                     }
                 }
                 .onFailure { error ->
                     if (error is CancellationException) throw error
+                    if (playbackController.requestedMediaKey != mediaKey) return@onFailure
                     Toast.makeText(this@VideoPlayerActivity, R.string.video_detail_load_failed, Toast.LENGTH_SHORT).show()
                     finish()
                 }
@@ -212,7 +249,9 @@ class VideoPlayerActivity : AppCompatActivity() {
         detail: VideoDetail,
         episode: Episode,
         resetOutroAdvance: Boolean = true,
+        resumePositionMs: Long = 0L,
     ) {
+        if (playbackController.isLoading) return
         if (resetOutroAdvance) hasAutomaticallyAdvancedOutro = false
         binding.meta.text = listOfNotNull(
             detail.typeName,
@@ -221,38 +260,43 @@ class VideoPlayerActivity : AppCompatActivity() {
             getString(R.string.video_play_count, detail.playCount),
             getString(R.string.video_stream_loading),
         ).joinToString(" / ")
-        lifecycleScope.launch {
-            runCatching { AppGraph.catalogRepository.resolvePlayback(detail, episode) }
-                .onSuccess { playableEpisode ->
-                    playingEpisode = playableEpisode
-                    val resumePositionMs = pendingFloatingRecoveryPositionMs ?: 0L
-                    val startPositionMs = AutoSkipPolicy.initialPositionMs(
-                        resumePositionMs = resumePositionMs,
-                        introSecond = playableEpisode.opSecond,
-                        enabled = autoSkipPreferenceStore.isEnabled(),
-                    )
-                    val skippedIntro = resumePositionMs <= 0L && startPositionMs > 0L
-                    if (playbackController.prepare(detail, playableEpisode, startPositionMs)) {
-                        pendingFloatingRecoveryPositionMs = null
-                        hasAutomaticallyAdvancedOutro = false
-                        attachPlayerToCurrentSurface()
-                        if (skippedIntro) {
-                            Toast.makeText(this@VideoPlayerActivity, R.string.auto_skip_intro, Toast.LENGTH_SHORT).show()
-                        }
-                    } else {
-                        Toast.makeText(this@VideoPlayerActivity, R.string.video_no_playable_stream, Toast.LENGTH_SHORT).show()
-                    }
-                    binding.meta.text = listOfNotNull(
-                        detail.typeName,
-                        detail.publishTime,
-                        detail.updateMsg,
-                        getString(R.string.video_play_count, detail.playCount),
-                    ).joinToString(" / ")
-                }
-                .onFailure { error ->
-                    if (error is CancellationException) throw error
-                    Toast.makeText(this@VideoPlayerActivity, R.string.video_stream_load_failed, Toast.LENGTH_SHORT).show()
-                }
+        playbackJob = lifecycleScope.launch {
+            handleEpisodeResult(playbackController.loadEpisode(detail, episode, resumePositionMs))
+            binding.meta.text = listOfNotNull(
+                detail.typeName, detail.publishTime, detail.updateMsg,
+                getString(R.string.video_play_count, detail.playCount),
+            ).joinToString(" / ")
+        }
+    }
+
+    private fun switchEpisode(offset: Int) {
+        if (playbackController.isLoading) return
+        hasAutomaticallyAdvancedOutro = false
+        playbackJob = lifecycleScope.launch { handleEpisodeResult(playbackController.switchEpisode(offset)) }
+    }
+
+    private fun handleEpisodeResult(result: EpisodeSwitchResult) {
+        when (result) {
+            is EpisodeSwitchResult.Switched -> {
+                hasAutomaticallyAdvancedOutro = false
+                syncFromActivePlaybackSession()
+                if (!playbackController.hasOverlayOwner) attachPlayerToCurrentSurface()
+            }
+            EpisodeSwitchResult.Failed -> Toast.makeText(this, R.string.video_stream_load_failed, Toast.LENGTH_SHORT).show()
+            EpisodeSwitchResult.Unavailable -> Unit
+        }
+        updateEpisodeButtons()
+    }
+
+    private fun updateEpisodeButtons() {
+        val session = playbackController.activeSession?.takeIf { it.detail.mediaKey == intent.getStringExtra(EXTRA_MEDIA_KEY) }
+        val index = session?.detail?.episodes?.indexOfFirst { it.episodeKey == session.episode.episodeKey } ?: -1
+        val count = session?.detail?.episodes?.size ?: 0
+        for ((id, offset) in listOf(R.id.playerPreviousEpisodeButton to -1, R.id.playerNextEpisodeButton to 1)) {
+            binding.playerView.findViewById<ImageButton>(id).apply {
+                isEnabled = !playbackController.isLoading && index >= 0 && index + offset in 0 until count
+                alpha = if (isEnabled) 1f else 0.4f
+            }
         }
     }
 
@@ -275,8 +319,6 @@ class VideoPlayerActivity : AppCompatActivity() {
         }
 
         hasAutomaticallyAdvancedOutro = true
-        selectedEpisode = nextEpisode
-        episodeAdapter.submitList(activeDetail.episodes, nextEpisode)
         Toast.makeText(this, R.string.auto_skip_outro, Toast.LENGTH_SHORT).show()
         loadEpisodePlayback(activeDetail, nextEpisode, resetOutroAdvance = false)
     }
@@ -337,6 +379,8 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
+        if (overlayHandoffPending || playbackController.hasOverlayOwner) return
+        if (!ScreenOffPlaybackObserver.canPlay(this)) return
         when (currentDestination()) {
             PlaybackDestination.PICTURE_IN_PICTURE -> {
                 if (!enterSystemPictureInPicture()) {
@@ -392,6 +436,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     private fun startOverlayPlayer() {
         if (!Settings.canDrawOverlays(this)) return
+        overlayHandoffPending = true
         ContextCompat.startForegroundService(this, FloatingPlayerService.intent(this))
         moveTaskToBack(true)
     }
@@ -408,39 +453,15 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     private fun updateInAppMiniPlayPauseButton() {
         binding.inAppMiniPlayPauseButton.setImageResource(
-            if (playbackController.isPlaying) R.drawable.ic_pause else R.drawable.ic_play,
+            if (playbackController.playWhenReady) R.drawable.ic_pause else R.drawable.ic_play,
         )
-        binding.inAppMiniPlayPauseButton.contentDescription = if (playbackController.isPlaying) "暂停播放" else "继续播放"
-    }
-
-    private fun restorePlaybackAfterFloatingWindow(positionMs: Long) {
-        if (playbackController.activeSession != null) {
-            playbackController.seekTo(positionMs)
-            pendingFloatingRecoveryPositionMs = null
-            isInAppMiniPlayerVisible = false
-            binding.inAppMiniPlayer.isVisible = false
-            binding.playerContainer.isVisible = true
-            attachPlayerToCurrentSurface()
-            return
-        }
-        val activeDetail = detail
-        val activeEpisode = playingEpisode
-        if (activeDetail == null || activeEpisode == null) {
-            pendingFloatingRecoveryPositionMs = positionMs
-            return
-        }
-        if (playbackController.prepare(activeDetail, activeEpisode, positionMs)) {
-            pendingFloatingRecoveryPositionMs = null
-            isInAppMiniPlayerVisible = false
-            binding.inAppMiniPlayer.isVisible = false
-            binding.playerContainer.isVisible = true
-            attachPlayerToCurrentSurface()
-        }
+        binding.inAppMiniPlayPauseButton.contentDescription = if (playbackController.playWhenReady) "暂停播放" else "继续播放"
     }
 
     private fun syncFromActivePlaybackSession() {
         val session = playbackController.activeSession ?: return
         val sessionDetail = session.detail
+        if (sessionDetail.mediaKey != intent.getStringExtra(EXTRA_MEDIA_KEY)) return
         if (detail?.mediaKey != sessionDetail.mediaKey) {
             detail = sessionDetail
             renderDetail(sessionDetail)
@@ -467,21 +488,34 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     override fun onStop() {
         unregisterPositionListener()
+        removeStateListener?.invoke()
+        removeStateListener = null
+        window.attributes = window.attributes.apply { screenBrightness = -1f }
         super.onStop()
         if (!isInPictureInPictureMode && isInAppMiniPlayerVisible && !isChangingConfigurations) {
             restoreMiniPlayerOnStart = true
             isInAppMiniPlayerVisible = false
             binding.inAppMiniPlayer.isVisible = false
-            if (playbackController.isPlaying) playbackController.togglePlayPause()
         }
+        if (playbackController.requestedMediaKey == intent.getStringExtra(EXTRA_MEDIA_KEY) &&
+            (!ScreenOffPlaybackObserver.canPlay(this) ||
+            (!overlayHandoffPending && !playbackController.hasOverlayOwner && !isChangingConfigurations)
+            )
+        ) playbackController.pause()
         playbackController.saveHistory()
     }
 
     override fun onDestroy() {
+        playbackJob?.cancel()
+        detailJob?.cancel()
         unregisterPositionListener()
+        removeStateListener?.invoke()
+        binding.root.removeCallbacks(gestureFeedbackHideRunnable)
         binding.playerView.player = null
         binding.inAppMiniPlayerView.player = null
-        if (isFinishing && !isInPictureInPictureMode) {
+        if (isFinishing && !playbackController.hasOverlayOwner &&
+            playbackController.requestedMediaKey == intent.getStringExtra(EXTRA_MEDIA_KEY)
+        ) {
             playbackController.saveHistory()
             playbackController.release()
         }
@@ -560,7 +594,6 @@ class VideoPlayerActivity : AppCompatActivity() {
         private var previewPositionMs = 0L
         private var isVerticalGesture = false
         private var isSeekGesture = false
-        private var requestedBrightnessPermission = false
 
         override fun onTouch(view: View, event: MotionEvent): Boolean {
             when (event.actionMasked) {
@@ -568,17 +601,15 @@ class VideoPlayerActivity : AppCompatActivity() {
                     downX = event.x
                     downY = event.y
                     downAtMs = SystemClock.elapsedRealtime()
-                    startBrightness = Settings.System.getInt(
-                        contentResolver,
-                        Settings.System.SCREEN_BRIGHTNESS,
-                        DEFAULT_SYSTEM_BRIGHTNESS,
+                    startBrightness = PlayerGesturePolicy.brightnessPercent(
+                        window.attributes.screenBrightness,
+                        Settings.System.getInt(contentResolver, Settings.System.SCREEN_BRIGHTNESS, DEFAULT_SYSTEM_BRIGHTNESS),
                     )
                     startVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
                     startPositionMs = playbackController.currentPositionMs
                     previewPositionMs = startPositionMs
                     isVerticalGesture = false
                     isSeekGesture = false
-                    requestedBrightnessPermission = false
                     return false
                 }
 
@@ -605,7 +636,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
                     isVerticalGesture = true
                     when (PlayerGesturePolicy.kindFor(downX, view.width)) {
-                        PlayerGestureKind.BRIGHTNESS -> updateSystemBrightness(deltaY, view.height)
+                        PlayerGestureKind.BRIGHTNESS -> updateWindowBrightness(deltaY, view.height)
                         PlayerGestureKind.VOLUME -> updateMediaVolume(deltaY, view.height)
                     }
                     return true
@@ -623,17 +654,11 @@ class VideoPlayerActivity : AppCompatActivity() {
             return false
         }
 
-        private fun updateSystemBrightness(deltaY: Float, height: Int) {
-            if (!Settings.System.canWrite(this@VideoPlayerActivity)) {
-                if (!requestedBrightnessPermission) {
-                    requestedBrightnessPermission = true
-                    startActivity(Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:$packageName")))
-                }
-                return
-            }
-            val brightness = PlayerGesturePolicy.adjustVertical(startBrightness, deltaY, height, 0, MAX_SYSTEM_BRIGHTNESS)
-            Settings.System.putInt(contentResolver, Settings.System.SCREEN_BRIGHTNESS, brightness)
-            showGestureFeedback(getString(R.string.player_gesture_brightness, brightness * 100 / MAX_SYSTEM_BRIGHTNESS))
+        private fun updateWindowBrightness(deltaY: Float, height: Int) {
+            val brightness = PlayerGesturePolicy.adjustVertical(startBrightness, deltaY, height, 1, 100)
+            playerBrightness = brightness / 100f
+            window.attributes = window.attributes.apply { screenBrightness = playerBrightness }
+            showGestureFeedback(getString(R.string.player_gesture_brightness, brightness))
         }
 
         private fun updateMediaVolume(deltaY: Float, height: Int) {
@@ -650,7 +675,6 @@ class VideoPlayerActivity : AppCompatActivity() {
         private const val IN_APP_MINI_MIN_WIDTH_DP = 180
         private const val IN_APP_MINI_MARGIN_DP = 16
         private const val DEFAULT_SYSTEM_BRIGHTNESS = 128
-        private const val MAX_SYSTEM_BRIGHTNESS = 255
         private const val GESTURE_FEEDBACK_HIDE_DELAY_MS = 1_500L
         fun intent(context: Context, mediaKey: String): Intent =
             Intent(context, VideoPlayerActivity::class.java).putExtra(EXTRA_MEDIA_KEY, mediaKey)

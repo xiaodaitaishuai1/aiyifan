@@ -10,6 +10,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SdkSuppress
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -25,6 +26,7 @@ class VideoPlayerManifestTest {
 
         val declaredPermissions = packageInfo.requestedPermissions.orEmpty().toSet()
         assertTrue(declaredPermissions.containsAll(VIDEO_PRESENTATION_PERMISSIONS))
+        assertFalse(declaredPermissions.contains("android.permission.WRITE_SETTINGS"))
     }
 
     @Test
