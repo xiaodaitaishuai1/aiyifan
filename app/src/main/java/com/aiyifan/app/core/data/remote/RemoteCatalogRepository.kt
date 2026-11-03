@@ -362,8 +362,6 @@ class RemoteCatalogRepository(
             ?: playable.firstOrNull()
             ?: return fallbackEpisode
         return fallbackEpisode.copy(
-            episodeKey = chosen.optionalRemoteText("episodeKey") ?: fallbackEpisode.episodeKey,
-            uniqueId = chosen.optInt("episodeId", fallbackEpisode.uniqueId),
             mediaUrl = chosen.optionalRemoteText("mediaUrl"),
             resolution = chosen.optionalRemoteText("resolution"),
             lang = chosen.optionalRemoteText("lang") ?: fallbackEpisode.lang,

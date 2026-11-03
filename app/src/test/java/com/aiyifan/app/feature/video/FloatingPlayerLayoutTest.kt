@@ -4,6 +4,7 @@ import java.io.File
 import javax.xml.parsers.DocumentBuilderFactory
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Test
 import org.w3c.dom.Element
 
@@ -25,6 +26,30 @@ class FloatingPlayerLayoutTest {
 
         assertNotNull(restoreHandle)
         assertEquals("gone", restoreHandle!!.getAttribute("android:visibility"))
+    }
+
+    @Test
+    fun `floating player does not expose episode navigation controls`() {
+        val layout = floatingPlayerLayout()
+
+        assertNull(viewWithId(layout, "floatingPreviousEpisodeButton"))
+        assertNull(viewWithId(layout, "floatingNextEpisodeButton"))
+        listOf("floatingRewindButton", "floatingPlayPauseButton", "floatingForwardButton",
+            "floatingCloseButton", "floatingResizeHandle", "floatingRestoreHandle").forEach { id ->
+            assertNotNull(id, viewWithId(layout, id))
+        }
+    }
+
+    @Test
+    fun `normal player retains its previous and next episode controls`() {
+        val file = sequenceOf(
+            File("src/main/res/layout/view_video_controls.xml"),
+            File("app/src/main/res/layout/view_video_controls.xml"),
+        ).first(File::isFile)
+        val layout = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file)
+
+        assertNotNull(viewWithId(layout, "playerPreviousEpisodeButton"))
+        assertNotNull(viewWithId(layout, "playerNextEpisodeButton"))
     }
 
     private fun floatingPlayerLayout() = DocumentBuilderFactory.newInstance()

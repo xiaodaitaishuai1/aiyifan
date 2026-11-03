@@ -17,6 +17,152 @@ import org.junit.Test
 class VideoPlaybackControllerTest {
 
     @Test
+    fun `pending selection survives callbacks and rolls back on failure`() = runBlocking {
+        val first = sampleEpisode(key = "first")
+        val second = sampleEpisode(key = "second")
+        val gate = CompletableDeferred<Episode>()
+        val repository = object : CatalogRepository by FakeCatalogRepository() {
+            override suspend fun resolvePlayback(detail: VideoDetail, episode: Episode, forceRefresh: Boolean) = gate.await()
+        }
+        val controller = VideoPlaybackController(FakePlaybackEngine(), repository, FakePlaybackSession())
+        val detail = sampleDetail(listOf(first, second))
+        controller.prepare(detail, first)
+        val selections = mutableListOf<String?>()
+        controller.addStateListener {
+            selections += (controller.pendingEpisode ?: controller.activeSession?.episode)?.episodeKey
+        }
+        val request = async(start = CoroutineStart.UNDISPATCHED) { controller.loadEpisode(detail, second) }
+        assertEquals(second, controller.pendingEpisode)
+        assertEquals("second", selections.last())
+        controller.pause()
+        assertEquals("second", selections.last())
+        assertEquals(EpisodeSwitchResult.Unavailable, controller.loadEpisode(detail, first))
+        assertEquals(second, controller.pendingEpisode)
+        gate.completeExceptionally(IllegalStateException("network"))
+        assertEquals(EpisodeSwitchResult.Failed, request.await())
+        assertEquals(null, controller.pendingEpisode)
+        assertEquals("first", selections.last())
+        assertFalse(controller.isLoading)
+    }
+
+    @Test
+    fun `cancelled pending selection restores active episode`() = runBlocking {
+        val first = sampleEpisode(key = "first")
+        val second = sampleEpisode(key = "second")
+        val gate = CompletableDeferred<Episode>()
+        val repository = object : CatalogRepository by FakeCatalogRepository() {
+            override suspend fun resolvePlayback(detail: VideoDetail, episode: Episode, forceRefresh: Boolean) = gate.await()
+        }
+        val controller = VideoPlaybackController(FakePlaybackEngine(), repository, FakePlaybackSession())
+        val detail = sampleDetail(listOf(first, second))
+        controller.prepare(detail, first)
+        val request = async(start = CoroutineStart.UNDISPATCHED) { controller.loadEpisode(detail, second) }
+        request.cancel()
+        request.join()
+        assertEquals(null, controller.pendingEpisode)
+        assertEquals(first, controller.activeSession?.episode)
+        assertFalse(controller.isLoading)
+    }
+
+    @Test
+    fun `successful selection clears pending before publishing new session`() = runBlocking {
+        val first = sampleEpisode(key = "first")
+        val second = sampleEpisode(key = "second")
+        val controller = VideoPlaybackController(FakePlaybackEngine(), FakeCatalogRepository(), FakePlaybackSession())
+        val detail = sampleDetail(listOf(first, second))
+        controller.prepare(detail, first)
+        controller.loadEpisode(detail, second)
+        assertEquals(null, controller.pendingEpisode)
+        assertFalse(controller.isLoading)
+        assertEquals(second, controller.activeSession?.episode)
+    }
+
+    @Test
+    fun `new video and release clear a pending selection without accepting its late response`() = runBlocking {
+        val gate = CompletableDeferred<Episode>()
+        val repository = object : CatalogRepository by FakeCatalogRepository() {
+            override suspend fun resolvePlayback(detail: VideoDetail, episode: Episode, forceRefresh: Boolean) = gate.await()
+        }
+        val controller = VideoPlaybackController(FakePlaybackEngine(), repository, FakePlaybackSession())
+        val episode = sampleEpisode()
+        controller.openVideo("video-1")
+        val request = async(start = CoroutineStart.UNDISPATCHED) { controller.loadEpisode(sampleDetail(), episode) }
+        controller.openVideo("video-2")
+        assertEquals(null, controller.pendingEpisode)
+        controller.release()
+        gate.complete(episode)
+        assertEquals(EpisodeSwitchResult.Unavailable, request.await())
+        assertEquals(null, controller.activeSession)
+    }
+
+    @Test
+    fun `relative seek clamps both ends and persists each change while paused`() {
+        val repository = FakeCatalogRepository()
+        val engine = FakePlaybackEngine(currentPosition = 5_000L, duration = 25_000L)
+        val controller = VideoPlaybackController(engine, repository, FakePlaybackSession())
+        controller.prepare(sampleDetail(), sampleEpisode(), shouldPlay = false)
+        controller.seekBy(-10_000L)
+        assertEquals(0L, engine.currentPosition)
+        controller.seekBy(10_000L)
+        controller.seekBy(10_000L)
+        assertEquals(20_000L, engine.currentPosition)
+        controller.seekBy(10_000L)
+        assertEquals(25_000L, engine.currentPosition)
+        assertEquals(25_000L, repository.getHistory().single().progressMs)
+        assertFalse(controller.playWhenReady)
+    }
+
+    @Test
+    fun `relative seek ignores unknown duration unprepared and loading states`() = runBlocking {
+        val gate = CompletableDeferred<Episode>()
+        val repository = object : CatalogRepository by FakeCatalogRepository() {
+            override suspend fun resolvePlayback(detail: VideoDetail, episode: Episode, forceRefresh: Boolean) = gate.await()
+        }
+        val engine = FakePlaybackEngine(currentPosition = 5_000L, duration = 25_000L)
+        val controller = VideoPlaybackController(engine, repository, FakePlaybackSession())
+        controller.seekBy(10_000L)
+        assertEquals(5_000L, engine.currentPosition)
+        controller.prepare(sampleDetail(), sampleEpisode())
+        engine.duration = 0L
+        controller.seekBy(10_000L)
+        assertFalse(controller.canSeek)
+        assertEquals(5_000L, engine.currentPosition)
+        engine.duration = 25_000L
+        val request = async(start = CoroutineStart.UNDISPATCHED) { controller.loadEpisode(sampleDetail(), sampleEpisode()) }
+        controller.seekBy(10_000L)
+        assertFalse(controller.canSeek)
+        assertEquals(5_000L, engine.currentPosition)
+        request.cancel()
+        request.join()
+        assertTrue(controller.canSeek)
+        controller.release()
+        controller.seekBy(10_000L)
+        assertEquals(5_000L, engine.currentPosition)
+    }
+
+    @Test
+    fun `resolved stream keeps catalog identity for next episode and history`() = runBlocking {
+        val first = sampleEpisode(key = "first")
+        val second = sampleEpisode(key = "second")
+        val base = FakeCatalogRepository()
+        val repository = object : CatalogRepository by base {
+            override suspend fun resolvePlayback(detail: VideoDetail, episode: Episode, forceRefresh: Boolean) =
+                episode.copy(episodeKey = "stream-${episode.episodeKey}", uniqueId = 999)
+        }
+        val controller = VideoPlaybackController(FakePlaybackEngine(), repository, FakePlaybackSession())
+        val detail = sampleDetail(listOf(first, second))
+
+        controller.loadEpisode(detail, first)
+        assertEquals(first.episodeKey, controller.activeSession?.episode?.episodeKey)
+        assertEquals(first.uniqueId, controller.activeSession?.episode?.uniqueId)
+        assertTrue(controller.switchEpisode(1) is EpisodeSwitchResult.Switched)
+        controller.saveHistory()
+        val history = base.getHistory().single()
+        assertEquals(second.episodeKey, history.episodeKey)
+        assertEquals(second, PlaybackResumePolicy.target(detail, history)?.episode)
+    }
+
+    @Test
     fun `release only reaches the engine and session once`() {
         val engine = FakePlaybackEngine()
         val session = FakePlaybackSession()
@@ -130,6 +276,131 @@ class VideoPlaybackControllerTest {
 
         assertEquals(EpisodeSwitchResult.Switched(second), controller.switchEpisode(offset = 1))
         assertEquals(second, controller.activeSession?.episode)
+    }
+
+    @Test
+    fun `ended playback advances to the next episode only once`() = runBlocking {
+        val first = sampleEpisode(key = "episode-1")
+        val second = sampleEpisode(key = "episode-2")
+        val engine = FakePlaybackEngine()
+        val controller = VideoPlaybackController(engine, FakeCatalogRepository(), FakePlaybackSession())
+        val detail = sampleDetail(episodes = listOf(first, second))
+        controller.prepare(detail, first)
+        engine.hasEnded = true
+
+        assertEquals(EpisodeSwitchResult.Switched(second), controller.advanceToNextEpisodeIfEnded())
+        assertEquals(EpisodeSwitchResult.Unavailable, controller.advanceToNextEpisodeIfEnded())
+        assertEquals(second, controller.activeSession?.episode)
+    }
+
+    @Test
+    fun `ended final episode does not advance`() = runBlocking {
+        val final = sampleEpisode(key = "episode-final")
+        val engine = FakePlaybackEngine()
+        val controller = VideoPlaybackController(engine, FakeCatalogRepository(), FakePlaybackSession())
+        controller.prepare(sampleDetail(episodes = listOf(final)), final)
+        engine.hasEnded = true
+
+        assertEquals(EpisodeSwitchResult.Unavailable, controller.advanceToNextEpisodeIfEnded())
+        assertEquals(final, controller.activeSession?.episode)
+    }
+
+    @Test
+    fun `failed automatic advance keeps the episode and does not repeatedly resolve`() = runBlocking {
+        val first = sampleEpisode(key = "first")
+        val second = sampleEpisode(key = "second")
+        var requests = 0
+        val repository = object : CatalogRepository by FakeCatalogRepository() {
+            override suspend fun resolvePlayback(detail: VideoDetail, episode: Episode, forceRefresh: Boolean): Episode {
+                requests++
+                throw IllegalStateException("network")
+            }
+        }
+        val engine = FakePlaybackEngine()
+        val controller = VideoPlaybackController(engine, repository, FakePlaybackSession())
+        controller.prepare(sampleDetail(listOf(first, second)), first)
+        engine.hasEnded = true
+
+        assertEquals(EpisodeSwitchResult.Failed, controller.advanceToNextEpisodeIfEnded())
+        assertEquals(EpisodeSwitchResult.Unavailable, controller.advanceToNextEpisodeIfEnded())
+        assertEquals(1, requests)
+        assertEquals(first, controller.activeSession?.episode)
+        assertFalse(controller.isLoading)
+    }
+
+    @Test
+    fun `automatic advance waits for playback end and allows each subsequent episode`() = runBlocking {
+        val episodes = (1..3).map { sampleEpisode(key = "episode-$it") }
+        val engine = FakePlaybackEngine()
+        val controller = VideoPlaybackController(engine, FakeCatalogRepository(), FakePlaybackSession())
+        controller.prepare(sampleDetail(episodes), episodes.first())
+        assertEquals(EpisodeSwitchResult.Unavailable, controller.advanceToNextEpisodeIfEnded())
+        engine.hasEnded = true
+        assertEquals(EpisodeSwitchResult.Switched(episodes[1]), controller.advanceToNextEpisodeIfEnded())
+        assertEquals(EpisodeSwitchResult.Unavailable, controller.advanceToNextEpisodeIfEnded())
+        engine.hasEnded = true
+        assertEquals(EpisodeSwitchResult.Switched(episodes[2]), controller.advanceToNextEpisodeIfEnded())
+        assertTrue(engine.playWhenReady)
+    }
+
+    @Test
+    fun `outro switch in progress prevents duplicate automatic advance`() = runBlocking {
+        val episodes = (1..3).map { sampleEpisode(key = "episode-$it") }
+        val gate = CompletableDeferred<Episode>()
+        var requests = 0
+        val repository = object : CatalogRepository by FakeCatalogRepository() {
+            override suspend fun resolvePlayback(detail: VideoDetail, episode: Episode, forceRefresh: Boolean): Episode {
+                requests++
+                return gate.await()
+            }
+        }
+        val engine = FakePlaybackEngine()
+        val controller = VideoPlaybackController(engine, repository, FakePlaybackSession())
+        val detail = sampleDetail(episodes)
+        controller.prepare(detail, episodes.first())
+        val outro = async(start = CoroutineStart.UNDISPATCHED) { controller.loadEpisode(detail, episodes[1]) }
+        engine.hasEnded = true
+        assertEquals(EpisodeSwitchResult.Unavailable, controller.advanceToNextEpisodeIfEnded())
+        gate.complete(episodes[1])
+        assertEquals(EpisodeSwitchResult.Switched(episodes[1]), outro.await())
+        assertEquals(EpisodeSwitchResult.Unavailable, controller.advanceToNextEpisodeIfEnded())
+        assertEquals(1, requests)
+    }
+
+    @Test
+    fun `replaying after a failed advance allows a new end attempt`() = runBlocking {
+        val episodes = (1..2).map { sampleEpisode(key = "episode-$it") }
+        val repository = FakeCatalogRepository().apply { resolvePlaybackFailure = IllegalStateException("network") }
+        val engine = FakePlaybackEngine()
+        val controller = VideoPlaybackController(engine, repository, FakePlaybackSession())
+        controller.prepare(sampleDetail(episodes), episodes.first())
+        engine.hasEnded = true
+        assertEquals(EpisodeSwitchResult.Failed, controller.advanceToNextEpisodeIfEnded())
+        engine.hasEnded = false
+        engine.dispatchState()
+        repository.resolvePlaybackFailure = null
+        engine.hasEnded = true
+        assertEquals(EpisodeSwitchResult.Switched(episodes[1]), controller.advanceToNextEpisodeIfEnded())
+    }
+
+    @Test
+    fun `cancelled automatic advance can resume when the playback surface changes`() = runBlocking {
+        val episodes = (1..2).map { sampleEpisode(key = "episode-$it") }
+        val gate = CompletableDeferred<Episode>()
+        val repository = object : CatalogRepository by FakeCatalogRepository() {
+            override suspend fun resolvePlayback(detail: VideoDetail, episode: Episode, forceRefresh: Boolean) = gate.await()
+        }
+        val engine = FakePlaybackEngine()
+        val controller = VideoPlaybackController(engine, repository, FakePlaybackSession())
+        controller.prepare(sampleDetail(episodes), episodes.first())
+        engine.hasEnded = true
+        val request = async(start = CoroutineStart.UNDISPATCHED) { controller.advanceToNextEpisodeIfEnded() }
+        request.cancel()
+        request.join()
+        assertFalse(controller.isLoading)
+
+        gate.complete(episodes[1])
+        assertEquals(EpisodeSwitchResult.Switched(episodes[1]), controller.advanceToNextEpisodeIfEnded())
     }
 
     @Test
@@ -309,16 +580,26 @@ class VideoPlaybackControllerTest {
         override var currentPosition: Long = 0L,
         override var duration: Long = 0L,
     ) : PlaybackEngine {
+        override var hasEnded = false
         override var isPlaying = false
         override var playWhenReady = false
         var setMediaCalls = 0
         var releaseCalls = 0
         var seekPositionMs = 0L
         private val positionListeners = linkedSetOf<(Long) -> Unit>()
+        private val stateListeners = linkedSetOf<() -> Unit>()
 
         override fun setMediaUrl(mediaUrl: String) {
             setMediaCalls++
+            hasEnded = false
         }
+
+        override fun addStateListener(listener: () -> Unit): () -> Unit {
+            stateListeners += listener
+            return { stateListeners -= listener }
+        }
+
+        fun dispatchState() = stateListeners.toList().forEach { it() }
 
         override fun prepare() = Unit
 

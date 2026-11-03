@@ -79,12 +79,15 @@ class VideoPlaybackController(
     private var released = false
     private var paused = false
     private var replacingMedia = false
+    private var endedAdvanceEpisodeKey: String? = null
     private var requestVersion = 0L
     private var lastSaveAt = 0L
     private var lastPlayWhenReady = engine.playWhenReady
     private val stateListeners = linkedSetOf<() -> Unit>()
     private var screenObserver: ScreenOffPlaybackObserver? = null
     var isLoading: Boolean = false
+        private set
+    var pendingEpisode: Episode? = null
         private set
     var hasOverlayOwner: Boolean = false
     var requestedMediaKey: String? = null
@@ -93,6 +96,9 @@ class VideoPlaybackController(
 
     private val removeStateListener = engine.addStateListener {
         if (!replacingMedia && !released) {
+            // Leaving the ended state (for example, replaying after a failed request)
+            // starts a new completion attempt without retrying repeated ended callbacks.
+            if (!engine.hasEnded) endedAdvanceEpisodeKey = null
             if (engine.playWhenReady && !canPlay()) pause()
             else {
                 if (lastPlayWhenReady != engine.playWhenReady) paused = !engine.playWhenReady
@@ -113,6 +119,8 @@ class VideoPlaybackController(
         saveHistory()
         requestVersion++
         isLoading = false
+        pendingEpisode = null
+        endedAdvanceEpisodeKey = null
         requestedMediaKey = mediaKey
         if (activeDetail?.mediaKey != mediaKey) {
             replacingMedia = true
@@ -138,6 +146,13 @@ class VideoPlaybackController(
     val durationMs: Long
         get() = if (released) 0L else engine.duration.coerceAtLeast(0L)
 
+    val canSeek: Boolean
+        get() = isPrepared && !isLoading && engine.isReady && durationMs > 0L
+
+    val isPlaybackEnded: Boolean
+        get() = isPrepared && engine.hasEnded &&
+            (requestedMediaKey == null || requestedMediaKey == activeDetail?.mediaKey)
+
     val activeSession: ActivePlaybackSession?
         get() = activeDetail?.let { detail ->
             activeEpisode?.let { episode -> ActivePlaybackSession(detail, episode) }
@@ -154,6 +169,8 @@ class VideoPlaybackController(
         saveHistory()
         requestVersion++
         isLoading = false
+        pendingEpisode = null
+        endedAdvanceEpisodeKey = null
         replacingMedia = true
         try {
             engine.setMediaUrl(mediaUrl)
@@ -208,6 +225,13 @@ class VideoPlaybackController(
         }
     }
 
+    fun seekBy(offsetMs: Long) {
+        if (!canSeek) return
+        val duration = durationMs
+        val position = currentPositionMs.coerceIn(0L, duration)
+        seekTo(position + offsetMs.coerceIn(-position, duration - position))
+    }
+
     suspend fun switchEpisode(offset: Int): EpisodeSwitchResult {
         val detail = activeDetail ?: return EpisodeSwitchResult.Unavailable
         val activeEpisode = activeEpisode ?: return EpisodeSwitchResult.Unavailable
@@ -215,6 +239,24 @@ class VideoPlaybackController(
         if (activeIndex < 0 || offset !in listOf(-1, 1)) return EpisodeSwitchResult.Unavailable
         val targetEpisode = detail.episodes.getOrNull(activeIndex + offset) ?: return EpisodeSwitchResult.Unavailable
         return loadEpisode(detail, targetEpisode)
+    }
+
+    suspend fun advanceToNextEpisodeIfEnded(): EpisodeSwitchResult {
+        val current = activeEpisode ?: return EpisodeSwitchResult.Unavailable
+        if (!isPlaybackEnded || isLoading || endedAdvanceEpisodeKey == current.episodeKey) {
+            return EpisodeSwitchResult.Unavailable
+        }
+        endedAdvanceEpisodeKey = current.episodeKey
+        return try {
+            switchEpisode(offset = 1)
+        } catch (error: CancellationException) {
+            // The next surface must be able to resume a request cancelled during handoff.
+            if (endedAdvanceEpisodeKey == current.episodeKey) {
+                endedAdvanceEpisodeKey = null
+                notifyState()
+            }
+            throw error
+        }
     }
 
     suspend fun loadEpisode(
@@ -226,9 +268,15 @@ class VideoPlaybackController(
         if (requestedMediaKey != null && requestedMediaKey != detail.mediaKey) return EpisodeSwitchResult.Unavailable
         val version = ++requestVersion
         isLoading = true
+        pendingEpisode = episode
         notifyState()
         try {
-            val playable = repository.resolvePlayback(detail, episode)
+            // A stream variant must not replace the identity used by the catalog and history.
+            val playable = repository.resolvePlayback(detail, episode).copy(
+                episodeKey = episode.episodeKey,
+                uniqueId = episode.uniqueId,
+                episodeTitle = episode.episodeTitle,
+            )
             currentCoroutineContext().ensureActive()
             if (released || version != requestVersion) return EpisodeSwitchResult.Unavailable
             val position = AutoSkipPolicy.initialPositionMs(resumePositionMs, playable.opSecond, skipIntro())
@@ -241,6 +289,7 @@ class VideoPlaybackController(
         } finally {
             if (version == requestVersion) {
                 isLoading = false
+                pendingEpisode = null
                 notifyState()
             }
         }
@@ -277,6 +326,8 @@ class VideoPlaybackController(
         released = true
         requestVersion++
         isLoading = false
+        pendingEpisode = null
+        endedAdvanceEpisodeKey = null
         screenObserver?.release()
         removeProgressListener()
         removeStateListener()
@@ -294,6 +345,8 @@ class VideoPlaybackController(
             repository: CatalogRepository,
         ): VideoPlaybackController {
             val player = ExoPlayer.Builder(applicationContext)
+                .setSeekBackIncrementMs(10_000L)
+                .setSeekForwardIncrementMs(10_000L)
                 .setMediaSourceFactory(DefaultMediaSourceFactory(DefaultDataSource.Factory(applicationContext)))
                 .build()
             val session = MediaSession.Builder(applicationContext, player).build()

@@ -61,16 +61,20 @@
         </ScrollView>
     </LinearLayout>
 
-    <FrameLayout android:id="@+id/inAppMiniPlayer" android:layout_width="@dimen/dp_240" android:layout_height="@dimen/dp_135" android:layout_gravity="bottom|end" android:layout_margin="@dimen/dp_16" android:background="@drawable/bg_floating_player" android:clipToOutline="true" android:visibility="gone">
+    <com.aiyifan.app.feature.video.ResizablePlayerLayout android:id="@+id/inAppMiniPlayer" android:layout_width="@dimen/dp_240" android:layout_height="@dimen/dp_135" android:layout_gravity="bottom|end" android:layout_margin="@dimen/dp_16" android:background="@drawable/bg_floating_player" android:clipToOutline="true" android:visibility="gone">
 
         <androidx.media3.ui.PlayerView android:id="@+id/inAppMiniPlayerView" android:layout_width="match_parent" android:layout_height="match_parent" app:show_buffering="when_playing" app:use_controller="false" />
 
-        <ImageButton android:id="@+id/inAppMiniCloseButton" android:layout_width="@dimen/dp_36" android:layout_height="@dimen/dp_36" android:layout_gravity="top|end" android:layout_margin="@dimen/dp_6" android:background="@drawable/bg_floating_control" android:contentDescription="@string/hardcoded_text_030" android:padding="@dimen/dp_6" android:src="@drawable/ic_close" />
+        <ImageButton android:id="@+id/inAppMiniCloseButton" android:layout_width="@dimen/dp_32" android:layout_height="@dimen/dp_32" android:layout_gravity="top|end" android:layout_margin="@dimen/dp_4" android:background="@drawable/bg_floating_control" android:contentDescription="@string/hardcoded_text_030" android:padding="@dimen/dp_6" android:src="@drawable/ic_close" />
 
-        <ImageButton android:id="@+id/inAppMiniPlayPauseButton" android:layout_width="@dimen/dp_40" android:layout_height="@dimen/dp_40" android:layout_gravity="bottom|center_horizontal" android:layout_marginBottom="@dimen/dp_8" android:background="@drawable/bg_floating_control" android:contentDescription="@string/hardcoded_text_031" android:padding="@dimen/dp_8" android:src="@drawable/ic_pause" />
+        <LinearLayout android:layout_width="wrap_content" android:layout_height="@dimen/dp_40" android:layout_gravity="bottom|center_horizontal" android:layout_marginBottom="@dimen/dp_24" android:orientation="horizontal">
+            <ImageButton android:id="@+id/inAppMiniRewindButton" android:layout_width="@dimen/dp_40" android:layout_height="@dimen/dp_40" android:layout_marginEnd="@dimen/dp_4" android:background="@drawable/bg_floating_control" android:contentDescription="@string/player_rewind_ten_seconds" android:padding="@dimen/dp_8" android:src="@drawable/ic_replay_10" app:tint="@android:color/white" />
+            <ImageButton android:id="@+id/inAppMiniPlayPauseButton" android:layout_width="@dimen/dp_40" android:layout_height="@dimen/dp_40" android:background="@drawable/bg_floating_control" android:contentDescription="@string/hardcoded_text_031" android:padding="@dimen/dp_8" android:src="@drawable/ic_pause" />
+            <ImageButton android:id="@+id/inAppMiniForwardButton" android:layout_width="@dimen/dp_40" android:layout_height="@dimen/dp_40" android:layout_marginStart="@dimen/dp_4" android:background="@drawable/bg_floating_control" android:contentDescription="@string/player_forward_ten_seconds" android:padding="@dimen/dp_8" android:src="@drawable/ic_forward_10" app:tint="@android:color/white" />
+        </LinearLayout>
 
-        <ImageButton android:id="@+id/inAppMiniResizeHandle" android:layout_width="@dimen/dp_24" android:layout_height="@dimen/dp_24" android:layout_gravity="bottom|end" android:layout_margin="@dimen/dp_4" android:background="@android:color/transparent" android:contentDescription="@string/hardcoded_text_032" android:padding="@dimen/dp_2" android:src="@drawable/ic_resize" />
-    </FrameLayout>
+        <ImageButton android:id="@+id/inAppMiniResizeHandle" android:layout_width="@dimen/dp_32" android:layout_height="@dimen/dp_24" android:layout_gravity="bottom|end" android:background="@android:color/transparent" android:contentDescription="@string/hardcoded_text_032" android:padding="@dimen/dp_2" android:src="@drawable/ic_resize" />
+    </com.aiyifan.app.feature.video.ResizablePlayerLayout>
 
     <TextView android:id="@+id/playerGestureFeedback" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:background="@drawable/bg_floating_control" android:paddingHorizontal="@dimen/dp_16" android:paddingVertical="@dimen/dp_12" android:textColor="@android:color/white" android:textSize="@dimen/sp_16" android:visibility="gone" />
 </FrameLayout>

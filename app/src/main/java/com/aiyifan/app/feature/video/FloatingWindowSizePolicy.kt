@@ -9,12 +9,25 @@ data class FloatingWindowSize(
 
 object FloatingWindowSizePolicy {
     fun resize(requestedWidth: Int, minWidth: Int, maxWidth: Int): FloatingWindowSize {
-        val width = requestedWidth.coerceIn(minWidth, maxWidth)
+        val upperBound = maxWidth.coerceAtLeast(1)
+        val width = requestedWidth.coerceIn(minWidth.coerceIn(1, upperBound), upperBound)
         return FloatingWindowSize(
             width = width,
             height = (width * HEIGHT_RATIO / WIDTH_RATIO).roundToInt(),
         )
     }
+
+    fun fit(
+        requestedWidth: Int,
+        minWidth: Int,
+        maxWidth: Int,
+        availableWidth: Int,
+        availableHeight: Int,
+    ): FloatingWindowSize = resize(
+        requestedWidth = requestedWidth,
+        minWidth = minWidth,
+        maxWidth = minOf(maxWidth, availableWidth, (availableHeight * WIDTH_RATIO / HEIGHT_RATIO).toInt()),
+    )
 
     fun resizeByScale(
         currentWidth: Int,

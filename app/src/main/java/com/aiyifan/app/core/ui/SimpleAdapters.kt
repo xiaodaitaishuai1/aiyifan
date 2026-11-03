@@ -13,11 +13,14 @@ class EpisodeAdapter(
 ) : RecyclerView.Adapter<EpisodeAdapter.EpisodeViewHolder>() {
     private val items = mutableListOf<Episode>()
     private var selectedKey: String? = null
+    private var selectionEnabled = true
 
-    fun submitList(episodes: List<Episode>, selected: Episode?) {
+    fun submitList(episodes: List<Episode>, selected: Episode?, enabled: Boolean = true) {
+        if (items == episodes && selectedKey == selected?.episodeKey && selectionEnabled == enabled) return
         items.clear()
         items.addAll(episodes)
         selectedKey = selected?.episodeKey
+        selectionEnabled = enabled
         notifyDataSetChanged()
     }
 
@@ -27,7 +30,7 @@ class EpisodeAdapter(
     }
 
     override fun onBindViewHolder(holder: EpisodeViewHolder, position: Int) {
-        holder.bind(items[position], items[position].episodeKey == selectedKey)
+        holder.bind(items[position], items[position].episodeKey == selectedKey, selectionEnabled)
     }
 
     override fun getItemCount(): Int = items.size
@@ -36,7 +39,7 @@ class EpisodeAdapter(
         private val binding: ItemEpisodeBinding,
         private val onClick: (Episode) -> Unit,
     ) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(episode: Episode, selected: Boolean) {
+        fun bind(episode: Episode, selected: Boolean, enabled: Boolean) {
             val appearance = ChipAppearanceResolver.forSelection(selected)
             binding.episodeTitle.text = episode.episodeTitle
             binding.episodeTitle.isSelected = selected
@@ -45,6 +48,7 @@ class EpisodeAdapter(
                 binding.root.resources.getColor(appearance.textColorRes, null),
             )
             binding.root.alpha = 1.0f
+            binding.root.isEnabled = enabled
             binding.root.setOnClickListener { onClick(episode) }
         }
     }

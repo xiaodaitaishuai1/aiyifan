@@ -12,6 +12,7 @@ import android.os.SystemClock
 import android.provider.Settings
 import android.util.Rational
 import android.view.MotionEvent
+import android.view.Gravity
 import android.view.View
 import android.view.ViewConfiguration
 import android.media.AudioManager
@@ -108,7 +109,14 @@ class VideoPlayerActivity : AppCompatActivity() {
             updateInAppMiniPlayPauseButton()
         }
         binding.inAppMiniCloseButton.setOnClickListener { closePlayback() }
-        binding.inAppMiniResizeHandle.setOnTouchListener(InAppMiniResizeTouchListener())
+        binding.inAppMiniRewindButton.setOnClickListener { playbackController.seekBy(-10_000L) }
+        binding.inAppMiniForwardButton.setOnClickListener { playbackController.seekBy(10_000L) }
+        binding.inAppMiniPlayer.configureResize(binding.inAppMiniResizeHandle, ::resizeInAppMiniPlayer)
+        binding.root.addOnLayoutChangeListener { _, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
+            if (isInAppMiniPlayerVisible && (right - left != oldRight - oldLeft || bottom - top != oldBottom - oldTop)) {
+                binding.inAppMiniPlayer.post { resizeInAppMiniPlayer(binding.inAppMiniPlayer.layoutParams.width) }
+            }
+        }
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 handleBack()
@@ -134,6 +142,11 @@ class VideoPlayerActivity : AppCompatActivity() {
             syncFromActivePlaybackSession()
             updateEpisodeButtons()
             updateInAppMiniPlayPauseButton()
+            if (playbackController.isPlaybackEnded) {
+                lifecycleScope.launch {
+                    handleEpisodeResult(playbackController.advanceToNextEpisodeIfEnded())
+                }
+            }
         }
         syncFromActivePlaybackSession()
         if (needsLoad) loadDetail(mediaKey)
@@ -204,6 +217,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         binding.title.text = detail.title
         binding.videoTitle.text = detail.title
         binding.fullScreenVideoTitle.text = detail.title
+        renderEpisodeSelection()
         binding.meta.text = listOfNotNull(
             detail.typeName,
             detail.publishTime,
@@ -449,6 +463,9 @@ class VideoPlayerActivity : AppCompatActivity() {
         binding.playerContainer.isVisible = false
         playbackController.attach(binding.inAppMiniPlayerView)
         updateInAppMiniPlayPauseButton()
+        binding.inAppMiniPlayer.post {
+            if (isInAppMiniPlayerVisible) resizeInAppMiniPlayer(binding.inAppMiniPlayer.layoutParams.width)
+        }
     }
 
     private fun updateInAppMiniPlayPauseButton() {
@@ -456,19 +473,37 @@ class VideoPlayerActivity : AppCompatActivity() {
             if (playbackController.playWhenReady) R.drawable.ic_pause else R.drawable.ic_play,
         )
         binding.inAppMiniPlayPauseButton.contentDescription = if (playbackController.playWhenReady) "暂停播放" else "继续播放"
+        for (button in listOf(binding.inAppMiniRewindButton, binding.inAppMiniForwardButton)) {
+            button.isEnabled = playbackController.canSeek
+            button.alpha = if (button.isEnabled) 1f else 0.4f
+        }
     }
 
     private fun syncFromActivePlaybackSession() {
-        val session = playbackController.activeSession ?: return
-        val sessionDetail = session.detail
-        if (sessionDetail.mediaKey != intent.getStringExtra(EXTRA_MEDIA_KEY)) return
-        if (detail?.mediaKey != sessionDetail.mediaKey) {
-            detail = sessionDetail
-            renderDetail(sessionDetail)
+        val session = playbackController.activeSession?.takeIf {
+            it.detail.mediaKey == intent.getStringExtra(EXTRA_MEDIA_KEY)
         }
-        selectedEpisode = session.episode
-        playingEpisode = session.episode
-        episodeAdapter.submitList(sessionDetail.episodes, session.episode)
+        if (session != null) {
+            val sessionDetail = session.detail
+            if (detail?.mediaKey != sessionDetail.mediaKey) {
+                detail = sessionDetail
+                renderDetail(sessionDetail)
+            }
+            playingEpisode = session.episode
+        }
+        renderEpisodeSelection()
+    }
+
+    private fun renderEpisodeSelection() {
+        val currentDetail = detail ?: return
+        val session = playbackController.activeSession?.takeIf { it.detail.mediaKey == currentDetail.mediaKey }
+        selectedEpisode = playbackController.pendingEpisode
+            ?.takeIf { playbackController.requestedMediaKey == currentDetail.mediaKey }
+            ?: session?.episode
+        episodeAdapter.submitList(currentDetail.episodes, selectedEpisode, enabled = !playbackController.isLoading)
+        val title = PlayerEpisodePresentation.title(currentDetail, selectedEpisode, getString(R.string.player_episode_title))
+        binding.videoTitle.text = title
+        binding.fullScreenVideoTitle.text = title
     }
 
     private fun currentDestination(): PlaybackDestination = PlaybackPresentationPolicy.destinationWhenLeaving(
@@ -553,34 +588,34 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     private fun dpToPx(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
-    private inner class InAppMiniResizeTouchListener : View.OnTouchListener {
-        private var downRawX = 0f
-        private var initialWidth = 0
-
-        override fun onTouch(view: View, event: MotionEvent): Boolean {
-            val params = binding.inAppMiniPlayer.layoutParams as FrameLayout.LayoutParams
-            when (event.actionMasked) {
-                MotionEvent.ACTION_DOWN -> {
-                    downRawX = event.rawX
-                    initialWidth = params.width
-                    return true
-                }
-
-                MotionEvent.ACTION_MOVE -> {
-                    val maxWidth = (binding.root.width - dpToPx(IN_APP_MINI_MARGIN_DP * 2)).coerceAtLeast(dpToPx(IN_APP_MINI_MIN_WIDTH_DP))
-                    val size = FloatingWindowSizePolicy.resize(
-                        requestedWidth = initialWidth + (downRawX - event.rawX).toInt(),
-                        minWidth = dpToPx(IN_APP_MINI_MIN_WIDTH_DP),
-                        maxWidth = maxWidth,
-                    )
-                    params.width = size.width
-                    params.height = size.height
-                    binding.inAppMiniPlayer.layoutParams = params
-                    return true
-                }
-            }
-            return false
-        }
+    private fun resizeInAppMiniPlayer(requestedWidth: Int): Int {
+        val mini = binding.inAppMiniPlayer
+        if (mini.width == 0 || binding.root.width == 0) return requestedWidth
+        val insets = ViewCompat.getRootWindowInsets(binding.root)
+            ?.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+        val margin = dpToPx(IN_APP_MINI_MARGIN_DP)
+        val safeLeft = (insets?.left ?: 0) + margin
+        val safeTop = (insets?.top ?: 0) + margin
+        val availableWidth = (binding.root.width - safeLeft - (insets?.right ?: 0) - margin).coerceAtLeast(1)
+        val availableHeight = (binding.root.height - safeTop - (insets?.bottom ?: 0) - margin).coerceAtLeast(1)
+        val size = FloatingWindowSizePolicy.fit(
+            requestedWidth, dpToPx(IN_APP_MINI_MIN_WIDTH_DP), availableWidth, availableWidth, availableHeight,
+        )
+        val params = mini.layoutParams as FrameLayout.LayoutParams
+        val x = mini.left.coerceIn(safeLeft, safeLeft + availableWidth - size.width)
+        val y = mini.top.coerceIn(safeTop, safeTop + availableHeight - size.height)
+        if (params.gravity == (Gravity.TOP or Gravity.LEFT) && params.leftMargin == x && params.topMargin == y &&
+            params.width == size.width && params.height == size.height
+        ) return size.width
+        params.gravity = Gravity.TOP or Gravity.LEFT
+        params.setMargins(x, y, 0, 0)
+        val rtl = mini.layoutDirection == View.LAYOUT_DIRECTION_RTL
+        params.marginStart = if (rtl) 0 else x
+        params.marginEnd = if (rtl) x else 0
+        params.width = size.width
+        params.height = size.height
+        mini.layoutParams = params
+        return size.width
     }
 
     private inner class PlayerGestureTouchListener : View.OnTouchListener {

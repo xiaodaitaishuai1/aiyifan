@@ -11,6 +11,18 @@ import org.junit.Test
 class RemoteCatalogRepositoryPlaybackTest {
 
     @Test
+    fun `playback source identifiers do not replace the catalog episode identity`() = runBlocking {
+        val source = episode()
+        val result = repository(PlaybackFetcher(
+            """{"data":{"list":[{"episodeKey":"stream-key","episodeId":999,"resolution":"720P","mediaUrl":"https://example.com/stream.m3u8"}]}}""",
+        )).resolvePlayback(detail(), source, forceRefresh = true)
+
+        assertEquals(source.episodeKey, result.episodeKey)
+        assertEquals(source.uniqueId, result.uniqueId)
+        assertEquals("https://example.com/stream.m3u8", result.mediaUrl)
+    }
+
+    @Test
     fun `forced resolution requests and returns matching playback source`() = runBlocking {
         val fetcher = PlaybackFetcher(
             """{"data":{"list":[
