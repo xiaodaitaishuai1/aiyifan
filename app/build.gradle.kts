@@ -4,29 +4,29 @@ plugins {
     id("org.jetbrains.kotlin.kapt")
 }
 
-fun signingValue(name: String): String? =
-    providers.gradleProperty(name).orNull
-        ?: System.getenv(name.uppercase().replace('.', '_'))
+val appConfigFile = rootProject.file("app-config.gradle")
+apply(from = appConfigFile.takeIf { it.isFile } ?: rootProject.file("app-config.gradle.example"))
 
-val releaseSigningPropertyNames = listOf(
-    "release.keystore.path",
-    "release.key.alias",
-    "release.store.password",
-    "release.key.password",
-)
-val releaseSigningValues = releaseSigningPropertyNames.associateWith(::signingValue)
-val hasReleaseSigning = releaseSigningValues.values.all { !it.isNullOrBlank() }
+val APPLICATION_ID: String by project.extra
+val VERSION_NAME: String by project.extra
+val VERSION_CODE: String by project.extra
+val STORE_PATH: String by project.extra
+val STORE_PASSWORD: String by project.extra
+val KEY_ALIAS: String by project.extra
+val KEY_PASSWORD: String by project.extra
+
+val hasReleaseSigning = listOf(STORE_PATH, STORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD).all { it.isNotBlank() }
 
 android {
     namespace = "com.aiyifan.app"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.aiyifan.app"
+        applicationId = APPLICATION_ID
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = VERSION_CODE.toInt()
+        versionName = VERSION_NAME
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk {
@@ -37,10 +37,10 @@ android {
     signingConfigs {
         if (hasReleaseSigning) {
             create("release") {
-                keyAlias = releaseSigningValues.getValue("release.key.alias")
-                keyPassword = releaseSigningValues.getValue("release.key.password")
-                storeFile = file(releaseSigningValues.getValue("release.keystore.path"))
-                storePassword = releaseSigningValues.getValue("release.store.password")
+                keyAlias = KEY_ALIAS
+                keyPassword = KEY_PASSWORD
+                storeFile = file(STORE_PATH)
+                storePassword = STORE_PASSWORD
             }
         }
     }
@@ -77,7 +77,7 @@ tasks.configureEach {
     ) {
         doFirst {
             throw GradleException(
-                "Release signing requires: ${releaseSigningPropertyNames.joinToString()}",
+                "Release signing requires STORE_PATH, STORE_PASSWORD, KEY_ALIAS and KEY_PASSWORD in app-config.gradle",
             )
         }
     }

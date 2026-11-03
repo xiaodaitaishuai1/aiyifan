@@ -1,0 +1,11 @@
+// Local application configuration. This file is excluded from Git.
+// STORE_PATH is resolved relative to the app/ module.
+ext {
+    APPLICATION_ID = "com.aiyifan.app"
+    VERSION_NAME = "1.0"
+    VERSION_CODE = "1"
+    STORE_PATH = "../aiyifan.jks"
+    STORE_PASSWORD = ""
+    KEY_ALIAS = "aiyifan"
+    KEY_PASSWORD = ""
+}
