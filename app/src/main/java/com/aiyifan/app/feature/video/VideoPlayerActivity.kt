@@ -67,6 +67,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     private var overlayHandoffPending = false
     private var playerBrightness = -1f
     private var hasAutomaticallyAdvancedOutro = false
+    private var episodeListScrollKey: String? = null
     private val gestureFeedbackHideRunnable = Runnable { binding.playerGestureFeedback.isVisible = false }
 
     @UnstableApi
@@ -138,6 +139,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         overlayHandoffPending = false
         window.attributes = window.attributes.apply { screenBrightness = playerBrightness }
         registerPositionListener()
+        episodeListScrollKey = null
         removeStateListener = playbackController.addStateListener {
             syncFromActivePlaybackSession()
             updateEpisodeButtons()
@@ -501,9 +503,23 @@ class VideoPlayerActivity : AppCompatActivity() {
             ?.takeIf { playbackController.requestedMediaKey == currentDetail.mediaKey }
             ?: session?.episode
         episodeAdapter.submitList(currentDetail.episodes, selectedEpisode, enabled = !playbackController.isLoading)
+        scrollToSelectedEpisode(currentDetail, selectedEpisode)
         val title = PlayerEpisodePresentation.title(currentDetail, selectedEpisode, getString(R.string.player_episode_title))
         binding.videoTitle.text = title
         binding.fullScreenVideoTitle.text = title
+    }
+
+    private fun scrollToSelectedEpisode(currentDetail: VideoDetail, episode: Episode?) {
+        val currentKey = episode?.episodeKey ?: return
+        if (episodeListScrollKey == currentKey) return
+        val currentIndex = currentDetail.episodes.indexOfFirst { it.episodeKey == currentKey }
+        val targetPosition = EpisodeListScrollPolicy.targetPosition(currentIndex, currentDetail.episodes.size) ?: return
+        episodeListScrollKey = currentKey
+        binding.episodeRecycler.post {
+            if (episodeListScrollKey != currentKey) return@post
+            (binding.episodeRecycler.layoutManager as? LinearLayoutManager)
+                ?.scrollToPositionWithOffset(targetPosition, 0)
+        }
     }
 
     private fun currentDestination(): PlaybackDestination = PlaybackPresentationPolicy.destinationWhenLeaving(

@@ -11,6 +11,8 @@ import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.lifecycle.Lifecycle
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -29,6 +31,36 @@ class PlayerExperienceDeviceTest {
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val automation get() = instrumentation.uiAutomation
+
+    @Test
+    fun enteringPageRevealsCurrentEpisodeWithoutInterruptingManualBrowsing() =
+        withPlayback(episodeCount = 30, startIndex = 24) { scenario, controller ->
+            fun assertCurrentEpisodeVisible() {
+                instrumentation.waitForIdleSync()
+                scenario.onActivity { activity ->
+                    val list = activity.findViewById<RecyclerView>(R.id.episodeRecycler)
+                    val layout = list.layoutManager as LinearLayoutManager
+                    assertTrue("Current episode must be fully visible on entry", 24 in
+                        layout.findFirstCompletelyVisibleItemPosition()..layout.findLastCompletelyVisibleItemPosition())
+                    assertTrue(list.findViewHolderForAdapterPosition(24)!!.itemView.isSelected)
+                }
+            }
+            assertCurrentEpisodeVisible()
+            scenario.onActivity { activity ->
+                (activity.findViewById<RecyclerView>(R.id.episodeRecycler).layoutManager as LinearLayoutManager)
+                    .scrollToPositionWithOffset(0, 0)
+            }
+            instrumentation.waitForIdleSync()
+            scenario.onActivity { controller.pause() }
+            instrumentation.waitForIdleSync()
+            scenario.onActivity { activity ->
+                val layout = activity.findViewById<RecyclerView>(R.id.episodeRecycler).layoutManager as LinearLayoutManager
+                assertEquals("State updates must preserve manual browsing", 0, layout.findFirstVisibleItemPosition())
+            }
+            scenario.moveToState(Lifecycle.State.CREATED)
+            scenario.moveToState(Lifecycle.State.RESUMED)
+            assertCurrentEpisodeVisible()
+        }
 
     @Test
     fun playbackEndAdvancesOnPageAndStopsAtFinalEpisode() = withPlayback { scenario, controller ->
@@ -197,7 +229,11 @@ class PlayerExperienceDeviceTest {
         }
     }
 
-    private fun withPlayback(block: (ActivityScenario<VideoPlayerActivity>, VideoPlaybackController) -> Unit) {
+    private fun withPlayback(
+        episodeCount: Int = 2,
+        startIndex: Int = 0,
+        block: (ActivityScenario<VideoPlayerActivity>, VideoPlaybackController) -> Unit,
+    ) {
         shell("input keyevent KEYCODE_WAKEUP")
         shell("wm dismiss-keyguard")
         val preferences = context.getSharedPreferences("watch_history", Context.MODE_PRIVATE)
@@ -206,13 +242,16 @@ class PlayerExperienceDeviceTest {
         instrumentation.context.assets.open("playback-test.mp4").use { input -> clip.outputStream().use(input::copyTo) }
         val first = Episode("qa-first", "1", 1, clip.toURI().toString())
         val second = first.copy(episodeKey = "qa-second", episodeTitle = "2", uniqueId = 2)
-        val detail = VideoDetail("qa-experience", "播放器验证", "", 2, episodes = listOf(first, second))
+        val episodes = listOf(first, second) + (3..episodeCount).map { index ->
+            first.copy(episodeKey = "qa-episode-$index", episodeTitle = "$index", uniqueId = index)
+        }
+        val detail = VideoDetail("qa-experience", "播放器验证", "", 2, episodes = episodes)
         lateinit var controller: VideoPlaybackController
         mainValue {
             AppGraph.videoPlaybackController.release()
             controller = AppGraph.videoPlaybackController
             controller.openVideo(detail.mediaKey)
-            controller.prepare(detail, first, shouldPlay = false)
+            controller.prepare(detail, episodes[startIndex], shouldPlay = false)
         }
         try {
             ActivityScenario.launch<VideoPlayerActivity>(VideoPlayerActivity.intent(context, detail.mediaKey)).use { scenario ->
