@@ -9,7 +9,7 @@ struct MainPage {
   build() {
     Column() {
       Row() {
-        Text('爱壹帆').fontSize(24).fontWeight(FontWeight.Bold).fontColor(Color.White);
+        Text('爱壹帆').fontSize(24).fontWeight(FontWeight.Bold).fontColor(this.darkMode ? '#FFFFFF' : '#17181C');
         Blank();
         Button(this.darkMode ? '深色' : '浅色')
           .fontSize(13)
@@ -24,12 +24,12 @@ struct MainPage {
           Text(this.tabTitles[this.selectedTab])
             .fontSize(26)
             .fontWeight(FontWeight.Bold)
-            .fontColor(Color.White)
+            .fontColor(this.darkMode ? '#FFFFFF' : '#17181C')
             .margin({ bottom: 12 });
-          Text('鸿蒙客户端基础骨架已就绪')
+          Text('暂无内容')
             .fontSize(16)
-            .fontColor('#B7BAC4');
-          Text('下一阶段接入首页目录、搜索和播放接口')
+            .fontColor(this.darkMode ? '#B7BAC4' : '#454952');
+          Text('')
             .fontSize(14)
             .fontColor('#777B88')
             .margin({ top: 8 });
@@ -45,7 +45,7 @@ struct MainPage {
           Column() {
             Text(title)
               .fontSize(14)
-              .fontColor(this.selectedTab === index ? '#FFFFFF' : '#888B96');
+              .fontColor(this.selectedTab === index ? (this.darkMode ? '#FFFFFF' : '#17181C') : '#777B88');
           }
           .layoutWeight(1)
           .padding(16)
@@ -53,7 +53,7 @@ struct MainPage {
         });
       }
       .width('100%')
-      .backgroundColor('#1A1B20');
+      .backgroundColor(this.darkMode ? '#1A1B20' : '#FFFFFF');
     }
     .width('100%')
     .height('100%')
