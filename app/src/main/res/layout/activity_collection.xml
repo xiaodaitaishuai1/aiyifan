@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="@drawable/bg_page">
+    <LinearLayout android:id="@+id/topBar" android:layout_width="match_parent" android:layout_height="56dp" android:gravity="center_vertical" android:background="@color/surface" android:orientation="horizontal">
+        <ImageButton android:id="@+id/backButton" android:layout_width="56dp" android:layout_height="match_parent" android:background="@android:color/transparent" android:padding="16dp" android:src="@drawable/ic_back" android:contentDescription="@string/hardcoded_text_001" />
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/collection_title" android:textSize="20sp" android:textStyle="bold" android:textColor="@color/text_primary" />
+    </LinearLayout>
+    <RadioGroup android:id="@+id/filters" android:layout_width="match_parent" android:layout_height="48dp" android:orientation="horizontal" android:paddingHorizontal="16dp">
+        <RadioButton android:id="@+id/allFilter" android:layout_width="wrap_content" android:layout_height="match_parent" android:checked="true" android:text="@string/collection_all" />
+        <RadioButton android:id="@+id/updatedFilter" android:layout_width="wrap_content" android:layout_height="match_parent" android:layout_marginStart="20dp" android:text="@string/collection_updated" />
+    </RadioGroup>
+    <TextView android:id="@+id/checkStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="40dp" android:gravity="center" android:padding="8dp" android:textColor="@color/text_secondary" />
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout android:id="@+id/swipeRefresh" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
+        <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent">
+            <androidx.recyclerview.widget.RecyclerView android:id="@+id/recycler" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="12dp" android:clipToPadding="false" />
+            <TextView android:id="@+id/emptyView" android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:padding="24dp" android:text="@string/collection_empty" android:textColor="@color/text_secondary" />
+        </FrameLayout>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+</LinearLayout>

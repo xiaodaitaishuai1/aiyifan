@@ -1,0 +1,17 @@
+<resources>
+    <string name="collection_title">收藏与追更</string>
+    <string name="collection_all">全部</string>
+    <string name="collection_updated">有更新</string>
+    <string name="collection_new_episodes">有新剧集</string>
+    <string name="collection_remove">取消收藏</string>
+    <string name="collection_no_updates">暂无更新，下拉检查新剧集</string>
+    <string name="collection_checking">正在检查更新…</string>
+    <string name="collection_check_failed">部分检查失败，点击重试</string>
+    <string name="collection_check_done">检查完成 · 下拉刷新</string>
+    <string name="collection_latest">最新：%1$s</string>
+    <string name="collection_watched">看到：%1$s</string>
+    <string name="collection_not_watched">尚未观看</string>
+    <string name="collection_checked">上次检查：%1$s</string>
+    <string name="collection_not_checked">尚未检查更新</string>
+    <string name="collection_unknown_episode">未知剧集</string>
+</resources>
