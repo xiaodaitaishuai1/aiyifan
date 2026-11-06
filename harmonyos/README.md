@@ -27,3 +27,16 @@
 ```
 
 产物为 `entry/build/default/outputs/default/entry-default-unsigned.hap`，未签名包不代表已经通过真机运行验证。需在 DevEco Studio 配置本地调试签名并连接设备或启动模拟器后验证。签名文件与本地环境文件不入库。
+
+## 当前已实现
+
+- 首页目录：读取配置接口，调用 `api/List/Index`，解析分区和视频，过滤广告、去重；网络失败时页面显示截断后的具体错误，便于模拟器诊断。
+- 首页/热门/我的导航：热门展示目录前三个分区，暂无登录和收藏页面。
+- 目录搜索：在已加载目录中按标题和分区名称过滤，支持空结果和错误重试。
+- 本地解析测试：`tests/home.test.cjs`。
+
+## 模拟器测试
+
+DevEco Studio 已配置 Mate 90 Pro、Mate X7、MateBook Pro 和 MatePad Pro 13 实例。首次使用需要在 DevEco Studio 的 Device Manager 中接受 HarmonyOS 软件和 SDK 协议，并安装对应 HarmonyOS 26.0.0 手机镜像。当前命令行检查未发现在线设备，因此尚未完成模拟器安装启动验证。
+
+构建通过后，在 Device Manager 启动 Mate 90 Pro，再使用 DevEco Studio 的 Run；需要调试签名后才能安装 HAP。

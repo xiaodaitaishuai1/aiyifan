@@ -1,10 +1,39 @@
+import { HomeRepository } from '../common/network/HomeRepository';
+import { HomeSection, HomeVideo, searchCatalog } from '../common/network/HomeCatalog';
+
 @Entry
 @Component
 struct MainPage {
   @State selectedTab: number = 0;
   @State darkMode: boolean = true;
+  @State sections: HomeSection[] = [];
+  @State status: string = '正在加载…';
+  @State query: string = '';
+  @State searchResults: HomeVideo[] = [];
 
   private tabTitles: string[] = ['首页', '热门', '我的'];
+  private repository: HomeRepository = new HomeRepository();
+
+  aboutToAppear() {
+    this.loadHome();
+  }
+
+  private async loadHome(): Promise<void> {
+    this.status = '正在加载…';
+    try {
+      this.sections = await this.repository.load();
+      this.status = this.sections.length > 0 ? '' : '暂无内容';
+    } catch (error) {
+      const message = String(error).replace('Error: ', '');
+      this.status = '加载失败：' + message.slice(0, 80);
+    }
+  }
+
+  private visibleSections(): HomeSection[] {
+    if (this.selectedTab === 0) return this.sections;
+    if (this.selectedTab === 1) return this.sections.slice(0, 3);
+    return [];
+  }
 
   build() {
     Column() {
@@ -19,20 +48,38 @@ struct MainPage {
       .width('100%')
       .padding({ left: 20, right: 20, top: 18, bottom: 12 });
 
-      Stack() {
+      TextInput({ placeholder: '搜索视频', text: this.query })
+        .width('calc(100% - 40vp)')
+        .height(44)
+        .margin({ left: 20, right: 20, bottom: 12 })
+        .onChange((value: string) => {
+          this.query = value;
+          this.searchResults = searchCatalog(this.sections, value);
+        });
+
+      Scroll() {
         Column() {
-          Text(this.tabTitles[this.selectedTab])
-            .fontSize(26)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(this.darkMode ? '#FFFFFF' : '#17181C')
-            .margin({ bottom: 12 });
-          Text('暂无内容')
+          Text(this.status)
             .fontSize(16)
-            .fontColor(this.darkMode ? '#B7BAC4' : '#454952');
-          Text('')
-            .fontSize(14)
-            .fontColor('#777B88')
-            .margin({ top: 8 });
+            .fontColor(this.status.includes('失败') ? '#E06C75' : (this.darkMode ? '#B7BAC4' : '#454952'))
+            .margin({ bottom: 16 })
+            .onClick(() => this.status.includes('失败') && this.loadHome());
+          ForEach(this.query.trim().length > 0 ? [{ name: '搜索结果', videos: this.searchResults }] : this.visibleSections(), (section: HomeSection) => {
+            Text(section.name)
+              .fontSize(20)
+              .fontWeight(FontWeight.Bold)
+              .fontColor(this.darkMode ? '#FFFFFF' : '#17181C')
+              .margin({ top: 8, bottom: 10 });
+            ForEach(section.videos.slice(0, 12), (video: HomeVideo) => {
+              Row() {
+                Text(video.title || '未命名视频').fontSize(16).fontColor(this.darkMode ? '#FFFFFF' : '#17181C').layoutWeight(1);
+                Text(video.updateStatus).fontSize(12).fontColor('#777B88');
+              }
+              .width('100%')
+              .padding({ top: 12, bottom: 12 })
+              .border({ width: { bottom: 1 }, color: this.darkMode ? '#252731' : '#E3E5EA' });
+            });
+          });
         }
         .alignItems(HorizontalAlign.Start)
         .padding(20);
@@ -60,3 +107,5 @@ struct MainPage {
     .backgroundColor(this.darkMode ? '#101114' : '#F6F7F9');
   }
 }
+
+
