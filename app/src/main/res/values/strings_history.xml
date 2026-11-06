@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="continue_watching">继续观看</string>
+    <string name="all_history">全部记录</string>
+    <string name="hide_from_home">从首页隐藏</string>
+    <string name="episode_completed">本集已看完</string>
+    <string name="history_episode_unknown">上次观看</string>
+    <string name="history_delete">删除</string>
+    <string name="history_select_all">全选</string>
+    <string name="history_cancel_selection">取消选择</string>
+    <string name="history_selected_count">已选 %1$d 项</string>
+    <string name="history_delete_confirmation">确定删除这 %1$d 条观看记录吗？若视频仍在播放，后续观看会生成新记录。</string>
+    <string name="history_cancel">取消</string>
+    <string name="history_clear_confirmation">确定清空全部观看记录吗？若视频仍在播放，后续观看会生成新记录。</string>
+</resources>

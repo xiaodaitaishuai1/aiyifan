@@ -12,6 +12,7 @@ import androidx.core.view.setMargins
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.aiyifan.app.R
 import com.aiyifan.app.core.data.AppGraph
@@ -29,6 +30,9 @@ class HomeFragment : Fragment() {
     private val binding get() = _binding!!
     private val repository = AppGraph.catalogRepository
     private lateinit var adapter: HomeVideoAdapter
+    private lateinit var continueAdapter: ContinueWatchingAdapter
+    private lateinit var continueStore: ContinueWatchingStore
+    private var removeHistoryListener: (() -> Unit)? = null
     private val pagination = HomeFeedPagination()
     private var selectedCategory: Category? = null
     private var homeRequestVersion = 0L
@@ -43,12 +47,20 @@ class HomeFragment : Fragment() {
         adapter = HomeVideoAdapter { video ->
             startActivity(VideoPlayerActivity.intent(requireContext(), video.mediaKey))
         }
+        continueStore = ContinueWatchingStore(requireContext().getSharedPreferences("continue_watching", android.content.Context.MODE_PRIVATE))
+        continueAdapter = ContinueWatchingAdapter(
+            onOpen = { startActivity(VideoPlayerActivity.intent(requireContext(), it.mediaKey)) },
+            onHide = { continueStore.hide(it); refreshContinueWatching() },
+            onAll = { startActivity(Intent(requireContext(), HistoryActivity::class.java)) },
+        )
         binding.videoRecycler.layoutManager = GridLayoutManager(requireContext(), 2).apply {
             spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
-                override fun getSpanSize(position: Int): Int = adapter.spanSizeAt(position)
+                override fun getSpanSize(position: Int): Int =
+                    if (position < continueAdapter.itemCount) 2 else adapter.spanSizeAt(position - continueAdapter.itemCount)
             }
         }
-        binding.videoRecycler.adapter = adapter
+        binding.videoRecycler.adapter = ConcatAdapter(continueAdapter, adapter)
+        refreshContinueWatching()
         binding.homeRefresh.setColorSchemeResources(R.color.accent)
         binding.homeRefresh.setProgressBackgroundColorSchemeResource(R.color.surface)
         binding.videoRecycler.addOnScrollListener(object : RecyclerView.OnScrollListener() {
@@ -77,9 +89,15 @@ class HomeFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         adapter.setBannerVisible(true)
+        refreshContinueWatching()
+        removeHistoryListener = repository.addHistoryListener {
+            _binding?.videoRecycler?.post { if (_binding != null && isResumed) refreshContinueWatching() }
+        }
     }
 
     override fun onPause() {
+        removeHistoryListener?.invoke()
+        removeHistoryListener = null
         adapter.setBannerVisible(false)
         super.onPause()
     }
@@ -107,6 +125,10 @@ class HomeFragment : Fragment() {
                 }
             }
         }
+    }
+
+    private fun refreshContinueWatching() {
+        continueAdapter.submitRecords(continueStore.visible(repository.getHistory()))
     }
 
     private fun renderCategories(categories: List<Category>) {

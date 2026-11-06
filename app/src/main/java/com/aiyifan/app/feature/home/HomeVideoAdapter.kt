@@ -300,12 +300,13 @@ class HomeVideoAdapter(
             isHighPriority: Boolean,
             sizeForWidth: (Int) -> HomeImageSize,
         ) {
+            if (!canLoadPoster(view)) return
             view.tag = coverUrl
             if (coverUrl.isBlank()) {
                 Glide.with(view).clear(view)
             } else {
                 view.post {
-                    if (view.tag != coverUrl) return@post
+                    if (view.tag != coverUrl || !canLoadPoster(view)) return@post
                     val size = sizeForWidth(view.width)
                     Glide.with(view)
                         .load(coverUrl)
@@ -319,6 +320,17 @@ class HomeVideoAdapter(
                         .into(view)
                 }
             }
+        }
+
+        private fun canLoadPoster(view: View): Boolean {
+            var context = view.context
+            while (context is android.content.ContextWrapper) {
+                if (context is android.app.Activity) return !context.isDestroyed && !context.isFinishing
+                val base = context.baseContext
+                if (base === context) break
+                context = base
+            }
+            return true
         }
 
     }
