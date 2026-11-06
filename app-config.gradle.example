@@ -1,0 +1,10 @@
+// Copy to app-config.gradle for local configuration. Never add credentials to Git.
+ext {
+    APPLICATION_ID = "com.aiyifan.app"
+    VERSION_NAME = "1.0"
+    VERSION_CODE = "1"
+    STORE_PATH = ""
+    STORE_PASSWORD = ""
+    KEY_ALIAS = ""
+    KEY_PASSWORD = ""
+}
