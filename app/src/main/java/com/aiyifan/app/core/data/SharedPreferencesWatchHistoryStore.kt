@@ -25,6 +25,13 @@ class SharedPreferencesWatchHistoryStore(
         WatchHistoryCodec.decode(payload)
     }
 
+    override fun remove(mediaKeys: Set<String>) {
+        synchronized(preferences) {
+            val remaining = getHistory().filterNot { it.mediaKey in mediaKeys }
+            preferences.edit().putString(HISTORY_KEY, WatchHistoryCodec.encode(remaining)).apply()
+        }
+    }
+
     override fun clear() {
         synchronized(preferences) {
             preferences.edit().remove(HISTORY_KEY).apply()

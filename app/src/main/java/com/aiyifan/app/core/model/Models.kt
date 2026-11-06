@@ -92,6 +92,7 @@ data class WatchHistory(
     val progressMs: Long,
     val durationMs: Long,
     val updatedAt: Long,
+    val episodeTitle: String? = null,
 )
 
 data class FavoriteVideo(
@@ -101,3 +102,13 @@ data class FavoriteVideo(
     val videoType: Int,
     val createdAt: Long,
 )
+
+/** Latest successful check and the stable episode keys actually acknowledged by the viewer. */
+data class FavoriteTracking(
+    val knownEpisodeKeys: Set<String>,
+    val latestEpisodeKeys: Set<String>,
+    val latestEpisodeTitle: String?,
+    val checkedAt: Long,
+) {
+    val hasUpdates: Boolean get() = (latestEpisodeKeys - knownEpisodeKeys).isNotEmpty()
+}

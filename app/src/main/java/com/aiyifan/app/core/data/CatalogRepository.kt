@@ -28,6 +28,16 @@ interface CatalogRepository {
 
     suspend fun searchSuggestions(keyword: String): List<SearchSuggestion>
 
+    suspend fun refreshVideoDetail(mediaKey: String): VideoDetail =
+        throw UnsupportedOperationException("Strict refresh is unavailable")
+
+    suspend fun checkFavoriteUpdates(mediaKey: String, force: Boolean = false) = Unit
+    fun getFavoriteTracking(mediaKey: String): com.aiyifan.app.core.model.FavoriteTracking? = null
+    fun markFavoriteEpisodesKnown(detail: VideoDetail) = Unit
+    fun removeFavorite(mediaKey: String) = Unit
+    fun removeHistory(mediaKeys: Set<String>) = Unit
+    fun addHistoryListener(listener: () -> Unit): () -> Unit = {}
+
     suspend fun getVideoDetail(mediaKey: String): VideoDetail
 
     suspend fun resolvePlayback(

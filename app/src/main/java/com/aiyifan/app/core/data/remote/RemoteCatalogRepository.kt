@@ -1,5 +1,7 @@
 package com.aiyifan.app.core.data.remote
 
+import com.aiyifan.app.core.data.FavoriteStore
+import com.aiyifan.app.core.data.InMemoryFavoriteStore
 import com.aiyifan.app.core.data.CatalogRepository
 import com.aiyifan.app.core.data.FakeCatalogRepository
 import com.aiyifan.app.core.data.HomeVideoPage
@@ -14,6 +16,7 @@ import com.aiyifan.app.core.model.SearchSuggestion
 import com.aiyifan.app.core.model.VideoDetail
 import com.aiyifan.app.core.model.VideoSummary
 import com.aiyifan.app.core.model.WatchHistory
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.json.JSONArray
@@ -26,6 +29,7 @@ class RemoteCatalogRepository(
     private val fetcher: HttpFetcher = UrlConnectionHttpFetcher(),
     private val historyStore: WatchHistoryStore = InMemoryWatchHistoryStore(),
     private val clock: () -> Long = System::currentTimeMillis,
+    private val favoriteStore: FavoriteStore = InMemoryFavoriteStore(),
 ) : CatalogRepository {
     private val cacheLock = Mutex()
     private val detailLock = Mutex()
@@ -36,7 +40,60 @@ class RemoteCatalogRepository(
     @Volatile
     private var cachedCategories: List<Category>? = null
 
-    private val detailCache = linkedMapOf<String, VideoDetail>()
+    private val detailCache = java.util.concurrent.ConcurrentHashMap<String, VideoDetail>()
+    private val historyListeners = java.util.concurrent.CopyOnWriteArraySet<() -> Unit>()
+
+    override suspend fun refreshVideoDetail(mediaKey: String): VideoDetail = detailLock.withLock {
+        fetchVideoDetail(mediaKey, strictEpisodes = true).also { detailCache[mediaKey] = it }
+    }
+
+    private suspend fun fetchVideoDetail(mediaKey: String, strictEpisodes: Boolean = false): VideoDetail {
+        val baseUrl = configResolver.resolveBaseUrl()
+        val response = fetcher.get(buildUrl(baseUrl, "api/Video/VideoDetails", mapOf("mediaKey" to mediaKey)))
+        check(response.code in 200..299) { "VideoDetails failed: ${response.code}" }
+        kotlinx.coroutines.currentCoroutineContext().ensureActive()
+        if (strictEpisodes) validateEpisodePayload(response.body)
+        return parseVideoDetail(response.body).also {
+            check(it.mediaKey == mediaKey && it.title.isNotBlank()) { "Invalid detail response" }
+        }
+    }
+
+    private fun validateEpisodePayload(payload: String) {
+        val detail = JSONObject(payload).optJSONObject("data")?.optJSONObject("detailInfo")
+            ?: throw IllegalStateException("Missing detailInfo")
+        val episodes = detail.optJSONArray("episodes")
+            ?: throw IllegalStateException("Missing episodes array")
+        val keys = mutableSetOf<String>()
+        for (index in 0 until episodes.length()) {
+            val episode = episodes.optJSONObject(index)
+                ?: throw IllegalStateException("Invalid episode entry")
+            val key = RemoteTextNormalizer.optional(episode.opt("episodeKey") as? String)
+            check(key != null && keys.add(key)) { "Invalid episode identity" }
+        }
+    }
+
+    override suspend fun checkFavoriteUpdates(mediaKey: String, force: Boolean) {
+        val generation = favoriteStore.generation(mediaKey) ?: return
+        val snapshot = favoriteStore.tracking(mediaKey)
+        if (!force && snapshot != null && clock() - snapshot.checkedAt in 0 until 15 * 60_000L) return
+        val detail = refreshVideoDetail(mediaKey)
+        kotlinx.coroutines.currentCoroutineContext().ensureActive()
+        favoriteStore.update(detail, clock(), generation)
+    }
+
+    override fun getFavoriteTracking(mediaKey: String) = favoriteStore.tracking(mediaKey)
+    override fun removeFavorite(mediaKey: String) = favoriteStore.remove(mediaKey)
+    override fun markFavoriteEpisodesKnown(detail: VideoDetail) {
+        if (detailCache[detail.mediaKey] === detail) favoriteStore.markKnown(detail)
+    }
+    override fun addHistoryListener(listener: () -> Unit): () -> Unit {
+        historyListeners.add(listener)
+        return { historyListeners.remove(listener) }
+    }
+    override fun removeHistory(mediaKeys: Set<String>) {
+        historyStore.remove(mediaKeys)
+        historyListeners.forEach { it() }
+    }
 
     override suspend fun getCategories(): List<Category> =
         try {
@@ -128,22 +185,11 @@ class RemoteCatalogRepository(
         return detailLock.withLock {
             detailCache[mediaKey]?.let { return@withLock it }
             val detail = try {
-                val baseUrl = configResolver.resolveBaseUrl()
-                val response = fetcher.get(
-                    buildUrl(
-                        baseUrl,
-                        "api/Video/VideoDetails",
-                        mapOf("mediaKey" to mediaKey),
-                    ),
-                )
-                if (response.code !in 200..299) {
-                    throw IllegalStateException("VideoDetails failed: ${response.code}")
-                }
-                parseVideoDetail(response.body)
-            } catch (_: Throwable) {
+                fetchVideoDetail(mediaKey).also { detailCache[mediaKey] = it }
+            } catch (exception: Throwable) {
+                if (exception is kotlinx.coroutines.CancellationException) throw exception
                 fallback.getVideoDetail(mediaKey)
             }
-            detailCache[mediaKey] = detail
             detail
         }
     }
@@ -194,21 +240,24 @@ class RemoteCatalogRepository(
                 progressMs = progressMs,
                 durationMs = durationMs,
                 updatedAt = clock(),
+                episodeTitle = episode.episodeTitle,
             ),
         )
+        historyListeners.forEach { it() }
     }
 
     override fun getHistory(): List<WatchHistory> = historyStore.getHistory()
 
     override fun clearHistory() {
         historyStore.clear()
+        historyListeners.forEach { it() }
     }
 
-    override fun toggleFavorite(detail: VideoDetail): Boolean = fallback.toggleFavorite(detail)
+    override fun toggleFavorite(detail: VideoDetail): Boolean = favoriteStore.toggle(detail, clock())
 
-    override fun isFavorite(mediaKey: String): Boolean = fallback.isFavorite(mediaKey)
+    override fun isFavorite(mediaKey: String): Boolean = favoriteStore.generation(mediaKey) != null
 
-    override fun getFavorites(): List<FavoriteVideo> = fallback.getFavorites()
+    override fun getFavorites(): List<FavoriteVideo> = favoriteStore.favorites()
 
     private suspend fun ensureSections(): List<TripDataHomeSection> {
         cachedSections?.let { return it }

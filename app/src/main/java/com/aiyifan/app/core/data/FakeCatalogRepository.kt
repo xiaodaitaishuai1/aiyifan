@@ -14,7 +14,8 @@ class FakeCatalogRepository(
     private val clock: () -> Long = System::currentTimeMillis,
 ) : CatalogRepository {
     var resolvePlaybackFailure: Throwable? = null
-    private val favorites = linkedMapOf<String, FavoriteVideo>()
+    private val favorites = InMemoryFavoriteStore()
+    private val historyListeners = java.util.concurrent.CopyOnWriteArraySet<() -> Unit>()
     private val history = linkedMapOf<String, WatchHistory>()
 
     private val categories = listOf(
@@ -190,7 +191,9 @@ class FakeCatalogRepository(
             progressMs = progressMs,
             durationMs = durationMs,
             updatedAt = clock(),
+            episodeTitle = episode.episodeTitle,
         )
+        historyListeners.forEach { it() }
     }
 
     override fun getHistory(): List<WatchHistory> =
@@ -198,27 +201,23 @@ class FakeCatalogRepository(
 
     override fun clearHistory() {
         history.clear()
+        historyListeners.forEach { it() }
     }
 
-    override fun toggleFavorite(detail: VideoDetail): Boolean {
-        if (favorites.containsKey(detail.mediaKey)) {
-            favorites.remove(detail.mediaKey)
-            return false
-        }
-        favorites[detail.mediaKey] = FavoriteVideo(
-            mediaKey = detail.mediaKey,
-            title = detail.title,
-            coverUrl = detail.coverUrl,
-            videoType = detail.videoType,
-            createdAt = clock(),
-        )
-        return true
+    override fun toggleFavorite(detail: VideoDetail) = favorites.toggle(detail, clock())
+    override fun isFavorite(mediaKey: String) = favorites.generation(mediaKey) != null
+    override fun getFavorites() = favorites.favorites()
+    override fun getFavoriteTracking(mediaKey: String) = favorites.tracking(mediaKey)
+    override fun removeFavorite(mediaKey: String) = favorites.remove(mediaKey)
+    override fun markFavoriteEpisodesKnown(detail: VideoDetail) = favorites.markKnown(detail)
+    override fun removeHistory(mediaKeys: Set<String>) {
+        mediaKeys.forEach(history::remove)
+        historyListeners.forEach { it() }
     }
-
-    override fun isFavorite(mediaKey: String): Boolean = favorites.containsKey(mediaKey)
-
-    override fun getFavorites(): List<FavoriteVideo> =
-        favorites.values.sortedByDescending { it.createdAt }
+    override fun addHistoryListener(listener: () -> Unit): () -> Unit {
+        historyListeners.add(listener)
+        return { historyListeners.remove(listener) }
+    }
 
     private fun episode(summary: VideoSummary, index: Int, title: String): Episode =
         Episode(

@@ -5,6 +5,7 @@ import com.aiyifan.app.core.model.WatchHistory
 interface WatchHistoryStore {
     fun save(history: WatchHistory)
     fun getHistory(): List<WatchHistory>
+    fun remove(mediaKeys: Set<String>)
     fun clear()
 }
 
@@ -22,6 +23,9 @@ class InMemoryWatchHistoryStore : WatchHistoryStore {
 
     @Synchronized
     override fun getHistory(): List<WatchHistory> = records.values.sortedByDescending { it.updatedAt }
+
+    @Synchronized
+    override fun remove(mediaKeys: Set<String>) { mediaKeys.forEach(records::remove) }
 
     @Synchronized
     override fun clear() {

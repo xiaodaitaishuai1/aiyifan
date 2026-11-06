@@ -111,10 +111,35 @@ class WatchHistoryStoreTest {
         val episode = Episode("episode", "1", 1, null)
         repository.saveHistory(detail, episode, 400, 1000)
 
-        assertEquals(listOf(WatchHistory("video", "episode", "Title", "cover", 1, 400, 1000, 123)), store.getHistory())
+        assertEquals(listOf(WatchHistory("video", "episode", "Title", "cover", 1, 400, 1000, 123, "1")), store.getHistory())
         assertEquals(store.getHistory(), RemoteCatalogRepository(historyStore = store).getHistory())
         repository.clearHistory()
         assertTrue(store.getHistory().isEmpty())
+    }
+
+    @Test
+    fun `favorite preferences survive store recreation including update badge and removal`() {
+        val preferences = memoryPreferences()
+        val store = SharedPreferencesFavoriteStore(preferences)
+        val first = VideoDetail("favorite", "Title", "cover", 1, episodes = listOf(Episode("a", "1", 1, null)))
+        store.toggle(first, 10)
+        store.update(first.copy(episodes = first.episodes + Episode("b", "2", 2, null)), 20, store.generation("favorite")!!)
+        val restored = SharedPreferencesFavoriteStore(preferences)
+        assertEquals(store.favorites(), restored.favorites())
+        assertTrue(restored.tracking("favorite")!!.hasUpdates)
+        restored.remove("favorite")
+        assertTrue(SharedPreferencesFavoriteStore(preferences).favorites().isEmpty())
+        assertEquals(null, SharedPreferencesFavoriteStore(preferences).tracking("favorite"))
+    }
+
+    @Test
+    fun `selected history removal persists across store recreation`() {
+        val preferences = memoryPreferences()
+        val store = SharedPreferencesWatchHistoryStore(preferences)
+        store.save(history("a"))
+        store.save(history("b"))
+        store.remove(setOf("a", "missing"))
+        assertEquals(listOf("b"), SharedPreferencesWatchHistoryStore(preferences).getHistory().map { it.mediaKey })
     }
 
     private fun history(mediaKey: String = "video", updatedAt: Long = 100L) = WatchHistory(

@@ -17,6 +17,7 @@ internal object WatchHistoryCodec {
                     .put("videoType", record.videoType)
                     .put("progressMs", record.progressMs)
                     .put("durationMs", record.durationMs)
+                    .put("episodeTitle", record.episodeTitle)
                     .put("updatedAt", record.updatedAt),
             )
         }
@@ -47,6 +48,7 @@ internal object WatchHistoryCodec {
             progressMs = item.longValue("progressMs") ?: return null,
             durationMs = item.longValue("durationMs") ?: return null,
             updatedAt = item.longValue("updatedAt") ?: return null,
+            episodeTitle = item.opt("episodeTitle") as? String,
         ).takeIf { it.isValid() }
     }
 
