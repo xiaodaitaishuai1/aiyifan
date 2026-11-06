@@ -40,6 +40,8 @@ class FloatingPlayerService : Service() {
     private var layoutParams: WindowManager.LayoutParams? = null
     private var hiddenEdge: FloatingWindowEdge? = null
     private var isClosing = false
+    private var sleepTimerDialog: androidx.appcompat.app.AlertDialog? = null
+    private var removePositionListener: (() -> Unit)? = null
     private var removeStateListener: (() -> Unit)? = null
     private var controlsVisible = true
     private var controlsShownAtMs = 0L
@@ -82,7 +84,12 @@ class FloatingPlayerService : Service() {
             controller.attach(root.findViewById<PlayerView>(R.id.floatingPlayerView))
             windowManager.addView(root, params)
             controller.hasOverlayOwner = true
+            removePositionListener = controller.addPositionListener { positionMs ->
+                serviceScope.launch { controller.advanceAutomatically(positionMs) }
+            }
             removeStateListener = controller.addStateListener {
+                root.findViewById<android.widget.TextView>(R.id.floatingSleepTimerButton).text =
+                    SleepTimerDialog.label(this, controller.sleepTimerState)
                 updatePlaybackButtons(root)
                 root.findViewById<ImageButton>(R.id.floatingPlayPauseButton).apply {
                     setImageResource(if (controller.playWhenReady) R.drawable.ic_pause else R.drawable.ic_play)
@@ -113,6 +120,10 @@ class FloatingPlayerService : Service() {
     }
 
     private fun bindControls(root: View) {
+        root.findViewById<View>(R.id.floatingSleepTimerButton).setOnClickListener {
+            sleepTimerDialog?.dismiss()
+            sleepTimerDialog = SleepTimerDialog.show(this, controller, overlayWindowType())
+        }
         root.findViewById<ImageButton>(R.id.floatingCloseButton).setOnClickListener {
             closeFloatingPlayer(stopService = true)
         }
@@ -177,6 +188,10 @@ class FloatingPlayerService : Service() {
     private fun closeFloatingPlayer(stopService: Boolean, releasePlayback: Boolean = true) {
         if (isClosing) return
         isClosing = true
+        sleepTimerDialog?.dismiss()
+        sleepTimerDialog = null
+        removePositionListener?.invoke()
+        removePositionListener = null
         removeStateListener?.invoke()
         removeStateListener = null
         if (controllerHolder.isInitialized()) controller.hasOverlayOwner = false
@@ -227,6 +242,7 @@ class FloatingPlayerService : Service() {
     private fun showControls(root: View) {
         controlsVisible = true
         controlsShownAtMs = SystemClock.elapsedRealtime()
+        root.findViewById<View>(R.id.floatingSleepTimerButton).visibility = View.VISIBLE
         root.findViewById<View>(R.id.floatingCloseButton).visibility = View.VISIBLE
         root.findViewById<View>(R.id.floatingPlaybackControls).visibility = View.VISIBLE
         root.findViewById<View>(R.id.floatingResizeHandle).visibility = View.VISIBLE
@@ -258,6 +274,7 @@ class FloatingPlayerService : Service() {
 
     private fun hideControls(root: View) {
         controlsVisible = false
+        root.findViewById<View>(R.id.floatingSleepTimerButton).visibility = View.GONE
         root.findViewById<View>(R.id.floatingCloseButton).visibility = View.GONE
         root.findViewById<View>(R.id.floatingPlaybackControls).visibility = View.GONE
         root.findViewById<View>(R.id.floatingResizeHandle).visibility = View.GONE

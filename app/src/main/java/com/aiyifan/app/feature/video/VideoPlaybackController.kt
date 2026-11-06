@@ -73,7 +73,34 @@ class VideoPlaybackController(
     private val canPlay: () -> Boolean = { true },
     private val skipIntro: () -> Boolean = { false },
     private val clock: () -> Long = System::currentTimeMillis,
+    monotonicClock: () -> Long = { System.nanoTime() / 1_000_000L },
 ) {
+    private val sleepTimer = SleepTimer(monotonicClock)
+    private var stoppedForSleep = false
+    private var removeTimerTicker: (() -> Unit)? = null
+    val sleepTimerState: SleepTimerState get() = sleepTimer.state
+
+    fun setSleepTimer(option: SleepTimerOption) {
+        if (released) return
+        sleepTimer.set(option, activeDetail?.mediaKey, activeEpisode?.episodeKey)
+        notifyState()
+    }
+
+    /** Called independently of engine progress, including while paused or buffering. */
+    fun tickSleepTimer() {
+        if (released) return
+        if (consumeSleepExpiry()) return
+        if (sleepTimer.state.option != SleepTimerOption.OFF) notifyState()
+    }
+
+    private fun consumeSleepExpiry(): Boolean {
+        if (!sleepTimer.consumeExpiry(activeDetail?.mediaKey, activeEpisode?.episodeKey, engine.hasEnded)) return false
+        // Latch before pause/notification: engine and UI callbacks may be synchronous/reentrant.
+        stoppedForSleep = true
+        pause()
+        return true
+    }
+
     private var activeDetail: VideoDetail? = null
     private var activeEpisode: Episode? = null
     private var released = false
@@ -96,6 +123,8 @@ class VideoPlaybackController(
 
     private val removeStateListener = engine.addStateListener {
         if (!replacingMedia && !released) {
+            if (consumeSleepExpiry()) return@addStateListener
+            if (engine.playWhenReady && !lastPlayWhenReady) stoppedForSleep = false
             // Leaving the ended state (for example, replaying after a failed request)
             // starts a new completion attempt without retrying repeated ended callbacks.
             if (!engine.hasEnded) endedAdvanceEpisodeKey = null
@@ -116,6 +145,7 @@ class VideoPlaybackController(
     /** Claims this shared controller when navigating between two video pages. */
     fun openVideo(mediaKey: String) {
         if (requestedMediaKey == mediaKey) return
+        sleepTimer.onSelection(mediaKey, null)
         saveHistory()
         requestVersion++
         isLoading = false
@@ -127,7 +157,7 @@ class VideoPlaybackController(
             engine.pause()
             lastPlayWhenReady = false
             replacingMedia = false
-            paused = !canPlay()
+            paused = stoppedForSleep || !canPlay()
         }
     }
 
@@ -166,6 +196,8 @@ class VideoPlaybackController(
     ): Boolean {
         val mediaUrl = episode.mediaUrl?.trim().orEmpty()
         if (released || mediaUrl.isBlank()) return false
+        consumeSleepExpiry()
+        sleepTimer.onSelection(detail.mediaKey, episode.episodeKey)
         saveHistory()
         requestVersion++
         isLoading = false
@@ -178,7 +210,7 @@ class VideoPlaybackController(
             activeEpisode = episode
             engine.prepare()
             if (startPositionMs > 0L) engine.seekTo(startPositionMs)
-            if (shouldPlay && !paused && canPlay()) engine.play() else engine.pause()
+            if (shouldPlay && !paused && !stoppedForSleep && canPlay()) engine.play() else engine.pause()
             paused = !engine.playWhenReady
             lastPlayWhenReady = engine.playWhenReady
             lastSaveAt = clock()
@@ -204,6 +236,7 @@ class VideoPlaybackController(
             pause()
         } else if (canPlay()) {
             paused = false
+            stoppedForSleep = false
             engine.play()
             notifyState()
         }
@@ -241,16 +274,21 @@ class VideoPlaybackController(
         return loadEpisode(detail, targetEpisode)
     }
 
-    suspend fun advanceToNextEpisodeIfEnded(): EpisodeSwitchResult {
+    suspend fun advanceToNextEpisodeIfEnded(): EpisodeSwitchResult = advanceAutomatically()
+
+    /** Single automatic transition gate shared by every playback surface and outro skipping. */
+    suspend fun advanceAutomatically(positionMs: Long? = null): EpisodeSwitchResult {
+        if (consumeSleepExpiry() || stoppedForSleep || paused) return EpisodeSwitchResult.Unavailable
         val current = activeEpisode ?: return EpisodeSwitchResult.Unavailable
-        if (!isPlaybackEnded || isLoading || endedAdvanceEpisodeKey == current.episodeKey) {
-            return EpisodeSwitchResult.Unavailable
-        }
+        if (isLoading || endedAdvanceEpisodeKey == current.episodeKey) return EpisodeSwitchResult.Unavailable
+        val ended = isPlaybackEnded
+        val skipOutro = positionMs != null && sleepTimer.state.option != SleepTimerOption.END_OF_EPISODE &&
+            AutoSkipPolicy.shouldAdvance(positionMs, current.epSecond, skipIntro(), true, false)
+        if (!ended && !skipOutro) return EpisodeSwitchResult.Unavailable
         endedAdvanceEpisodeKey = current.episodeKey
         return try {
             switchEpisode(offset = 1)
         } catch (error: CancellationException) {
-            // The next surface must be able to resume a request cancelled during handoff.
             if (endedAdvanceEpisodeKey == current.episodeKey) {
                 endedAdvanceEpisodeKey = null
                 notifyState()
@@ -266,6 +304,7 @@ class VideoPlaybackController(
     ): EpisodeSwitchResult {
         if (released || isLoading) return EpisodeSwitchResult.Unavailable
         if (requestedMediaKey != null && requestedMediaKey != detail.mediaKey) return EpisodeSwitchResult.Unavailable
+        sleepTimer.onSelection(detail.mediaKey, episode.episodeKey)
         val version = ++requestVersion
         isLoading = true
         pendingEpisode = episode
@@ -324,6 +363,9 @@ class VideoPlaybackController(
 
         saveHistory()
         released = true
+        sleepTimer.clear()
+        removeTimerTicker?.invoke()
+        removeTimerTicker = null
         requestVersion++
         isLoading = false
         pendingEpisode = null
@@ -356,8 +398,19 @@ class VideoPlaybackController(
                 session = Media3PlaybackSession(session),
                 canPlay = { ScreenOffPlaybackObserver.canPlay(applicationContext) },
                 skipIntro = { AutoSkipPreferenceStore(applicationContext).isEnabled() },
+                monotonicClock = android.os.SystemClock::elapsedRealtime,
             ).also { controller ->
                 controller.screenObserver = ScreenOffPlaybackObserver(applicationContext, controller::pause)
+                val timerHandler = Handler(Looper.getMainLooper())
+                val timerTick = object : Runnable {
+                    override fun run() {
+                        if (controller.isReleased) return
+                        controller.tickSleepTimer()
+                        timerHandler.postDelayed(this, 1_000L)
+                    }
+                }
+                timerHandler.post(timerTick)
+                controller.removeTimerTicker = { timerHandler.removeCallbacks(timerTick) }
             }
         }
     }

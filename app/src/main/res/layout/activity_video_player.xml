@@ -65,6 +65,8 @@
 
         <androidx.media3.ui.PlayerView android:id="@+id/inAppMiniPlayerView" android:layout_width="match_parent" android:layout_height="match_parent" app:show_buffering="when_playing" app:use_controller="false" />
 
+        <TextView android:id="@+id/inAppMiniSleepTimerButton" android:layout_width="wrap_content" android:layout_height="48dp" android:layout_gravity="top|start" android:paddingHorizontal="8dp" android:gravity="center" android:background="@drawable/bg_floating_control" android:text="@string/sleep_timer_title" android:textColor="@android:color/white" android:textSize="12sp" />
+
         <ImageButton android:id="@+id/inAppMiniCloseButton" android:layout_width="@dimen/dp_32" android:layout_height="@dimen/dp_32" android:layout_gravity="top|end" android:layout_margin="@dimen/dp_4" android:background="@drawable/bg_floating_control" android:contentDescription="@string/hardcoded_text_030" android:padding="@dimen/dp_6" android:src="@drawable/ic_close" />
 
         <LinearLayout android:layout_width="wrap_content" android:layout_height="@dimen/dp_40" android:layout_gravity="bottom|center_horizontal" android:layout_marginBottom="@dimen/dp_24" android:orientation="horizontal">

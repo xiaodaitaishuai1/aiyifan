@@ -72,6 +72,16 @@
       <ImageButton android:id="@id/exo_subtitle"
           style="@style/ExoStyledControls.Button.Bottom.CC"/>
 
+      <TextView android:id="@+id/playerSleepTimerButton"
+          android:layout_width="wrap_content"
+          android:layout_height="48dp"
+          android:gravity="center"
+          android:paddingHorizontal="8dp"
+          android:text="@string/sleep_timer_title"
+          android:textColor="@android:color/white"
+          android:textSize="12sp"
+          android:background="?attr/selectableItemBackgroundBorderless" />
+
       <ImageButton android:id="@id/exo_settings"
           style="@style/ExoStyledControls.Button.Bottom.Settings"/>
 

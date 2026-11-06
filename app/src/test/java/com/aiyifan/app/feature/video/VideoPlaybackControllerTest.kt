@@ -558,6 +558,96 @@ class VideoPlaybackControllerTest {
         assertFalse(controller.playWhenReady)
     }
 
+    @Test
+    fun `sleep deadline counts paused time and clears after saving`() {
+        var now = 0L
+        val engine = FakePlaybackEngine(currentPosition = 1234L)
+        val repository = FakeCatalogRepository()
+        val controller = VideoPlaybackController(engine, repository, FakePlaybackSession(), monotonicClock = { now })
+        controller.prepare(sampleDetail(), sampleEpisode())
+        controller.setSleepTimer(SleepTimerOption.MINUTES_15)
+        controller.pause()
+        now = 900_000L
+        controller.tickSleepTimer()
+        assertEquals(SleepTimerOption.OFF, controller.sleepTimerState.option)
+        assertFalse(controller.playWhenReady)
+        assertEquals(1234L, repository.getHistory().single().progressMs)
+    }
+
+    @Test
+    fun `timer replacement cancellation and surface handoff retain correct deadline`() {
+        var now = 0L
+        val controller = VideoPlaybackController(FakePlaybackEngine(), FakeCatalogRepository(), FakePlaybackSession(), monotonicClock = { now })
+        controller.prepare(sampleDetail(), sampleEpisode())
+        controller.setSleepTimer(SleepTimerOption.MINUTES_15)
+        now = 60_000L
+        controller.detach()
+        controller.hasOverlayOwner = true
+        controller.openVideo("video-1")
+        assertEquals(840_000L, controller.sleepTimerState.remainingMs)
+        controller.setSleepTimer(SleepTimerOption.MINUTES_30)
+        assertEquals(1_800_000L, controller.sleepTimerState.remainingMs)
+        controller.setSleepTimer(SleepTimerOption.OFF)
+        now = 10_000_000L
+        controller.tickSleepTimer()
+        assertTrue(controller.playWhenReady)
+        controller.setSleepTimer(SleepTimerOption.MINUTES_60)
+        controller.release()
+        assertEquals(SleepTimerOption.OFF, controller.sleepTimerState.option)
+    }
+
+    @Test
+    fun `expiry during initial async loading prevents late autoplay`() = runBlocking {
+        var now = 0L
+        val gate = CompletableDeferred<Episode>()
+        val repository = object : CatalogRepository by FakeCatalogRepository() {
+            override suspend fun resolvePlayback(detail: VideoDetail, episode: Episode, forceRefresh: Boolean) = gate.await()
+        }
+        val controller = VideoPlaybackController(FakePlaybackEngine(), repository, FakePlaybackSession(), monotonicClock = { now })
+        val request = async(start = CoroutineStart.UNDISPATCHED) { controller.loadEpisode(sampleDetail(), sampleEpisode()) }
+        controller.setSleepTimer(SleepTimerOption.MINUTES_15)
+        now = 900_000L
+        controller.tickSleepTimer()
+        gate.complete(sampleEpisode())
+        assertTrue(request.await() is EpisodeSwitchResult.Switched)
+        assertFalse(controller.playWhenReady)
+    }
+
+    @Test
+    fun `episode timer takes priority over outro and reentrant ended callbacks`() = runBlocking {
+        val engine = FakePlaybackEngine()
+        val episodes = listOf(sampleEpisode().copy(epSecond = 10), sampleEpisode(key = "second"))
+        val controller = VideoPlaybackController(engine, FakeCatalogRepository(), FakePlaybackSession(), skipIntro = { true })
+        controller.prepare(sampleDetail(episodes), episodes.first())
+        controller.setSleepTimer(SleepTimerOption.END_OF_EPISODE)
+        assertEquals(EpisodeSwitchResult.Unavailable, controller.advanceAutomatically(20_000L))
+        controller.addStateListener {
+            if (controller.isPlaybackEnded) runBlocking { controller.advanceToNextEpisodeIfEnded() }
+        }
+        engine.hasEnded = true
+        engine.dispatchState()
+        assertFalse(controller.playWhenReady)
+        assertEquals(episodes.first(), controller.activeSession?.episode)
+        assertEquals(SleepTimerOption.OFF, controller.sleepTimerState.option)
+        assertEquals(EpisodeSwitchResult.Unavailable, controller.advanceToNextEpisodeIfEnded())
+    }
+
+    @Test
+    fun `manual episode or video selection cancels episode timer but preserves minute timer`() = runBlocking {
+        val episodes = listOf(sampleEpisode(), sampleEpisode(key = "second"))
+        val controller = VideoPlaybackController(FakePlaybackEngine(), FakeCatalogRepository(), FakePlaybackSession())
+        controller.prepare(sampleDetail(episodes), episodes.first())
+        controller.setSleepTimer(SleepTimerOption.END_OF_EPISODE)
+        controller.switchEpisode(1)
+        assertEquals(SleepTimerOption.OFF, controller.sleepTimerState.option)
+        controller.setSleepTimer(SleepTimerOption.END_OF_EPISODE)
+        controller.openVideo("another")
+        assertEquals(SleepTimerOption.OFF, controller.sleepTimerState.option)
+        controller.setSleepTimer(SleepTimerOption.MINUTES_15)
+        controller.openVideo("third")
+        assertEquals(SleepTimerOption.MINUTES_15, controller.sleepTimerState.option)
+    }
+
     private fun sampleDetail(episodes: List<Episode> = emptyList()) = VideoDetail(
         mediaKey = "video-1",
         title = "Sample video",

@@ -3,6 +3,8 @@
 
     <androidx.media3.ui.PlayerView android:id="@+id/floatingPlayerView" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@android:color/black" app:show_buffering="when_playing" app:shutter_background_color="@android:color/black" app:use_controller="false" />
 
+    <TextView android:id="@+id/floatingSleepTimerButton" android:layout_width="wrap_content" android:layout_height="48dp" android:layout_gravity="top|start" android:paddingHorizontal="8dp" android:gravity="center" android:background="@drawable/bg_floating_control" android:text="@string/sleep_timer_title" android:textColor="@android:color/white" android:textSize="12sp" />
+
     <ImageButton android:id="@+id/floatingCloseButton" android:layout_width="@dimen/dp_36" android:layout_height="@dimen/dp_36" android:layout_gravity="top|end" android:layout_margin="@dimen/dp_6" android:background="@drawable/bg_floating_control" android:contentDescription="@string/hardcoded_text_047" android:padding="@dimen/dp_6" android:src="@drawable/ic_close" />
 
     <LinearLayout android:id="@+id/floatingPlaybackControls" android:layout_width="match_parent" android:layout_height="@dimen/dp_40" android:layout_gravity="center" android:paddingHorizontal="@dimen/dp_4" android:gravity="center" android:orientation="horizontal">

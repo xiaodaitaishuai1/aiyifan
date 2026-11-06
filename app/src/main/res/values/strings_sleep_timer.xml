@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sleep_timer_title">定时暂停</string>
+    <string name="sleep_timer_off">关闭定时</string>
+    <string name="sleep_timer_15">15 分钟后</string>
+    <string name="sleep_timer_30">30 分钟后</string>
+    <string name="sleep_timer_60">60 分钟后</string>
+    <string name="sleep_timer_end">播完当前集</string>
+    <string name="sleep_timer_end_label">本集结束暂停</string>
+    <string name="sleep_timer_countdown">定时 %1$02d:%2$02d</string>
+    <string name="sleep_timer_close">返回</string>
+</resources>

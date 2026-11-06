@@ -66,7 +66,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     private var detailJob: Job? = null
     private var overlayHandoffPending = false
     private var playerBrightness = -1f
-    private var hasAutomaticallyAdvancedOutro = false
+    private var sleepTimerDialog: androidx.appcompat.app.AlertDialog? = null
     private var episodeListScrollKey: String? = null
     private val gestureFeedbackHideRunnable = Runnable { binding.playerGestureFeedback.isVisible = false }
 
@@ -98,6 +98,8 @@ class VideoPlayerActivity : AppCompatActivity() {
         binding.playerView.setOnTouchListener(PlayerGestureTouchListener())
         binding.playerView.findViewById<ImageButton>(R.id.playerPreviousEpisodeButton).setOnClickListener { switchEpisode(-1) }
         binding.playerView.findViewById<ImageButton>(R.id.playerNextEpisodeButton).setOnClickListener { switchEpisode(1) }
+        binding.playerView.findViewById<View>(R.id.playerSleepTimerButton).setOnClickListener { showSleepTimer() }
+        binding.inAppMiniSleepTimerButton.setOnClickListener { showSleepTimer() }
         binding.floatingWindowButton.setOnClickListener { showFloatingPresentation() }
         binding.autoSkipIntroOutroSwitch.apply {
             isChecked = autoSkipPreferenceStore.isEnabled()
@@ -141,6 +143,9 @@ class VideoPlayerActivity : AppCompatActivity() {
         registerPositionListener()
         episodeListScrollKey = null
         removeStateListener = playbackController.addStateListener {
+            val timerLabel = SleepTimerDialog.label(this, playbackController.sleepTimerState)
+            binding.playerView.findViewById<android.widget.TextView>(R.id.playerSleepTimerButton).text = timerLabel
+            binding.inAppMiniSleepTimerButton.text = timerLabel
             syncFromActivePlaybackSession()
             updateEpisodeButtons()
             updateInAppMiniPlayPauseButton()
@@ -200,6 +205,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                     if (playbackController.requestedMediaKey != mediaKey) return@onSuccess
                     detail = loadedDetail
                     renderDetail(loadedDetail)
+                    AppGraph.catalogRepository.markFavoriteEpisodesKnown(loadedDetail)
                     val history = AppGraph.catalogRepository.getHistory().firstOrNull { it.mediaKey == mediaKey }
                     PlaybackResumePolicy.target(loadedDetail, history)?.let { target ->
                         episodeAdapter.submitList(loadedDetail.episodes, target.episode)
@@ -264,11 +270,9 @@ class VideoPlayerActivity : AppCompatActivity() {
     private fun loadEpisodePlayback(
         detail: VideoDetail,
         episode: Episode,
-        resetOutroAdvance: Boolean = true,
         resumePositionMs: Long = 0L,
     ) {
         if (playbackController.isLoading) return
-        if (resetOutroAdvance) hasAutomaticallyAdvancedOutro = false
         binding.meta.text = listOfNotNull(
             detail.typeName,
             detail.publishTime,
@@ -287,14 +291,12 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     private fun switchEpisode(offset: Int) {
         if (playbackController.isLoading) return
-        hasAutomaticallyAdvancedOutro = false
         playbackJob = lifecycleScope.launch { handleEpisodeResult(playbackController.switchEpisode(offset)) }
     }
 
     private fun handleEpisodeResult(result: EpisodeSwitchResult) {
         when (result) {
             is EpisodeSwitchResult.Switched -> {
-                hasAutomaticallyAdvancedOutro = false
                 syncFromActivePlaybackSession()
                 if (!playbackController.hasOverlayOwner) attachPlayerToCurrentSurface()
             }
@@ -316,27 +318,20 @@ class VideoPlayerActivity : AppCompatActivity() {
         }
     }
 
-    private fun handlePlaybackPosition(positionMs: Long) {
-        val activeDetail = detail ?: return
-        val activeEpisode = playingEpisode ?: return
-        val activeIndex = activeDetail.episodes.indexOfFirst { it.episodeKey == activeEpisode.episodeKey }
-        if (activeIndex < 0) return
-        val nextEpisode = activeDetail.episodes.getOrNull(activeIndex + 1) ?: return
-        if (
-            !AutoSkipPolicy.shouldAdvance(
-                positionMs = positionMs,
-                outroSecond = activeEpisode.epSecond,
-                enabled = autoSkipPreferenceStore.isEnabled(),
-                hasNextEpisode = true,
-                hasAdvanced = hasAutomaticallyAdvancedOutro,
-            )
-        ) {
-            return
-        }
+    private fun showSleepTimer() {
+        sleepTimerDialog?.dismiss()
+        sleepTimerDialog = SleepTimerDialog.show(this, playbackController)
+    }
 
-        hasAutomaticallyAdvancedOutro = true
-        Toast.makeText(this, R.string.auto_skip_outro, Toast.LENGTH_SHORT).show()
-        loadEpisodePlayback(activeDetail, nextEpisode, resetOutroAdvance = false)
+    private fun handlePlaybackPosition(positionMs: Long) {
+        lifecycleScope.launch {
+            val wasEnded = playbackController.isPlaybackEnded
+            val result = playbackController.advanceAutomatically(positionMs)
+            if (!wasEnded && result is EpisodeSwitchResult.Switched) {
+                Toast.makeText(this@VideoPlayerActivity, R.string.auto_skip_outro, Toast.LENGTH_SHORT).show()
+            }
+            handleEpisodeResult(result)
+        }
     }
 
     private fun attachPlayerToCurrentSurface() {
@@ -538,6 +533,8 @@ class VideoPlayerActivity : AppCompatActivity() {
             packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
 
     override fun onStop() {
+        sleepTimerDialog?.dismiss()
+        sleepTimerDialog = null
         unregisterPositionListener()
         removeStateListener?.invoke()
         removeStateListener = null
