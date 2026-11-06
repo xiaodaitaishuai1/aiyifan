@@ -229,6 +229,96 @@ class PlayerExperienceDeviceTest {
         }
     }
 
+    @Test
+    @androidx.media3.common.util.UnstableApi
+    fun sleepTimerDialogSharesCountdownAcrossPortraitFullscreenAndMini() = withPlayback { scenario, controller ->
+        val originalFlags = automation.serviceInfo.flags
+        automation.serviceInfo = automation.serviceInfo.apply {
+            flags = flags or AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS or
+                AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS
+        }
+        try {
+            scenario.onActivity { activity ->
+                activity.findViewById<androidx.media3.ui.PlayerView>(R.id.playerView).showController()
+                activity.findViewById<View>(R.id.playerSleepTimerButton).performClick()
+            }
+            waitForText("15 分钟后").performAction(AccessibilityNodeInfo.ACTION_CLICK)
+            await { controller.sleepTimerState.option == SleepTimerOption.MINUTES_15 }
+            screenshot("sleep-timer-portrait.png")
+            scenario.onActivity { activity -> activity.findViewById<View>(R.id.fullScreenButton).performClick() }
+            instrumentation.waitForIdleSync()
+            scenario.onActivity { activity ->
+                activity.findViewById<androidx.media3.ui.PlayerView>(R.id.playerView).showController()
+                assertTrue(activity.findViewById<TextView>(R.id.playerSleepTimerButton).text.startsWith("定时 "))
+                activity.findViewById<View>(R.id.playerSleepTimerButton).performClick()
+            }
+            assertTrue(waitForText("15 分钟后").isChecked)
+            screenshot("sleep-timer-fullscreen-dialog.png")
+            waitForText("返回").performAction(AccessibilityNodeInfo.ACTION_CLICK)
+            scenario.onActivity { activity -> activity.findViewById<View>(R.id.fullScreenBackButton).performClick() }
+            instrumentation.waitForIdleSync()
+            scenario.onActivity { activity ->
+                VideoPlayerActivity::class.java.getDeclaredMethod("showInAppMiniPlayer").apply { isAccessible = true }.invoke(activity)
+                assertTrue(activity.findViewById<TextView>(R.id.inAppMiniSleepTimerButton).text.startsWith("定时 "))
+                activity.findViewById<View>(R.id.inAppMiniSleepTimerButton).performClick()
+            }
+            waitForText("关闭定时").performAction(AccessibilityNodeInfo.ACTION_CLICK)
+            await { controller.sleepTimerState.option == SleepTimerOption.OFF }
+            assertFalse(mainValue { controller.playWhenReady })
+            screenshot("sleep-timer-mini.png")
+        } finally {
+            automation.serviceInfo = automation.serviceInfo.apply { flags = originalFlags }
+        }
+    }
+
+    @Test
+    fun overlaySleepTimerDialogStopsAtEpisodeEndWithoutAdvancing() = withPlayback { scenario, controller ->
+        val previousMode = shell("appops get ${context.packageName} SYSTEM_ALERT_WINDOW")
+        val restoreMode = Regex("SYSTEM_ALERT_WINDOW: (allow|ignore|deny|default|foreground)")
+            .find(previousMode)?.groupValues?.get(1) ?: "default"
+        val originalFlags = automation.serviceInfo.flags
+        try {
+            automation.serviceInfo = automation.serviceInfo.apply {
+                flags = flags or AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS or
+                    AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS
+            }
+            shell("appops set ${context.packageName} SYSTEM_ALERT_WINDOW allow")
+            scenario.onActivity { activity ->
+                controller.setSleepTimer(SleepTimerOption.MINUTES_30)
+                activity.findViewById<View>(R.id.floatingWindowButton).performClick()
+            }
+            await { controller.hasOverlayOwner }
+            waitForNode("floatingSleepTimerButton").performAction(AccessibilityNodeInfo.ACTION_CLICK)
+            assertTrue(waitForText("30 分钟后").isChecked)
+            screenshot("sleep-timer-overlay-dialog.png")
+            waitForText("播完当前集").performAction(AccessibilityNodeInfo.ACTION_CLICK)
+            await { controller.sleepTimerState.option == SleepTimerOption.END_OF_EPISODE }
+            mainValue {
+                controller.seekTo((controller.durationMs - 500L).coerceAtLeast(0L))
+                controller.togglePlayPause()
+            }
+            await { controller.sleepTimerState.option == SleepTimerOption.OFF && !controller.playWhenReady }
+            assertEquals("qa-first", mainValue { controller.activeSession?.episode?.episodeKey })
+            assertTrue(mainValue { controller.hasOverlayOwner })
+            screenshot("sleep-timer-overlay-ended.png")
+        } finally {
+            context.stopService(FloatingPlayerService.intent(context))
+            shell("appops set ${context.packageName} SYSTEM_ALERT_WINDOW $restoreMode")
+            automation.serviceInfo = automation.serviceInfo.apply { flags = originalFlags }
+        }
+    }
+
+    private fun waitForText(text: String): AccessibilityNodeInfo {
+        val deadline = SystemClock.elapsedRealtime() + 8_000L
+        while (SystemClock.elapsedRealtime() < deadline) {
+            automation.windows.asSequence().mapNotNull { it.root }
+                .flatMap { it.findAccessibilityNodeInfosByText(text).asSequence() }
+                .firstOrNull { it.isVisibleToUser && it.text?.toString() == text }?.let { return it }
+            SystemClock.sleep(100L)
+        }
+        error("Missing visible text: $text")
+    }
+
     private fun withPlayback(
         episodeCount: Int = 2,
         startIndex: Int = 0,
@@ -319,6 +409,9 @@ class PlayerExperienceDeviceTest {
     private fun bounds(id: String) = Rect().also { waitForNode(id).getBoundsInScreen(it) }
 
     private fun screenshot(name: String) {
+        instrumentation.waitForIdleSync()
+        SystemClock.sleep(500L)
+        instrumentation.waitForIdleSync()
         val bitmap = automation.takeScreenshot() ?: error("Screenshot unavailable")
         val file = File(context.getExternalFilesDir(null), name)
         file.outputStream().use {
