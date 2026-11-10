@@ -36,7 +36,7 @@ class HomeLayoutContractTest {
 
     @Test
     fun `home adapter owns a cancellable pager carousel`() {
-        val adapter = source("feature/home/HomeVideoAdapter.kt").readText()
+        val adapter = source("feature/home/HomeBannerAdapter.kt").readText()
 
         assertTrue(adapter.contains("ViewPager2"))
         assertTrue(adapter.contains("bindBannerPoster(binding.bannerPagePoster, video.coverUrl)"))
@@ -46,7 +46,6 @@ class HomeLayoutContractTest {
         assertTrue(adapter.contains("renderIndicatorDots"))
         assertTrue(adapter.contains("HomePosterSizePolicy.pxFromDp(INDICATOR_SELECTED_WIDTH_DP, density)"))
         assertTrue(adapter.contains("bindBannerPoster"))
-        assertTrue(adapter.contains("bindCardPoster"))
         assertTrue(adapter.contains("private var isAttached = false"))
         assertTrue(adapter.contains("fun setAttached"))
         assertTrue(adapter.contains("isAttached && isFragmentVisible"))
@@ -98,8 +97,34 @@ class HomeLayoutContractTest {
 
         assertTrue(home.contains("GridLayoutManager(requireContext(), 2)"))
         assertTrue(home.contains("HomeVideoAdapter"))
+        assertTrue(home.contains("ConcatAdapter(bannerAdapter, continueAdapter, adapter)"))
+        assertTrue(home.contains("HomeFeedSections.from"))
         assertFalse(home.contains("LinearLayoutManager(requireContext())"))
         assertTrue(source("feature/hot/HotFragment.kt").readText().contains("LinearLayoutManager(requireContext())"))
+    }
+
+    @Test
+    fun `continue watching uses compact sixteen by nine poster cards`() {
+        val section = root(layout("item_continue_watching"))
+        val card = root(layout("item_continue_card"))
+        val adapter = source("feature/home/ContinueWatchingAdapter.kt").readText()
+
+        assertEquals("@dimen/dp_48", view(section, "allButton")
+            .getAttribute("android:minHeight"))
+        assertTrue(adapter.contains("RecyclerView.HORIZONTAL"))
+        val posterFrame = view(card, "posterFrame")
+        assertEquals("AspectRatioFrameLayout", posterFrame.tagName.substringAfterLast('.'))
+        assertEquals("16", posterFrame.getAttribute("app:ratioWidth"))
+        assertEquals("9", posterFrame.getAttribute("app:ratioHeight"))
+        assertEquals("@dimen/continue_card_width", card.getAttribute("android:layout_width"))
+        assertEquals("ImageView", view(card, "poster").tagName)
+        assertEquals("ImageButton", view(card, "clearButton").tagName)
+        assertEquals("@dimen/dp_48", view(card, "clearButton").getAttribute("android:layout_width"))
+        assertEquals("@string/continue_clear_record", view(card, "clearButton")
+            .getAttribute("android:contentDescription"))
+        assertFalse(adapter.contains("PopupMenu"))
+        assertTrue(adapter.contains("clearButton.setOnClickListener { onHide(record) }"))
+        assertTrue(layout("item_continue_card").readText().contains("@drawable/bg_continue_scrim"))
     }
 
     @Test

@@ -33,6 +33,7 @@ class RemoteCatalogRepository(
 ) : CatalogRepository {
     private val cacheLock = Mutex()
     private val detailLock = Mutex()
+    private val pageCache = CatalogPageCache(clock)
 
     @Volatile
     private var cachedSections: List<TripDataHomeSection>? = null
@@ -42,6 +43,26 @@ class RemoteCatalogRepository(
 
     private val detailCache = java.util.concurrent.ConcurrentHashMap<String, VideoDetail>()
     private val historyListeners = java.util.concurrent.CopyOnWriteArraySet<() -> Unit>()
+
+    override suspend fun getShortDramaPage(page: Int, size: Int): HomeVideoPage =
+        cachedShortDramaPage(page, size, refresh = false)
+
+    override suspend fun refreshShortDramaPage(size: Int): HomeVideoPage =
+        cachedShortDramaPage(1, size, refresh = true)
+
+    private suspend fun cachedShortDramaPage(page: Int, size: Int, refresh: Boolean): HomeVideoPage {
+        require(page > 0 && size > 0)
+        return pageCache.get("short-drama", "$page:$size", refresh) { fetchShortDramaPage(page, size) }
+    }
+
+    private suspend fun fetchShortDramaPage(page: Int, size: Int): HomeVideoPage {
+        val baseUrl = configResolver.resolveBaseUrl()
+        val body = JSONObject().put("page", page.toString()).put("size", size.toString()).put("titleid", "8")
+        val response = fetcher.postJson("${baseUrl}api/Home/GetRelativeVideos", body.toString())
+        check(response.code in 200..299) { "Short drama request failed: ${response.code}" }
+        kotlinx.coroutines.currentCoroutineContext().ensureActive()
+        return ShortDramaPageParser.parse(response.body, page)
+    }
 
     override suspend fun refreshVideoDetail(mediaKey: String): VideoDetail = detailLock.withLock {
         fetchVideoDetail(mediaKey, strictEpisodes = true).also { detailCache[mediaKey] = it }
@@ -121,25 +142,39 @@ class RemoteCatalogRepository(
         try {
             require(page > 0) { "Page must be positive" }
             require(size > 0) { "Page size must be positive" }
-            val baseUrl = configResolver.resolveBaseUrl()
-            val payload = JSONObject()
-                .put("page", page.toString())
-                .put("size", size.toString())
-                .put("titleid", category.id)
-            val response = fetcher.postJson(
-                "${baseUrl}api/Home/GetRelativeVideos",
-                payload.toString(),
-            )
-            if (response.code !in 200..299) {
-                throw IllegalStateException("Home page request failed: ${response.code}")
-            }
-            val videos = TripDataHomeParser.parseSection(response.body, category.name)
-            HomeVideoPage(videos = videos, hasMore = videos.isNotEmpty())
+            pageCache.get("home:${category.id}", "$page:$size") { fetchHomeVideoPage(category, page, size) }
         } catch (exception: Throwable) {
             if (exception is kotlinx.coroutines.CancellationException) throw exception
             if (page > 1) throw exception
             fallback.getHomeVideoPage(category, page, size)
         }
+
+    override suspend fun refreshHomeVideoPage(category: Category, size: Int): HomeVideoPage {
+        require(size > 0)
+        return pageCache.get("home:${category.id}", "1:$size", refresh = true) {
+            fetchHomeVideoPage(category, 1, size)
+        }
+    }
+
+    private suspend fun fetchHomeVideoPage(category: Category, page: Int, size: Int): HomeVideoPage {
+        val baseUrl = configResolver.resolveBaseUrl()
+        val payload = JSONObject()
+            .put("page", page.toString())
+            .put("size", size.toString())
+            .put("titleid", category.id)
+        val response = fetcher.postJson(
+            "${baseUrl}api/Home/GetRelativeVideos",
+            payload.toString(),
+        )
+        if (response.code !in 200..299) {
+            throw IllegalStateException("Home page request failed: ${response.code}")
+        }
+        val videos = TripDataHomeParser.parseSection(response.body, category.name)
+        val root = JSONObject(response.body)
+        check(!root.has("ret") || root.optInt("ret") == 200) { "Home page service rejected request" }
+        check(root.optJSONObject("data")?.optJSONArray("list") != null) { "Missing home page list" }
+        return HomeVideoPage(videos = videos, hasMore = videos.isNotEmpty())
+    }
 
     override suspend fun refreshHome() {
         cacheLock.withLock {

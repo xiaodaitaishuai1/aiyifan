@@ -33,35 +33,30 @@ class PlayerExperienceDeviceTest {
     private val automation get() = instrumentation.uiAutomation
 
     @Test
-    fun enteringPageRevealsCurrentEpisodeWithoutInterruptingManualBrowsing() =
+    fun episodesExpandDownwardAndKeepSelectionWithoutScrollingTheGrid() =
         withPlayback(episodeCount = 30, startIndex = 24) { scenario, controller ->
-            fun assertCurrentEpisodeVisible() {
-                instrumentation.waitForIdleSync()
-                scenario.onActivity { activity ->
-                    val list = activity.findViewById<RecyclerView>(R.id.episodeRecycler)
-                    val layout = list.layoutManager as LinearLayoutManager
-                    assertTrue("Current episode must be fully visible on entry", 24 in
-                        layout.findFirstCompletelyVisibleItemPosition()..layout.findLastCompletelyVisibleItemPosition())
-                    assertTrue(list.findViewHolderForAdapterPosition(24)!!.itemView.isSelected)
-                }
-            }
-            assertCurrentEpisodeVisible()
-            scenario.onActivity { activity ->
-                (activity.findViewById<RecyclerView>(R.id.episodeRecycler).layoutManager as LinearLayoutManager)
-                    .scrollToPositionWithOffset(0, 0)
-            }
-            instrumentation.waitForIdleSync()
-            scenario.onActivity { controller.pause() }
             instrumentation.waitForIdleSync()
             scenario.onActivity { activity ->
-                val layout = activity.findViewById<RecyclerView>(R.id.episodeRecycler).layoutManager as LinearLayoutManager
-                assertEquals("State updates must preserve manual browsing", 0, layout.findFirstVisibleItemPosition())
+                val list = activity.findViewById<RecyclerView>(R.id.episodeRecycler)
+                val layout = list.layoutManager as androidx.recyclerview.widget.GridLayoutManager
+                assertEquals(4, layout.spanCount)
+                assertEquals(RecyclerView.VERTICAL, layout.orientation)
+                assertFalse(list.isNestedScrollingEnabled)
+                assertEquals(0, layout.findFirstVisibleItemPosition())
+                assertEquals("All episodes must be bound", 30, list.adapter!!.itemCount)
+                assertNotNull("Last episode must be laid out: height=${list.height}, children=${list.childCount}", list.findViewHolderForAdapterPosition(29))
+                assertTrue(list.findViewHolderForAdapterPosition(24)!!.itemView.isSelected)
+                assertTrue(list.findViewHolderForAdapterPosition(4)!!.itemView.top >
+                    list.findViewHolderForAdapterPosition(0)!!.itemView.top)
+                controller.pause()
             }
-            scenario.moveToState(Lifecycle.State.CREATED)
-            scenario.moveToState(Lifecycle.State.RESUMED)
-            assertCurrentEpisodeVisible()
+            instrumentation.waitForIdleSync()
+            scenario.onActivity { activity ->
+                val list = activity.findViewById<RecyclerView>(R.id.episodeRecycler)
+                assertEquals(0, (list.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition())
+                assertTrue(list.findViewHolderForAdapterPosition(24)!!.itemView.isSelected)
+            }
         }
-
     @Test
     fun playbackEndAdvancesOnPageAndStopsAtFinalEpisode() = withPlayback { scenario, controller ->
         scenario.onActivity { activity ->

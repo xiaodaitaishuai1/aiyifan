@@ -10,6 +10,14 @@ import com.aiyifan.app.core.model.VideoSummary
 import com.aiyifan.app.core.model.WatchHistory
 
 interface CatalogRepository {
+    suspend fun getShortDramaPage(page: Int, size: Int = 30): HomeVideoPage =
+        throw UnsupportedOperationException("Short drama is unavailable")
+
+    suspend fun refreshShortDramaPage(size: Int = 30): HomeVideoPage = getShortDramaPage(1, size)
+
+    suspend fun refreshHomeVideoPage(category: Category, size: Int = 30): HomeVideoPage =
+        getHomeVideoPage(category, 1, size)
+
     suspend fun getCategories(): List<Category>
 
     suspend fun getHomeVideos(categoryId: String): List<VideoSummary>

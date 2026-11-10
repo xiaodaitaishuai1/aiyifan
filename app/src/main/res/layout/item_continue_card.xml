@@ -1,17 +1,99 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="184dp"
-    android:layout_height="wrap_content" android:layout_marginEnd="8dp" android:orientation="vertical"
-    android:padding="10dp" android:background="@drawable/bg_chip">
-    <ImageView android:id="@+id/poster" android:layout_width="match_parent" android:layout_height="90dp"
-        android:scaleType="centerCrop" android:contentDescription="@string/video_poster" />
-    <TextView android:id="@+id/title" android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_marginTop="8dp" android:maxLines="1" android:ellipsize="end" android:textSize="15sp" android:textStyle="bold" android:textColor="@color/text_primary" />
-    <TextView android:id="@+id/episode" android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:maxLines="1" android:ellipsize="end" android:textSize="12sp" android:textColor="@color/text_secondary" />
-    <ProgressBar android:id="@+id/progress" style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent" android:layout_height="4dp" android:layout_marginTop="8dp" android:max="100" android:progressTint="@color/accent" />
-    <TextView android:id="@+id/time" android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_marginTop="4dp" android:textSize="12sp" android:textColor="@color/text_secondary" />
-    <TextView android:id="@+id/hideButton" android:layout_width="match_parent" android:layout_height="48dp"
-        android:gravity="center_vertical" android:text="@string/hide_from_home" android:textSize="12sp" android:textColor="@color/text_secondary" />
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="@dimen/continue_card_width"
+    android:layout_height="wrap_content"
+    android:layout_marginEnd="@dimen/dp_12"
+    android:background="?attr/selectableItemBackground"
+    android:focusable="true"
+    android:orientation="vertical">
+
+    <com.aiyifan.app.core.ui.AspectRatioFrameLayout
+        android:id="@+id/posterFrame"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_continue_card"
+        android:clipToOutline="true"
+        app:ratioHeight="9"
+        app:ratioWidth="16">
+
+        <ImageView
+            android:id="@+id/poster"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:importantForAccessibility="no"
+            android:scaleType="centerCrop" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/dp_48"
+            android:layout_gravity="bottom"
+            android:background="@drawable/bg_continue_scrim"
+            android:importantForAccessibility="no" />
+
+        <ImageButton
+            android:id="@+id/clearButton"
+            android:layout_width="@dimen/dp_48"
+            android:layout_height="@dimen/dp_48"
+            android:layout_gravity="top|end"
+            android:background="@drawable/bg_continue_more"
+            android:contentDescription="@string/continue_clear_record"
+            android:padding="@dimen/dp_14"
+            android:tooltipText="@string/continue_clear_record"
+            android:src="@drawable/ic_delete"
+            app:tint="@color/white" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/dp_10"
+            android:paddingEnd="@dimen/dp_10"
+            android:paddingBottom="@dimen/dp_10">
+
+            <ImageView
+                android:layout_width="@dimen/dp_18"
+                android:layout_height="@dimen/dp_18"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_play"
+                app:tint="@color/white" />
+
+            <TextView
+                android:id="@+id/time"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/dp_4"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:textColor="@color/white"
+                android:textSize="@dimen/sp_11" />
+        </LinearLayout>
+
+        <ProgressBar
+            android:id="@+id/progress"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/dp_3"
+            android:layout_gravity="bottom"
+            android:max="100"
+            android:progressDrawable="@drawable/progress_continue_watching"
+            android:importantForAccessibility="no" />
+    </com.aiyifan.app.core.ui.AspectRatioFrameLayout>
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp_8"
+        android:ellipsize="end"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:paddingBottom="@dimen/dp_4"
+        android:textColor="@color/text_primary"
+        android:textSize="@dimen/sp_13"
+        android:textStyle="bold" />
 </LinearLayout>

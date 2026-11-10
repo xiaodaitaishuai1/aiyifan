@@ -16,4 +16,8 @@ class WatchProgressPresentationTest {
         assertFalse(WatchProgressPresentation.completed(10, 0))
         assertTrue(WatchProgressPresentation.completed(100, 100))
     }
+    @Test fun `compact time rounds durations to whole minutes for the home strip`() {
+        assertEquals("0:00 / 1:29", WatchProgressPresentation.compactTime(1_000, 5_337_000))
+        assertEquals("1:02 / 2:00", WatchProgressPresentation.compactTime(3_723_000, 7_200_000))
+    }
 }

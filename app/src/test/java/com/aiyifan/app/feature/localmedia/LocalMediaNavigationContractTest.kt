@@ -10,20 +10,20 @@ import org.w3c.dom.Element
 class LocalMediaNavigationContractTest {
 
     @Test
-    fun `main activity maps the second tab to the local media fragment`() {
+    fun `main activity maps the second tab to the short drama fragment`() {
         val source = sourceFile("feature/main/MainActivity.kt").readText()
 
-        assertTrue(source.contains("1 -> LocalMediaFragment()"))
-        assertTrue(source.contains("import com.aiyifan.app.feature.localmedia.LocalMediaFragment"))
+        assertTrue(source.contains("1 -> ShortDramaFragment()"))
+        assertTrue(source.contains("import com.aiyifan.app.feature.shortdrama.ShortDramaFragment"))
     }
 
     @Test
-    fun `main layout labels the second tab as local media`() {
+    fun `main layout labels the second tab as short drama`() {
         val root = parseLayout(layoutFile("activity_main.xml"))
         val tabItems = elements(root).filter { it.tagName == "com.google.android.material.tabs.TabItem" }.toList()
 
         assertEquals(3, tabItems.size)
-        assertEquals("@string/local_media_tab", tabItems[1].getAttribute("android:text"))
+        assertEquals("@string/tab_short_drama", tabItems[1].getAttribute("android:text"))
     }
 
     @Test

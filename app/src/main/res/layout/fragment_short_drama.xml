@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:background="@drawable/bg_page">
+    <TextView android:layout_width="match_parent" android:layout_height="@dimen/dp_56"
+        android:gravity="center_vertical" android:paddingStart="@dimen/dp_16"
+        android:paddingEnd="@dimen/dp_16" android:text="@string/tab_short_drama"
+        android:textColor="@color/text_primary" android:textSize="@dimen/sp_20" android:textStyle="bold" />
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/dramaRefresh" android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_0" android:layout_weight="1">
+        <androidx.recyclerview.widget.RecyclerView android:id="@+id/dramaRecycler"
+            android:layout_width="match_parent" android:layout_height="match_parent"
+            android:clipToPadding="false" android:padding="@dimen/dp_6" />
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+    <TextView android:id="@+id/dramaStatus" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:minHeight="@dimen/dp_48"
+        android:padding="@dimen/dp_12" android:gravity="center"
+        android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true"
+        android:textColor="@color/text_secondary" android:textSize="@dimen/sp_14" />
+</LinearLayout>

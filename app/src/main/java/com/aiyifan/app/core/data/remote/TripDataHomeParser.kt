@@ -41,7 +41,7 @@ object TripDataHomeParser {
         return emptyList()
     }
 
-    private fun parseVideos(items: JSONArray?): List<VideoSummary> =
+    internal fun parseVideos(items: JSONArray?): List<VideoSummary> =
         buildList {
             if (items == null) return@buildList
             for (index in 0 until items.length()) {

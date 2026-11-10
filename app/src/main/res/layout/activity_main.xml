@@ -19,14 +19,14 @@
         android:layout_height="@dimen/dp_56"
         android:background="@color/surface"
         app:tabGravity="fill"
-        app:tabIndicatorColor="@color/accent"
-        app:tabIndicatorHeight="@dimen/dp_2"
+        app:tabIndicatorHeight="0dp"
         app:tabMode="fixed"
+        app:tabRippleColor="@android:color/transparent"
         app:tabSelectedTextColor="@color/accent"
         app:tabTextColor="@color/text_secondary">
 
         <com.google.android.material.tabs.TabItem android:text="@string/tab_home" />
-        <com.google.android.material.tabs.TabItem android:text="@string/local_media_tab" />
+        <com.google.android.material.tabs.TabItem android:text="@string/tab_short_drama" />
         <com.google.android.material.tabs.TabItem android:text="@string/tab_mine" />
     </com.google.android.material.tabs.TabLayout>
 </LinearLayout>

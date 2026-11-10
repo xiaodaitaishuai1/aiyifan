@@ -1,11 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
-    android:layout_height="wrap_content" android:orientation="vertical" android:paddingBottom="12dp">
-    <LinearLayout android:layout_width="match_parent" android:layout_height="48dp" android:gravity="center_vertical">
-        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-            android:text="@string/continue_watching" android:textColor="@color/text_primary" android:textStyle="bold" android:textSize="18sp" />
-        <TextView android:id="@+id/allButton" android:layout_width="wrap_content" android:layout_height="match_parent"
-            android:gravity="center" android:minWidth="72dp" android:text="@string/all_history" android:textColor="@color/accent" />
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingBottom="@dimen/dp_12">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="@dimen/dp_48"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/continue_watching"
+            android:textColor="@color/text_primary"
+            android:textStyle="bold"
+            android:textSize="@dimen/sp_16" />
+
+        <TextView
+            android:id="@+id/allButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/dp_48"
+            android:minWidth="@dimen/dp_72"
+            android:background="?attr/selectableItemBackground"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="@string/all_history"
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/sp_12" />
     </LinearLayout>
-    <androidx.recyclerview.widget.RecyclerView android:id="@+id/records" android:layout_width="match_parent" android:layout_height="wrap_content" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/records"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clipToPadding="false"
+        android:overScrollMode="never"
+        android:scrollbars="none" />
 </LinearLayout>

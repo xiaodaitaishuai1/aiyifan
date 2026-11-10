@@ -57,16 +57,16 @@ class ContinueWatchingAdapter(
             val record = getItem(position)
             with(holder.binding) {
                 title.text = record.title
-                episode.text = record.episodeTitle ?: root.context.getString(R.string.history_episode_unknown)
                 progress.progress = WatchProgressPresentation.percent(record.progressMs, record.durationMs)
                 time.text = if (WatchProgressPresentation.completed(record.progressMs, record.durationMs))
                     root.context.getString(R.string.episode_completed)
-                else WatchProgressPresentation.time(record.progressMs, record.durationMs)
+                else WatchProgressPresentation.compactTime(record.progressMs, record.durationMs)
                 Glide.with(poster).load(record.coverUrl.ifBlank { null }).placeholder(R.color.poster_placeholder).into(poster)
                 root.setOnClickListener { onOpen(record) }
-                hideButton.setOnClickListener { onHide(record) }
+                clearButton.setOnClickListener { onHide(record) }
             }
         }
     }
     private class Card(val binding: ItemContinueCardBinding) : RecyclerView.ViewHolder(binding.root)
+
 }

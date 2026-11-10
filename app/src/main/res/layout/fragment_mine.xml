@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/bg_page" android:fillViewport="true">
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/bg_page" android:fillViewport="true">
 
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
 
@@ -37,6 +37,12 @@
                 <TextView android:layout_width="@dimen/dp_0" android:layout_height="wrap_content" android:layout_marginStart="@dimen/dp_14" android:layout_weight="1" android:text="@string/tab_hot" android:textColor="@color/text_primary" android:textSize="@dimen/sp_16" />
 
                 <ImageView android:layout_width="@dimen/dp_20" android:layout_height="@dimen/dp_20" android:contentDescription="@string/tab_hot" android:src="@drawable/ic_chevron_right" />
+            </LinearLayout>
+            <View android:layout_width="match_parent" android:layout_height="@dimen/dp_1" android:layout_marginStart="@dimen/dp_54" android:background="@color/outline" />
+            <LinearLayout android:id="@+id/localMediaButton" android:layout_width="match_parent" android:layout_height="@dimen/dp_56" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="@dimen/dp_16" android:paddingEnd="@dimen/dp_14" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true">
+                <ImageView android:layout_width="@dimen/dp_24" android:layout_height="@dimen/dp_24" android:importantForAccessibility="no" android:src="@drawable/ic_play" app:tint="@color/text_primary" />
+                <TextView android:layout_width="@dimen/dp_0" android:layout_height="wrap_content" android:layout_marginStart="@dimen/dp_14" android:layout_weight="1" android:text="@string/local_media_title" android:textColor="@color/text_primary" android:textSize="@dimen/sp_16" />
+                <ImageView android:layout_width="@dimen/dp_20" android:layout_height="@dimen/dp_20" android:importantForAccessibility="no" android:src="@drawable/ic_chevron_right" />
             </LinearLayout>
         </LinearLayout>
 

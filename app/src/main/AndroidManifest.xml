@@ -36,6 +36,10 @@
             android:exported="false"
             android:screenOrientation="portrait" />
         <activity
+            android:name=".feature.localmedia.LocalMediaActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        <activity
             android:name=".feature.localmedia.LocalVideoPlayerActivity"
             android:configChanges="keyboardHidden|orientation|screenSize|smallestScreenSize"
             android:exported="false"

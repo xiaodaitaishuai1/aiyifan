@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tab_short_drama">短剧</string>
+    <string name="short_drama_retry">加载失败，点击重试</string>
+    <string name="short_drama_loading">正在加载短剧…</string>
+    <string name="short_drama_empty">暂无短剧，下拉刷新试试</string>
+    <string name="short_drama_end">已加载全部短剧</string>
+</resources>

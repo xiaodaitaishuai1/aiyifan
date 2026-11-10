@@ -6,6 +6,12 @@
     android:background="@drawable/bg_page"
     android:orientation="vertical">
 
+    <LinearLayout android:layout_width="match_parent" android:layout_height="@dimen/dp_56"
+        android:orientation="horizontal" android:gravity="center_vertical" android:background="@color/surface">
+    <ImageButton android:id="@+id/localBackButton" android:layout_width="@dimen/dp_48"
+        android:layout_height="@dimen/dp_48" android:padding="@dimen/dp_12"
+        android:background="?attr/selectableItemBackgroundBorderless" android:src="@drawable/ic_back"
+        android:contentDescription="@string/hardcoded_text_001" />
     <TextView
         android:layout_width="match_parent"
         android:layout_height="@dimen/dp_56"
@@ -16,6 +22,7 @@
         android:textColor="@color/text_primary"
         android:textSize="@dimen/sp_20"
         android:textStyle="bold" />
+    </LinearLayout>
 
     <EditText
         android:id="@+id/localSearch"

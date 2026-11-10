@@ -30,6 +30,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.PlayerView
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.aiyifan.app.R
@@ -67,7 +68,6 @@ class VideoPlayerActivity : AppCompatActivity() {
     private var overlayHandoffPending = false
     private var playerBrightness = -1f
     private var sleepTimerDialog: androidx.appcompat.app.AlertDialog? = null
-    private var episodeListScrollKey: String? = null
     private val gestureFeedbackHideRunnable = Runnable { binding.playerGestureFeedback.isVisible = false }
 
     @UnstableApi
@@ -141,7 +141,6 @@ class VideoPlayerActivity : AppCompatActivity() {
         overlayHandoffPending = false
         window.attributes = window.attributes.apply { screenBrightness = playerBrightness }
         registerPositionListener()
-        episodeListScrollKey = null
         removeStateListener = playbackController.addStateListener {
             val timerLabel = SleepTimerDialog.label(this, playbackController.sleepTimerState)
             binding.playerView.findViewById<android.widget.TextView>(R.id.playerSleepTimerButton).text = timerLabel
@@ -177,7 +176,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                 loadEpisodePlayback(currentDetail, episode)
             }
         }
-        binding.episodeRecycler.layoutManager = LinearLayoutManager(this, RecyclerView.HORIZONTAL, false)
+        binding.episodeRecycler.layoutManager = GridLayoutManager(this, 4)
         binding.episodeRecycler.adapter = episodeAdapter
 
         binding.relatedRecycler.layoutManager = LinearLayoutManager(this)
@@ -498,23 +497,19 @@ class VideoPlayerActivity : AppCompatActivity() {
             ?.takeIf { playbackController.requestedMediaKey == currentDetail.mediaKey }
             ?: session?.episode
         episodeAdapter.submitList(currentDetail.episodes, selectedEpisode, enabled = !playbackController.isLoading)
-        scrollToSelectedEpisode(currentDetail, selectedEpisode)
+        // ScrollView can give wrap_content RecyclerViews a viewport-sized measurement.
+        // Reserve every grid row so the parent scrolls the complete episode list.
+        val rowHeight = resources.getDimensionPixelSize(R.dimen.dp_48) +
+            resources.getDimensionPixelSize(R.dimen.dp_8)
+        val gridHeight = ((currentDetail.episodes.size + 3) / 4) * rowHeight
+        if (binding.episodeRecycler.layoutParams.height != gridHeight) {
+            binding.episodeRecycler.layoutParams = binding.episodeRecycler.layoutParams.apply {
+                height = gridHeight
+            }
+        }
         val title = PlayerEpisodePresentation.title(currentDetail, selectedEpisode, getString(R.string.player_episode_title))
         binding.videoTitle.text = title
         binding.fullScreenVideoTitle.text = title
-    }
-
-    private fun scrollToSelectedEpisode(currentDetail: VideoDetail, episode: Episode?) {
-        val currentKey = episode?.episodeKey ?: return
-        if (episodeListScrollKey == currentKey) return
-        val currentIndex = currentDetail.episodes.indexOfFirst { it.episodeKey == currentKey }
-        val targetPosition = EpisodeListScrollPolicy.targetPosition(currentIndex, currentDetail.episodes.size) ?: return
-        episodeListScrollKey = currentKey
-        binding.episodeRecycler.post {
-            if (episodeListScrollKey != currentKey) return@post
-            (binding.episodeRecycler.layoutManager as? LinearLayoutManager)
-                ?.scrollToPositionWithOffset(targetPosition, 0)
-        }
     }
 
     private fun currentDestination(): PlaybackDestination = PlaybackPresentationPolicy.destinationWhenLeaving(

@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.aiyifan.app.R
 import com.aiyifan.app.core.data.AppGraph
 import com.aiyifan.app.core.model.Category
+import com.aiyifan.app.core.model.VideoSummary
 import com.aiyifan.app.core.ui.ChipAppearanceResolver
 import com.aiyifan.app.databinding.FragmentHomeBinding
 import com.aiyifan.app.feature.history.HistoryActivity
@@ -30,6 +31,7 @@ class HomeFragment : Fragment() {
     private val binding get() = _binding!!
     private val repository = AppGraph.catalogRepository
     private lateinit var adapter: HomeVideoAdapter
+    private lateinit var bannerAdapter: HomeBannerAdapter
     private lateinit var continueAdapter: ContinueWatchingAdapter
     private lateinit var continueStore: ContinueWatchingStore
     private var removeHistoryListener: (() -> Unit)? = null
@@ -44,6 +46,9 @@ class HomeFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        bannerAdapter = HomeBannerAdapter { video ->
+            startActivity(VideoPlayerActivity.intent(requireContext(), video.mediaKey))
+        }
         adapter = HomeVideoAdapter { video ->
             startActivity(VideoPlayerActivity.intent(requireContext(), video.mediaKey))
         }
@@ -56,10 +61,14 @@ class HomeFragment : Fragment() {
         binding.videoRecycler.layoutManager = GridLayoutManager(requireContext(), 2).apply {
             spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
                 override fun getSpanSize(position: Int): Int =
-                    if (position < continueAdapter.itemCount) 2 else adapter.spanSizeAt(position - continueAdapter.itemCount)
+                    when {
+                        position < bannerAdapter.itemCount -> 2
+                        position < bannerAdapter.itemCount + continueAdapter.itemCount -> 2
+                        else -> adapter.spanSizeAt(position - bannerAdapter.itemCount - continueAdapter.itemCount)
+                    }
             }
         }
-        binding.videoRecycler.adapter = ConcatAdapter(continueAdapter, adapter)
+        binding.videoRecycler.adapter = ConcatAdapter(bannerAdapter, continueAdapter, adapter)
         refreshContinueWatching()
         binding.homeRefresh.setColorSchemeResources(R.color.accent)
         binding.homeRefresh.setProgressBackgroundColorSchemeResource(R.color.surface)
@@ -82,13 +91,13 @@ class HomeFragment : Fragment() {
         })
         binding.searchBox.setOnClickListener { startActivity(Intent(requireContext(), SearchActivity::class.java)) }
         binding.historyButton.setOnClickListener { startActivity(Intent(requireContext(), HistoryActivity::class.java)) }
-        binding.homeRefresh.setOnRefreshListener(::loadHome)
+        binding.homeRefresh.setOnRefreshListener { loadHome(forceRefresh = true) }
         loadHome()
     }
 
     override fun onResume() {
         super.onResume()
-        adapter.setBannerVisible(true)
+        bannerAdapter.setBannerVisible(true)
         refreshContinueWatching()
         removeHistoryListener = repository.addHistoryListener {
             _binding?.videoRecycler?.post { if (_binding != null && isResumed) refreshContinueWatching() }
@@ -98,11 +107,11 @@ class HomeFragment : Fragment() {
     override fun onPause() {
         removeHistoryListener?.invoke()
         removeHistoryListener = null
-        adapter.setBannerVisible(false)
+        bannerAdapter.setBannerVisible(false)
         super.onPause()
     }
 
-    private fun loadHome() {
+    private fun loadHome(forceRefresh: Boolean = false) {
         val requestVersion = ++homeRequestVersion
         isInitialPageLoading = true
         pagination.cancelPending()
@@ -114,7 +123,7 @@ class HomeFragment : Fragment() {
                 val category = categories.firstOrNull { it.id == selectedCategory?.id } ?: categories.first()
                 selectedCategory = category
                 renderCategories(categories)
-                submitHomeFeed(category, requestVersion)
+                submitHomeFeed(category, requestVersion, forceRefresh)
             } catch (exception: Throwable) {
                 if (exception is CancellationException) throw exception
                 showToast("首页刷新失败")
@@ -129,6 +138,12 @@ class HomeFragment : Fragment() {
 
     private fun refreshContinueWatching() {
         continueAdapter.submitRecords(continueStore.visible(repository.getHistory()))
+    }
+
+    private fun submitFeed(videos: List<VideoSummary>) {
+        val sections = HomeFeedSections.from(videos)
+        bannerAdapter.submitList(sections.banner)
+        adapter.submitList(sections.cards)
     }
 
     private fun renderCategories(categories: List<Category>) {
@@ -163,6 +178,7 @@ class HomeFragment : Fragment() {
             (tab as TextView).setTextColor(resources.getColor(appearance.textColorRes, null))
         }
         pagination.clear()
+        bannerAdapter.submitList(emptyList())
         adapter.submitList(emptyList())
         viewLifecycleOwner.lifecycleScope.launch {
             try {
@@ -178,10 +194,11 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private suspend fun submitHomeFeed(category: Category, requestVersion: Long) {
-        val response = repository.getHomeVideoPage(category, page = 1)
+    private suspend fun submitHomeFeed(category: Category, requestVersion: Long, forceRefresh: Boolean = false) {
+        val response = if (forceRefresh) repository.refreshHomeVideoPage(category)
+            else repository.getHomeVideoPage(category, page = 1)
         if (isCurrentRequest(requestVersion) && selectedCategory?.id == category.id) {
-            adapter.submitList(pagination.reset(response))
+            submitFeed(pagination.reset(response))
         }
     }
 
@@ -192,7 +209,7 @@ class HomeFragment : Fragment() {
             try {
                 val response = repository.getHomeVideoPage(category, page)
                 if (isCurrentRequest(requestVersion) && selectedCategory?.id == categoryId) {
-                    adapter.submitList(pagination.append(page, response))
+                    submitFeed(pagination.append(page, response))
                 }
             } catch (exception: Throwable) {
                 if (exception is CancellationException) throw exception

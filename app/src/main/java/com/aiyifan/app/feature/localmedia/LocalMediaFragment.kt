@@ -22,6 +22,7 @@ import com.aiyifan.app.feature.localmedia.model.LocalVideo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Job
 
 class LocalMediaFragment : Fragment() {
     private var _binding: FragmentLocalMediaBinding? = null
@@ -34,6 +35,7 @@ class LocalMediaFragment : Fragment() {
     private var allVideos: List<LocalVideo> = emptyList()
     private var currentFilter: Filter = Filter.ALL
     private var lastKnownPermissionGranted: Boolean? = null
+    private var loadJob: Job? = null
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
@@ -54,6 +56,7 @@ class LocalMediaFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        binding.localBackButton.setOnClickListener { requireActivity().onBackPressedDispatcher.onBackPressed() }
         adapter = LocalMediaAdapter { video ->
             startActivity(LocalVideoPlayerActivity.intent(requireContext(), video))
         }
@@ -88,6 +91,8 @@ class LocalMediaFragment : Fragment() {
     }
 
     override fun onDestroyView() {
+        loadJob?.cancel()
+        loadJob = null
         _binding = null
         super.onDestroyView()
     }
@@ -124,8 +129,10 @@ class LocalMediaFragment : Fragment() {
             return
         }
 
-        lifecycleScope.launch {
+        loadJob?.cancel()
+        loadJob = viewLifecycleOwner.lifecycleScope.launch {
             val loaded = withContext(Dispatchers.IO) { repository.queryVideos() }
+            if (!isAdded || _binding == null) return@launch
             allVideos = loaded
             val availableIds = loaded.mapTo(mutableSetOf()) { it.id }
             withContext(Dispatchers.IO) { playbackStore.prune(availableIds) }
