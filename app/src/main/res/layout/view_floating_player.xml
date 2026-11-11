@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.aiyifan.app.feature.video.ResizablePlayerLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/bg_floating_player" android:clipToOutline="true">
 
-    <androidx.media3.ui.PlayerView android:id="@+id/floatingPlayerView" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@android:color/black" app:show_buffering="when_playing" app:shutter_background_color="@android:color/black" app:use_controller="false" />
+    <!-- Keep video in the same composition layer as the resizable, clipped overlay window. -->
+    <androidx.media3.ui.PlayerView android:id="@+id/floatingPlayerView" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@android:color/black" app:surface_type="texture_view" app:show_buffering="when_playing" app:shutter_background_color="@android:color/black" app:use_controller="false" />
 
     <TextView android:id="@+id/floatingSleepTimerButton" android:layout_width="wrap_content" android:layout_height="48dp" android:layout_gravity="top|start" android:paddingHorizontal="8dp" android:gravity="center" android:background="@drawable/bg_floating_control" android:text="@string/sleep_timer_title" android:textColor="@android:color/white" android:textSize="12sp" />
 

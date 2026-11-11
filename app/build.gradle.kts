@@ -1,7 +1,41 @@
+import com.bytedance.android.plugin.extensions.AabResGuardExtension
+import com.github.megatronking.stringfog.plugin.StringFogExtension
+import com.github.megatronking.stringfog.plugin.StringFogMode
+import com.github.megatronking.stringfog.plugin.kg.RandomKeyGenerator
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.kapt")
+    id("com.bytedance.android.aabResGuard")
+    id("stringfog")
+}
+
+configure<StringFogExtension> {
+    implementation = "com.github.megatronking.stringfog.xor.StringFogImpl"
+    enable = true
+    fogPackages = arrayOf("com.aiyifan.app")
+    kg = RandomKeyGenerator()
+    mode = StringFogMode.bytes
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        freeCompilerArgs.add("-Xstring-concat=inline")
+    }
+}
+
+configure<AabResGuardExtension> {
+    mappingFile = file("mapping.txt").toPath()
+    whiteList = setOf("*.R.raw.*", "*.R.drawable.icon")
+    obfuscatedBundleFileName = "app_build.aab"
+    mergeDuplicatedRes = true
+    enableFilterFiles = true
+    filterList = setOf("META-INF/*", "BUNDLE-METADATA/*")
+    enableFilterStrings = false
+    unusedStringPath = file("unused.txt").toPath().toString()
+    languageWhiteList = setOf("en", "zh")
 }
 
 val appConfigFile = rootProject.file("app-config.gradle")
@@ -54,6 +88,7 @@ android {
 
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
 
     compileOptions {
@@ -61,11 +96,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlin {
-        compilerOptions {
-            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
-        }
-    }
 }
 
 tasks.configureEach {
@@ -84,6 +114,7 @@ tasks.configureEach {
 }
 
 dependencies {
+    implementation("com.github.mobcoding.StringFog:xor:5.2.2")
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("com.google.android.material:material:1.12.0")

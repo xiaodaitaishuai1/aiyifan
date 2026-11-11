@@ -33,6 +33,86 @@ class PlayerExperienceDeviceTest {
     private val automation get() = instrumentation.uiAutomation
 
     @Test
+    @androidx.test.filters.SdkSuppress(minSdkVersion = 26)
+    fun systemPipContainsOnlyVideoAndReturnsToDetail() = withPlayback { scenario, controller ->
+        org.junit.Assume.assumeTrue(context.packageManager.hasSystemFeature(
+            android.content.pm.PackageManager.FEATURE_PICTURE_IN_PICTURE,
+        ))
+        lateinit var activity: VideoPlayerActivity
+        scenario.onActivity {
+            activity = it
+            val entered = VideoPlayerActivity::class.java.getDeclaredMethod("enterSystemPictureInPicture")
+                .apply { isAccessible = true }.invoke(it) as Boolean
+            assertTrue(entered)
+        }
+        await { activity.isInPictureInPictureMode }
+        instrumentation.waitForIdleSync()
+        mainValue {
+            val root = activity.findViewById<View>(R.id.root)
+            val player = activity.findViewById<View>(R.id.playerContainer)
+            assertEquals(root.height, player.height)
+            assertEquals(root.width, player.width)
+            assertEquals(View.GONE, activity.findViewById<View>(R.id.contentScroll).visibility)
+        }
+        screenshot("system-pip.png")
+        mainValue {
+            activity.startActivity(VideoPlayerActivity.intent(activity, controller.activeSession!!.detail.mediaKey)
+                .addFlags(android.content.Intent.FLAG_ACTIVITY_REORDER_TO_FRONT))
+        }
+        await { !activity.isInPictureInPictureMode }
+        instrumentation.waitForIdleSync()
+        scenario.onActivity {
+            assertEquals(View.VISIBLE, it.findViewById<View>(R.id.contentScroll).visibility)
+            assertEquals(View.VISIBLE, it.findViewById<View>(R.id.playerTopBar).visibility)
+            assertFalse(controller.isReleased)
+        }
+    }
+
+    @Test
+    @androidx.media3.common.util.UnstableApi
+    fun pipLayoutFillsWindowAndRestoresAfterRepeatedCallbacks() = withPlayback { scenario, controller ->
+        var originalHeight = 0
+        var originalBottomPadding = 0
+        val session = mainValue { controller.activeSession }
+        scenario.onActivity { activity ->
+            originalHeight = activity.findViewById<View>(R.id.playerContainer).layoutParams.height
+            originalBottomPadding = activity.findViewById<View>(R.id.pageContent).paddingBottom
+            repeat(2) {
+                VideoPlayerActivity::class.java.getDeclaredMethod("preparePictureInPictureLayout")
+                    .apply { isAccessible = true }.invoke(activity)
+            }
+        }
+        instrumentation.waitForIdleSync()
+        scenario.onActivity { activity ->
+            val page = activity.findViewById<View>(R.id.pageContent)
+            val container = activity.findViewById<View>(R.id.playerContainer)
+            val player = activity.findViewById<androidx.media3.ui.PlayerView>(R.id.playerView)
+            assertEquals(page.height, container.height)
+            assertEquals(page.width, container.width)
+            assertEquals(0, container.top)
+            assertEquals(0, page.paddingBottom)
+            assertEquals(container.height, player.height)
+            assertFalse(player.useController)
+            for (id in listOf(R.id.contentScroll, R.id.playerTopBar, R.id.fullScreenTitleBar, R.id.inAppMiniPlayer)) {
+                assertEquals(View.GONE, activity.findViewById<View>(id).visibility)
+            }
+            repeat(2) {
+                VideoPlayerActivity::class.java.getDeclaredMethod("restorePictureInPictureLayout")
+                    .apply { isAccessible = true }.invoke(activity)
+            }
+        }
+        instrumentation.waitForIdleSync()
+        scenario.onActivity { activity ->
+            assertEquals(originalHeight, activity.findViewById<View>(R.id.playerContainer).layoutParams.height)
+            assertEquals(originalBottomPadding, activity.findViewById<View>(R.id.pageContent).paddingBottom)
+            assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.contentScroll).visibility)
+            assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.playerTopBar).visibility)
+            assertTrue(activity.findViewById<androidx.media3.ui.PlayerView>(R.id.playerView).useController)
+            assertSame(session, controller.activeSession)
+        }
+    }
+
+    @Test
     fun episodesExpandDownwardAndKeepSelectionWithoutScrollingTheGrid() =
         withPlayback(episodeCount = 30, startIndex = 24) { scenario, controller ->
             instrumentation.waitForIdleSync()
@@ -164,6 +244,55 @@ class PlayerExperienceDeviceTest {
             assertFalse(controller.playWhenReady)
         }
         screenshot("mini-player.png")
+    }
+
+    @Test
+    @androidx.test.filters.SdkSuppress(minSdkVersion = 29)
+    @androidx.media3.common.util.UnstableApi
+    fun floatingWindowUsesHardwareTextureWithDecodedVideo() = withPlayback { scenario, controller ->
+        val previousMode = shell("appops get ${context.packageName} SYSTEM_ALERT_WINDOW")
+        val restoreMode = Regex("SYSTEM_ALERT_WINDOW: (allow|ignore|deny|default|foreground)")
+            .find(previousMode)?.groupValues?.get(1) ?: "default"
+        try {
+            shell("appops set ${context.packageName} SYSTEM_ALERT_WINDOW allow")
+            scenario.onActivity { activity ->
+                activity.findViewById<ImageButton>(R.id.floatingWindowButton).performClick()
+            }
+            await { controller.hasOverlayOwner }
+            var texture: android.view.TextureView? = null
+            await {
+                val root = android.view.inspector.WindowInspector.getGlobalWindowViews()
+                    .firstOrNull { it.findViewById<View>(R.id.floatingPlayerView) != null }
+                if (root == null) false else {
+                    assertTrue("Service window must be hardware accelerated", root.isHardwareAccelerated)
+                    val player = root.findViewById<androidx.media3.ui.PlayerView>(R.id.floatingPlayerView)
+                    assertTrue(player.videoSurfaceView is android.view.TextureView)
+                    texture = player.videoSurfaceView as android.view.TextureView
+                    texture.isAvailable
+                }
+            }
+            mainValue {
+                controller.seekTo(2_000L)
+                controller.togglePlayPause()
+            }
+            await {
+                val bitmap = texture!!.bitmap
+                if (bitmap == null) false else {
+                    try {
+                        // The local test clip has coloured pixels; an unrendered texture stays black.
+                        (1..3).any { y -> (1..3).any { x ->
+                            bitmap.getPixel(bitmap.width * x / 4, bitmap.height * y / 4) and 0x00ffffff != 0
+                        } }
+                    } finally {
+                        bitmap.recycle()
+                    }
+                }
+            }
+            screenshot("floating-texture-video.png")
+        } finally {
+            context.stopService(FloatingPlayerService.intent(context))
+            shell("appops set ${context.packageName} SYSTEM_ALERT_WINDOW $restoreMode")
+        }
     }
 
     @Test

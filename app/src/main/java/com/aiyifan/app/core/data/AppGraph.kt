@@ -1,6 +1,7 @@
 package com.aiyifan.app.core.data
 
 import android.content.Context
+import com.aiyifan.app.core.data.remote.ChannelNavigationRepository
 import com.aiyifan.app.core.data.remote.RemoteCatalogRepository
 import com.aiyifan.app.core.data.remote.RemoteConfigResolver
 import com.aiyifan.app.core.data.remote.UrlConnectionHttpFetcher
@@ -9,6 +10,10 @@ import com.aiyifan.app.feature.video.VideoPlaybackControllerProvider
 
 object AppGraph {
     private lateinit var applicationContext: Context
+
+    val channelNavigationRepository: ChannelNavigationRepository by lazy {
+        ChannelNavigationRepository()
+    }
 
     val catalogRepository: CatalogRepository by lazy {
         RemoteCatalogRepository(

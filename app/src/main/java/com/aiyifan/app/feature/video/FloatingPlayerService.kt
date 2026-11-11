@@ -176,7 +176,8 @@ class FloatingPlayerService : Service() {
             size.width,
             size.height,
             overlayWindowType(),
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+            // Service windows do not inherit Activity hardware acceleration. TextureView needs it.
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
             PixelFormat.OPAQUE,
         ).apply {
             gravity = Gravity.TOP or Gravity.START

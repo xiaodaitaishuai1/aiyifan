@@ -68,6 +68,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     private var overlayHandoffPending = false
     private var playerBrightness = -1f
     private var sleepTimerDialog: androidx.appcompat.app.AlertDialog? = null
+    private var restorePipLayout: (() -> Unit)? = null
     private val gestureFeedbackHideRunnable = Runnable { binding.playerGestureFeedback.isVisible = false }
 
     @UnstableApi
@@ -82,7 +83,7 @@ class VideoPlayerActivity : AppCompatActivity() {
             left = true,
             right = true,
             bottom = true,
-            shouldApply = { FullScreenInsetsPolicy.shouldApplyPageInsets(isFullScreen) },
+            shouldApply = { restorePipLayout == null && FullScreenInsetsPolicy.shouldApplyPageInsets(isFullScreen) },
         )
         binding.playerTopBar.applySystemBarsPadding(top = true, growHeight = true)
 
@@ -334,7 +335,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     }
 
     private fun attachPlayerToCurrentSurface() {
-        if (isInAppMiniPlayerVisible) {
+        if (isInAppMiniPlayerVisible && restorePipLayout == null) {
             playbackController.attach(binding.inAppMiniPlayerView)
         } else {
             playbackController.attach(binding.playerView)
@@ -384,7 +385,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         binding.fullScreenTitleBar.isVisible = FullScreenControlVisibility.shouldShowTitleBar(
             isFullScreen = isFullScreen,
             controllerVisibility = controllerVisibility,
-        )
+        ) && restorePipLayout == null
     }
 
     override fun onUserLeaveHint() {
@@ -411,24 +412,76 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode)
-        binding.contentScroll.isVisible = !isInPictureInPictureMode && !isInAppMiniPlayerVisible && !isFullScreen
-        binding.fullScreenButton.isVisible = !isInPictureInPictureMode
-        binding.floatingWindowButton.isVisible = !isInPictureInPictureMode
-        binding.backButton.isVisible = !isInPictureInPictureMode
-        binding.playerTopBar.isVisible = !isInPictureInPictureMode && !isFullScreen
-        binding.fullScreenTitleBar.isVisible = !isInPictureInPictureMode &&
-            FullScreenControlVisibility.shouldShowTitleBar(isFullScreen, controllerVisibility)
+        if (isInPictureInPictureMode) preparePictureInPictureLayout() else restorePictureInPictureLayout()
+    }
+
+    @androidx.annotation.OptIn(UnstableApi::class)
+    private fun preparePictureInPictureLayout() {
+        if (restorePipLayout != null) return
+        val hiddenViews = listOf(
+            binding.playerTopBar,
+            binding.contentScroll,
+            binding.fullScreenTitleBar,
+            binding.inAppMiniPlayer,
+        )
+        val visibility = hiddenViews.map { it.visibility }
+        val playerVisibility = binding.playerContainer.visibility
+        val params = LinearLayout.LayoutParams(binding.playerContainer.layoutParams as LinearLayout.LayoutParams)
+        val page = binding.pageContent
+        val padding = intArrayOf(page.paddingLeft, page.paddingTop, page.paddingRight, page.paddingBottom)
+        val background = binding.root.background
+        val playerBackground = binding.playerView.background
+        val useController = binding.playerView.useController
+        val controllerWasVisible = controllerVisibility == View.VISIBLE
+        restorePipLayout = {
+            hiddenViews.forEachIndexed { index, view -> view.visibility = visibility[index] }
+            binding.playerContainer.visibility = playerVisibility
+            binding.playerContainer.layoutParams = params
+            page.setPadding(padding[0], padding[1], padding[2], padding[3])
+            binding.root.background = background
+            binding.playerView.background = playerBackground
+            binding.playerView.useController = useController
+            if (controllerWasVisible && useController) binding.playerView.showController()
+            attachPlayerToCurrentSurface()
+            updateFullScreenTitleBar()
+            ViewCompat.requestApplyInsets(page)
+        }
+        hiddenViews.forEach { it.isVisible = false }
+        binding.playerGestureFeedback.isVisible = false
+        binding.root.removeCallbacks(gestureFeedbackHideRunnable)
+        sleepTimerDialog?.dismiss()
+        binding.playerView.hideController()
+        binding.playerView.useController = false
+        binding.root.setBackgroundColor(android.graphics.Color.BLACK)
+        binding.playerView.setBackgroundColor(android.graphics.Color.BLACK)
+        page.setPadding(0, 0, 0, 0)
+        binding.playerContainer.isVisible = true
+        binding.playerContainer.layoutParams = binding.playerContainer.layoutParams.apply {
+            height = android.view.ViewGroup.LayoutParams.MATCH_PARENT
+            (this as LinearLayout.LayoutParams).weight = 0f
+        }
+        attachPlayerToCurrentSurface()
+        ViewCompat.requestApplyInsets(page)
+    }
+
+    private fun restorePictureInPictureLayout() {
+        val restore = restorePipLayout ?: return
+        restorePipLayout = null
+        restore()
     }
 
     private fun enterSystemPictureInPicture(): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false
-        return runCatching {
+        preparePictureInPictureLayout()
+        val entered = runCatching {
             enterPictureInPictureMode(
                 PictureInPictureParams.Builder()
                     .setAspectRatio(Rational(16, 9))
                     .build(),
             )
         }.getOrDefault(false)
+        if (!entered) restorePictureInPictureLayout()
+        return entered
     }
 
     private fun showFloatingPresentation() {

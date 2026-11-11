@@ -16,6 +16,17 @@ class VideoPlayerLifecycleSafetyTest {
         assertTrue(source.contains("if (error is CancellationException) throw error"))
     }
 
+    @Test
+    fun `picture in picture prepares a player only layout before entering`() {
+        val source = videoPlayerSource()
+
+        val entry = source.substringAfter("private fun enterSystemPictureInPicture(): Boolean")
+            .substringBefore("private fun showFloatingPresentation()")
+        assertTrue(entry.indexOf("preparePictureInPictureLayout()") >= 0)
+        assertTrue(entry.indexOf("preparePictureInPictureLayout()") < entry.indexOf("enterPictureInPictureMode("))
+        assertTrue(entry.contains("if (!entered) restorePictureInPictureLayout()"))
+    }
+
     private fun videoPlayerSource(): String = sequenceOf(
         File("src/main/java/com/aiyifan/app/feature/video/VideoPlayerActivity.kt"),
         File("app/src/main/java/com/aiyifan/app/feature/video/VideoPlayerActivity.kt"),

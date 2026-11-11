@@ -11,6 +11,12 @@ import org.w3c.dom.Element
 class FloatingPlayerLayoutTest {
 
     @Test
+    fun `floating video participates in window composition instead of punching a surface hole`() {
+        val playerView = viewWithId(floatingPlayerLayout(), "floatingPlayerView")!!
+        assertEquals("texture_view", playerView.getAttribute("app:surface_type"))
+    }
+
+    @Test
     fun `floating player renders an opaque black surface`() {
         val layout = floatingPlayerLayout()
         val playerView = viewWithId(layout, "floatingPlayerView")!!

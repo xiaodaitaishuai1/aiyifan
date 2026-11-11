@@ -7,7 +7,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.aiyifan.app.R
-import com.aiyifan.app.core.data.remote.ChannelNavigationRepository
+import com.aiyifan.app.core.data.AppGraph
 import com.aiyifan.app.core.data.remote.NavigationChannel
 import com.aiyifan.app.core.ui.applySystemBarsPadding
 import com.aiyifan.app.core.ui.setupEdgeToEdge
@@ -22,7 +22,7 @@ class NavigationActivity : AppCompatActivity() {
     private var channels: List<NavigationChannel> = emptyList()
     private var selectedId: String? = null
     private var loading = false
-    private val repository = ChannelNavigationRepository()
+    private val repository = AppGraph.channelNavigationRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

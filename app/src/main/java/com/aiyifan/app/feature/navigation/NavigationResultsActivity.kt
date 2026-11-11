@@ -10,7 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.aiyifan.app.R
-import com.aiyifan.app.core.data.remote.ChannelNavigationRepository
+import com.aiyifan.app.core.data.AppGraph
 import com.aiyifan.app.core.data.remote.NavigationChannel
 import com.aiyifan.app.core.data.remote.NavigationTag
 import com.aiyifan.app.core.model.VideoSummary
@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
 class NavigationResultsActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySimpleListBinding
     private lateinit var adapter: VideoListAdapter
-    private val repository = ChannelNavigationRepository()
+    private val repository = AppGraph.channelNavigationRepository
     private val videos = mutableListOf<VideoSummary>()
     private var page = 1
     private var loading = false

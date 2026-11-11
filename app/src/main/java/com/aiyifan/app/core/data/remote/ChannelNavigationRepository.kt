@@ -1,6 +1,10 @@
 package com.aiyifan.app.core.data.remote
 
 import com.aiyifan.app.core.model.VideoSummary
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.json.JSONObject
 
 data class NavigationTag(val id: String, val name: String, val classType: Int, val index: Int, val subId: String)
@@ -9,7 +13,12 @@ data class NavigationChannel(val id: String, val name: String, val tags: List<Na
 class ChannelNavigationRepository(
     private val fetcher: HttpFetcher = UrlConnectionHttpFetcher(),
     private val resolver: RemoteConfigResolver = RemoteConfigResolver(fetcher),
+    private val clock: () -> Long = System::currentTimeMillis,
 ) {
+    private data class ChannelCache(val channels: List<NavigationChannel>, val savedAt: Long)
+    private var channelCache: ChannelCache? = null
+    private val channelLock = Mutex()
+
     private suspend fun request(path: String, body: JSONObject): JSONObject {
         val response = fetcher.postJson("${resolver.resolveBaseUrl()}$path", body.toString())
         check(response.code in 200..299) { "Navigation HTTP ${response.code}" }
@@ -18,7 +27,19 @@ class ChannelNavigationRepository(
         return root.getJSONObject("data")
     }
 
-    suspend fun loadChannels(): List<NavigationChannel> {
+    /** Shared by navigation screens through AppGraph; successful data expires after five minutes. */
+    suspend fun loadChannels(): List<NavigationChannel> = channelLock.withLock {
+        channelCache?.let { cached ->
+            if (clock() - cached.savedAt in 0 until 300_000L) return@withLock cached.channels
+        }
+        val channels = fetchChannels()
+        currentCoroutineContext().ensureActive()
+        // Empty results must remain retryable from the navigation empty state.
+        channelCache = channels.takeIf { it.isNotEmpty() }?.let { ChannelCache(it, clock()) }
+        channels
+    }
+
+    private suspend fun fetchChannels(): List<NavigationChannel> {
         val list = request("api/Home/GetChannelNavigation", JSONObject()).getJSONArray("list")
         return buildList {
             for (i in 0 until list.length()) {
