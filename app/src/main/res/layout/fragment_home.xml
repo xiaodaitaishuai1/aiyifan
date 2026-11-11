@@ -9,12 +9,17 @@
 
 
         <TextView android:id="@+id/historyButton" android:layout_width="@dimen/dp_52" android:layout_height="match_parent" android:gravity="center" android:text="@string/hardcoded_text_035" android:textColor="@color/text_primary" android:textSize="@dimen/sp_13" />
+
+
     </LinearLayout>
 
-    <HorizontalScrollView android:layout_width="match_parent" android:layout_height="@dimen/dp_44" android:background="@color/surface" android:overScrollMode="never" android:scrollbars="none">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="@dimen/dp_44" android:orientation="horizontal" android:background="@color/surface">
+    <HorizontalScrollView android:layout_width="0dp" android:layout_weight="1" android:layout_height="@dimen/dp_44" android:background="@color/surface" android:overScrollMode="never" android:scrollbars="none">
 
         <LinearLayout android:id="@+id/categoryContainer" android:layout_width="wrap_content" android:layout_height="match_parent" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="@dimen/dp_12" android:paddingEnd="@dimen/dp_12" />
     </HorizontalScrollView>
+        <ImageButton android:id="@+id/navigationButton" android:layout_width="@dimen/dp_44" android:layout_height="match_parent" android:background="@android:color/transparent" android:contentDescription="@string/navigation_open" android:padding="@dimen/dp_10" android:src="@drawable/ic_grid" />
+    </LinearLayout>
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout android:id="@+id/homeRefresh" android:layout_width="match_parent" android:layout_height="@dimen/dp_0" android:layout_weight="1">
 

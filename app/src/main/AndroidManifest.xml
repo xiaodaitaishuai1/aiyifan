@@ -39,6 +39,11 @@
             android:name=".feature.localmedia.LocalMediaActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
+        <activity android:name=".feature.navigation.NavigationResultsActivity" android:exported="false" />
+        <activity
+            android:name=".feature.navigation.NavigationActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".feature.localmedia.LocalVideoPlayerActivity"
             android:configChanges="keyboardHidden|orientation|screenSize|smallestScreenSize"

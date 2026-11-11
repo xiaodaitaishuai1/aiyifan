@@ -6,6 +6,9 @@ import android.view.Gravity
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.lifecycle.Lifecycle
 import com.aiyifan.app.R
 import com.aiyifan.app.core.ui.applySystemBarsPadding
@@ -23,7 +26,16 @@ class MainActivity : AppCompatActivity() {
         setupEdgeToEdge()
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        binding.fragmentContainer.applySystemBarsPadding(left = true, top = true, right = true)
+        // Mine draws its header behind the status bar and owns its top inset.
+        ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentContainer) { view, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            view.updatePadding(
+                left = bars.left,
+                top = if (binding.bottomTabs.selectedTabPosition == 2) 0 else bars.top,
+                right = bars.right,
+            )
+            insets
+        }
         binding.bottomTabs.applySystemBarsPadding(left = true, right = true, bottom = true, growHeight = true)
 
         val selectedTabPosition = (savedInstanceState?.getInt(KEY_SELECTED_TAB) ?: 0).takeIf {
@@ -71,7 +83,8 @@ class MainActivity : AppCompatActivity() {
     private fun updateTopBackground(selectedPosition: Int) {
         val color = getColor(if (selectedPosition == 1) R.color.page_bg else R.color.surface)
         binding.fragmentContainer.setBackgroundColor(color)
-        window.statusBarColor = color
+        window.statusBarColor = if (selectedPosition == 2) android.graphics.Color.TRANSPARENT else color
+        ViewCompat.requestApplyInsets(binding.fragmentContainer)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -89,7 +102,7 @@ class MainActivity : AppCompatActivity() {
         return when (position) {
             1 -> ShortDramaFragment()
             2 -> MineFragment()
-            else -> HomeFragment()
+            else -> HomeFragment.newInstance(intent.getStringExtra(EXTRA_CATEGORY_ID))
         }
     }
 
@@ -105,7 +118,12 @@ class MainActivity : AppCompatActivity() {
             .commitNow()
     }
 
-    private companion object {
+    companion object {
         const val KEY_SELECTED_TAB = "selected_tab"
+        const val EXTRA_CATEGORY_ID = "categoryId"
+
+        fun intent(context: android.content.Context, categoryId: String): android.content.Intent =
+            android.content.Intent(context, MainActivity::class.java)
+                .putExtra(EXTRA_CATEGORY_ID, categoryId)
     }
 }

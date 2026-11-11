@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/navigation_rail"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/navigationToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_56"
+        android:background="@color/navigation_rail"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/navigationBackButton"
+            android:layout_width="@dimen/dp_56"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:contentDescription="@string/hardcoded_text_001"
+            android:padding="@dimen/dp_16"
+            android:src="@drawable/ic_back" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/navigation_title"
+            android:textColor="@color/text_primary"
+            android:textSize="@dimen/sp_17" />
+
+        <View android:layout_width="@dimen/dp_56" android:layout_height="match_parent" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/navigationRailRecycler"
+                android:layout_width="@dimen/dp_100"
+                android:layout_height="match_parent"
+                android:background="@color/navigation_rail"
+                android:clipToPadding="false"
+                android:paddingVertical="@dimen/dp_0" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/navigationRecycler"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:clipToPadding="false"
+                android:background="@color/navigation_content"
+                android:padding="@dimen/dp_0" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/navigationEmptyState"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="@dimen/dp_24"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/navigationEmptyText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/navigation_load_failed"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/sp_14" />
+
+            <Button
+                android:id="@+id/navigationRetryButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/dp_12"
+                android:text="@string/navigation_retry" />
+        </LinearLayout>
+
+        <ProgressBar
+            android:id="@+id/navigationProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center" />
+    </FrameLayout>
+</LinearLayout>

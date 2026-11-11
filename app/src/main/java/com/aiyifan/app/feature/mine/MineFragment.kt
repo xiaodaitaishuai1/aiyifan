@@ -7,7 +7,9 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.aiyifan.app.R
+import com.aiyifan.app.core.data.AppGraph
 import com.aiyifan.app.core.ui.ThemeMode
+import com.aiyifan.app.core.ui.applySystemBarsPadding
 import com.aiyifan.app.core.ui.ThemePreferenceStore
 import com.aiyifan.app.databinding.FragmentMineBinding
 import com.aiyifan.app.feature.collection.CollectionActivity
@@ -26,8 +28,9 @@ class MineFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        binding.mineHeader.applySystemBarsPadding(top = true)
         val themePreferenceStore = ThemePreferenceStore(requireContext())
-        binding.themeSettingsSummary.setText(themePreferenceStore.currentMode().labelRes)
+        refreshPresentation(themePreferenceStore)
         binding.historyButton.setOnClickListener { startActivity(Intent(requireContext(), HistoryActivity::class.java)) }
         binding.collectionButton.setOnClickListener { startActivity(Intent(requireContext(), CollectionActivity::class.java)) }
         binding.hotButton.setOnClickListener { startActivity(Intent(requireContext(), HotActivity::class.java)) }
@@ -45,6 +48,21 @@ class MineFragment : Fragment() {
                 }
                 .show()
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (_binding != null) refreshPresentation(ThemePreferenceStore(requireContext()))
+    }
+
+    private fun refreshPresentation(themePreferenceStore: ThemePreferenceStore) {
+        val preferences = requireContext().getSharedPreferences("auth", android.content.Context.MODE_PRIVATE)
+        binding.mineNickname.text = preferences.getString("nickname", null).orEmpty().ifBlank {
+            getString(R.string.login_default_account)
+        }
+        binding.historyCount.text = AppGraph.catalogRepository.getHistory().size.toString()
+        binding.favoriteCount.text = AppGraph.catalogRepository.getFavorites().size.toString()
+        binding.themeSettingsSummary.setText(themePreferenceStore.currentMode().labelRes)
     }
 
     override fun onDestroyView() {

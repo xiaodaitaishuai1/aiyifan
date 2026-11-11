@@ -40,6 +40,9 @@ class HomeFragment : Fragment() {
     private var homeRequestVersion = 0L
     private var isInitialPageLoading = false
 
+    private val initialCategoryId: String?
+        get() = arguments?.getString(ARG_INITIAL_CATEGORY_ID)
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         return binding.root
@@ -91,6 +94,9 @@ class HomeFragment : Fragment() {
         })
         binding.searchBox.setOnClickListener { startActivity(Intent(requireContext(), SearchActivity::class.java)) }
         binding.historyButton.setOnClickListener { startActivity(Intent(requireContext(), HistoryActivity::class.java)) }
+        binding.navigationButton.setOnClickListener {
+            startActivity(Intent(requireContext(), com.aiyifan.app.feature.navigation.NavigationActivity::class.java))
+        }
         binding.homeRefresh.setOnRefreshListener { loadHome(forceRefresh = true) }
         loadHome()
     }
@@ -120,7 +126,9 @@ class HomeFragment : Fragment() {
             try {
                 val categories = repository.getCategories()
                 if (!isCurrentRequest(requestVersion)) return@launch
-                val category = categories.firstOrNull { it.id == selectedCategory?.id } ?: categories.first()
+                val category = categories.firstOrNull { it.id == selectedCategory?.id }
+                    ?: categories.firstOrNull { it.id == initialCategoryId }
+                    ?: categories.first()
                 selectedCategory = category
                 renderCategories(categories)
                 submitHomeFeed(category, requestVersion, forceRefresh)
@@ -232,5 +240,13 @@ class HomeFragment : Fragment() {
     override fun onDestroyView() {
         _binding = null
         super.onDestroyView()
+    }
+
+    companion object {
+        private const val ARG_INITIAL_CATEGORY_ID = "initialCategoryId"
+
+        fun newInstance(categoryId: String?): HomeFragment = HomeFragment().apply {
+            arguments = Bundle().apply { putString(ARG_INITIAL_CATEGORY_ID, categoryId) }
+        }
     }
 }

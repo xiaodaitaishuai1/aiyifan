@@ -11,5 +11,6 @@
     <color name="outline">#D6D9DE</color>
     <color name="field_bg">#F0F2F5</color>
     <color name="chip_bg">#EEF0F4</color>
+    <color name="chip_selected">#FFE6D6</color>
     <color name="poster_placeholder">#D9DEE7</color>
 </resources>

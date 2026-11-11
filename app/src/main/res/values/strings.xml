@@ -5,6 +5,11 @@
     <string name="tab_home">首页</string>
     <string name="tab_hot">热门</string>
     <string name="tab_mine">我的</string>
+    <string name="navigation_title">导航</string>
+    <string name="navigation_open">打开导航</string>
+    <string name="navigation_empty">暂无可用分类</string>
+    <string name="navigation_load_failed">分类加载失败，请重试</string>
+    <string name="navigation_retry">重试</string>
     <string name="video_not_found">未找到视频</string>
     <string name="video_loading">加载中…</string>
     <string name="video_detail_load_failed">视频详情加载失败</string>
@@ -90,4 +95,13 @@
     <string name="local_media_empty">没有找到本地视频</string>
     <string name="local_media_play">播放</string>
     <string name="local_media_speed">速度</string>
+    <string name="mine_greeting">你好，欢迎回来</string>
+    <string name="mine_header_subtitle">记录你的精彩观看</string>
+    <string name="mine_history_count">观看记录</string>
+    <string name="mine_favorite_count">我的收藏</string>
+    <string name="mine_common_features">常用功能</string>
+    <string name="mine_history_subtitle">继续追踪看过的内容</string>
+    <string name="mine_favorite_subtitle">收藏的精彩内容</string>
+    <string name="mine_hot_subtitle">发现正在热播的内容</string>
+    <string name="mine_local_media_subtitle">播放设备中的本地视频</string>
 </resources>
