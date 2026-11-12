@@ -10,12 +10,22 @@ import org.w3c.dom.Element
 class MineLayoutTest {
 
     @Test
-    fun `mine screen presents profile and grouped navigation`() {
+    fun `mine screen presents image header and grouped navigation`() {
         val root = parseLayout()
 
-        assertEquals("@string/hardcoded_text_037", viewWithId(root, "mineTitle").getAttribute("android:text"))
+        assertEquals("com.aiyifan.app.feature.mine.HeaderSlideView", viewWithId(root, "headerImage").tagName)
+        assertEquals("false", viewWithId(root, "headerImage").getAttribute("android:clickable"))
+        assertEquals("@dimen/mine_header_height", viewWithId(root, "mineHeader").getAttribute("android:layout_height"))
+        assertEquals("@dimen/dp_48", viewWithId(root, "headerExpand").getAttribute("android:layout_width"))
+        assertEquals("@dimen/dp_48", viewWithId(root, "headerPlayback").getAttribute("android:layout_width"))
+        assertFalse(hasViewWithId(root, "mineTitle"))
+        assertFalse(hasViewWithId(root, "mineGreeting"))
+        assertFalse(hasViewWithId(root, "mineNickname"))
         assertEquals("LinearLayout", viewWithId(root, "contentGroup").tagName)
         assertEquals("LinearLayout", viewWithId(root, "settingsGroup").tagName)
+        assertEquals("vertical", viewWithId(root, "settingsGroup").getAttribute("android:orientation"))
+        assertFalse(hasViewWithId(root, "headerSizeSettingsButton"))
+        assertFalse(hasViewWithId(root, "headerSizeSettingsSummary"))
         assertEquals("LinearLayout", viewWithId(root, "themeSettingsButton").tagName)
         assertEquals("TextView", viewWithId(root, "themeSettingsSummary").tagName)
         assertFalse(hasViewWithId(root, "profileCard"))

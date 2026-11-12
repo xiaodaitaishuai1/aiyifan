@@ -104,4 +104,9 @@
     <string name="mine_favorite_subtitle">收藏的精彩内容</string>
     <string name="mine_hot_subtitle">发现正在热播的内容</string>
     <string name="mine_local_media_subtitle">播放设备中的本地视频</string>
+    <string name="mine_view_image">放大查看图片</string>
+    <string name="mine_pause_slideshow">暂停轮播</string>
+    <string name="mine_resume_slideshow">继续轮播</string>
+    <string name="mine_close_image">关闭图片</string>
+    <string name="mine_image_unavailable">图片暂时无法显示</string>
 </resources>

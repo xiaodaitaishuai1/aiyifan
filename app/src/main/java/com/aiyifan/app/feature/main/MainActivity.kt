@@ -8,11 +8,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.updatePadding
 import androidx.lifecycle.Lifecycle
 import com.aiyifan.app.R
 import com.aiyifan.app.core.ui.applySystemBarsPadding
 import com.aiyifan.app.core.ui.setupEdgeToEdge
+import com.aiyifan.app.core.ui.usesLightSystemBarIcons
 import com.aiyifan.app.databinding.ActivityMainBinding
 import com.aiyifan.app.feature.home.HomeFragment
 import com.aiyifan.app.feature.shortdrama.ShortDramaFragment
@@ -84,6 +86,8 @@ class MainActivity : AppCompatActivity() {
         val color = getColor(if (selectedPosition == 1) R.color.page_bg else R.color.surface)
         binding.fragmentContainer.setBackgroundColor(color)
         window.statusBarColor = if (selectedPosition == 2) android.graphics.Color.TRANSPARENT else color
+        WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars =
+            selectedPosition != 2 && usesLightSystemBarIcons(resources.configuration.uiMode)
         ViewCompat.requestApplyInsets(binding.fragmentContainer)
     }
 

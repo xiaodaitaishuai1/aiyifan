@@ -64,4 +64,5 @@
     <dimen name="sp_22">22sp</dimen>
     <dimen name="sp_26">26sp</dimen>
 
+    <dimen name="mine_header_height">280dp</dimen>
 </resources>
