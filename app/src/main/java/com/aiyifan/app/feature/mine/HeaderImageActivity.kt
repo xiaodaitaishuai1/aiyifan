@@ -1,8 +1,11 @@
 package com.aiyifan.app.feature.mine
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.os.Build
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -10,6 +13,9 @@ import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModelProvider
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -27,6 +33,12 @@ class HeaderImageActivity : AppCompatActivity() {
     private var target: CustomViewTarget<ZoomImageView, Drawable>? = null
     private var requests: RequestManager? = null
     private var maskEnabled = true
+    private var imageName: String? = null
+    private val saveModel by lazy { ViewModelProvider(this)[HeaderImageSaveViewModel::class.java] }
+    private val storagePermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) imageName?.let { saveModel.save(this, it) }
+        else Toast.makeText(this, R.string.mine_image_save_permission, Toast.LENGTH_LONG).show()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,6 +48,7 @@ class HeaderImageActivity : AppCompatActivity() {
             finish()
             return
         }
+        imageName = name
         WindowCompat.setDecorFitsSystemWindows(window, false)
         WindowCompat.getInsetsController(window, window.decorView).apply {
             hide(WindowInsetsCompat.Type.systemBars())
@@ -69,9 +82,39 @@ class HeaderImageActivity : AppCompatActivity() {
             setOnClickListener { finish() }
         }
         controls.addView(close, FrameLayout.LayoutParams(buttonSize, buttonSize, Gravity.TOP or Gravity.END))
+        val download = ImageButton(this).apply {
+            tag = "header_image_download"
+            setImageResource(R.drawable.ic_download)
+            imageTintList = android.content.res.ColorStateList.valueOf(Color.WHITE)
+            setBackgroundColor(0x99000000.toInt())
+            contentDescription = getString(R.string.mine_save_image)
+            setOnClickListener {
+                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P &&
+                    ContextCompat.checkSelfPermission(this@HeaderImageActivity, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    storagePermission.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                } else saveModel.save(this@HeaderImageActivity, name)
+            }
+        }
+        controls.addView(download, FrameLayout.LayoutParams(buttonSize, buttonSize, Gravity.TOP or Gravity.END).apply {
+            marginEnd = buttonSize + resources.getDimensionPixelSize(R.dimen.dp_8)
+        })
         root.addView(controls, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
         controls.applySystemBarsPadding(top = true, left = true, right = true)
         setContentView(root)
+        saveModel.state.observe(this) { state ->
+            download.isEnabled = state != HeaderImageSaveViewModel.State.SAVING
+            download.alpha = if (download.isEnabled) 1f else 0.5f
+            download.contentDescription = getString(if (download.isEnabled) R.string.mine_save_image else R.string.mine_image_saving)
+            val message = when (state) {
+                HeaderImageSaveViewModel.State.SAVED -> R.string.mine_image_saved
+                HeaderImageSaveViewModel.State.FAILED -> R.string.mine_image_save_failed
+                else -> null
+            }
+            if (message != null) {
+                Toast.makeText(this@HeaderImageActivity, message, Toast.LENGTH_LONG).show()
+                saveModel.consumeResult()
+            }
+        }
         image.doOnLayout {
             val manager = requests ?: return@doOnLayout
             val requestTarget = object : CustomViewTarget<ZoomImageView, Drawable>(image) {

@@ -109,4 +109,9 @@
     <string name="mine_resume_slideshow">继续轮播</string>
     <string name="mine_close_image">关闭图片</string>
     <string name="mine_image_unavailable">图片暂时无法显示</string>
+    <string name="mine_save_image">保存图片到相册</string>
+    <string name="mine_image_saving">正在保存图片…</string>
+    <string name="mine_image_saved">已保存到相册 Pictures/Aiyifan</string>
+    <string name="mine_image_save_failed">保存失败，请检查存储空间后重试</string>
+    <string name="mine_image_save_permission">未获得存储权限，无法保存图片</string>
 </resources>

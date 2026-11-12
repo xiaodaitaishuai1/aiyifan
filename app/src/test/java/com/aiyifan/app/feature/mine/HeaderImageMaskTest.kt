@@ -35,6 +35,10 @@ class HeaderImageMaskTest {
             }
         }
         try {
+            val download = controller.get().window.decorView.findViewWithTag<View>("header_image_download")
+            assertNotNull("Full-screen viewer needs a save button", download)
+            assertEquals(controller.get().resources.getDimensionPixelSize(R.dimen.dp_48), download.layoutParams.width)
+            assertTrue(download.contentDescription.isNotBlank())
             assertNotNull(mask())
             assertEquals(View.VISIBLE, mask().visibility)
             assertFalse(mask().isClickable)
