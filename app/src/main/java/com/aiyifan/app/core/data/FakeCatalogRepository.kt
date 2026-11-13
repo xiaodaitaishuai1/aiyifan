@@ -6,6 +6,7 @@ import com.aiyifan.app.core.model.Episode
 import com.aiyifan.app.core.model.FavoriteVideo
 import com.aiyifan.app.core.model.PlaybackLanguage
 import com.aiyifan.app.core.model.SearchSuggestion
+import com.aiyifan.app.core.model.ShortDramaCategory
 import com.aiyifan.app.core.model.VideoDetail
 import com.aiyifan.app.core.model.VideoSummary
 import com.aiyifan.app.core.model.WatchHistory
@@ -91,6 +92,17 @@ class FakeCatalogRepository(
     )
 
     override suspend fun getCategories(): List<Category> = categories
+
+    override suspend fun getShortDramaCategories(): List<ShortDramaCategory> = emptyList()
+
+    override suspend fun getShortDramaPage(page: Int, size: Int): HomeVideoPage =
+        HomeVideoPage(emptyList(), false)
+
+    override suspend fun getShortDramaPage(
+        category: ShortDramaCategory,
+        page: Int,
+        size: Int,
+    ): HomeVideoPage = getShortDramaPage(page, size)
 
     override suspend fun getHomeVideos(categoryId: String): List<VideoSummary> =
         when (categoryId) {

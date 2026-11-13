@@ -5,4 +5,7 @@
     <string name="short_drama_loading">正在加载短剧…</string>
     <string name="short_drama_empty">暂无短剧，下拉刷新试试</string>
     <string name="short_drama_end">已加载全部短剧</string>
+    <string name="short_drama_all">全部</string>
+    <string name="short_drama_category_loading">正在加载分类…</string>
+    <string name="short_drama_category_retry">分类加载失败，点击重试</string>
 </resources>

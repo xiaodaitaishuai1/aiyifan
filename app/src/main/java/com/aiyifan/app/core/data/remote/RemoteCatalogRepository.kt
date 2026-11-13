@@ -13,6 +13,7 @@ import com.aiyifan.app.core.model.Episode
 import com.aiyifan.app.core.model.FavoriteVideo
 import com.aiyifan.app.core.model.PlaybackLanguage
 import com.aiyifan.app.core.model.SearchSuggestion
+import com.aiyifan.app.core.model.ShortDramaCategory
 import com.aiyifan.app.core.model.VideoDetail
 import com.aiyifan.app.core.model.VideoSummary
 import com.aiyifan.app.core.model.WatchHistory
@@ -30,6 +31,8 @@ class RemoteCatalogRepository(
     private val historyStore: WatchHistoryStore = InMemoryWatchHistoryStore(),
     private val clock: () -> Long = System::currentTimeMillis,
     private val favoriteStore: FavoriteStore = InMemoryFavoriteStore(),
+    private val channelNavigationRepository: ChannelNavigationRepository =
+        ChannelNavigationRepository(fetcher = fetcher, resolver = configResolver, clock = clock),
 ) : CatalogRepository {
     private val cacheLock = Mutex()
     private val detailLock = Mutex()
@@ -49,6 +52,36 @@ class RemoteCatalogRepository(
 
     override suspend fun refreshShortDramaPage(size: Int): HomeVideoPage =
         cachedShortDramaPage(1, size, refresh = true)
+
+    override suspend fun getShortDramaCategories(): List<ShortDramaCategory> =
+        channelNavigationRepository.loadChannels()
+            .firstOrNull { it.id == SHORT_DRAMA_CHANNEL_ID }
+            ?.tags
+            .orEmpty()
+            .distinctBy { it.id }
+            .map { ShortDramaCategory(it.id, it.name, it.classType, it.index, it.subId) }
+
+    override suspend fun getShortDramaPage(
+        category: ShortDramaCategory,
+        page: Int,
+        size: Int,
+    ): HomeVideoPage {
+        require(page > 0 && size > 0)
+        return pageCache.get("short-drama:${category.id}", "$page:$size") {
+            val tag = NavigationTag(category.id, category.name, category.classType, category.index, category.subId)
+            val videos = channelNavigationRepository.loadVideos(SHORT_DRAMA_CHANNEL_ID, tag, page)
+            HomeVideoPage(videos, videos.isNotEmpty() && videos.size >= size)
+        }
+    }
+
+    override suspend fun refreshShortDramaPage(category: ShortDramaCategory, size: Int): HomeVideoPage {
+        require(size > 0)
+        return pageCache.get("short-drama:${category.id}", "1:$size", refresh = true) {
+            val tag = NavigationTag(category.id, category.name, category.classType, category.index, category.subId)
+            val videos = channelNavigationRepository.loadVideos(SHORT_DRAMA_CHANNEL_ID, tag, 1)
+            HomeVideoPage(videos, videos.isNotEmpty() && videos.size >= size)
+        }
+    }
 
     private suspend fun cachedShortDramaPage(page: Int, size: Int, refresh: Boolean): HomeVideoPage {
         require(page > 0 && size > 0)
@@ -591,6 +624,7 @@ class RemoteCatalogRepository(
 
     private companion object {
         const val DEFAULT_REGION = "cn"
+        const val SHORT_DRAMA_CHANNEL_ID = "8"
         const val MAX_PLAYBACK_SECOND = Long.MAX_VALUE / 1_000L
     }
 }

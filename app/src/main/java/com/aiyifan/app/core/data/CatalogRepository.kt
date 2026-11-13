@@ -5,6 +5,7 @@ import com.aiyifan.app.core.model.Comment
 import com.aiyifan.app.core.model.Episode
 import com.aiyifan.app.core.model.FavoriteVideo
 import com.aiyifan.app.core.model.SearchSuggestion
+import com.aiyifan.app.core.model.ShortDramaCategory
 import com.aiyifan.app.core.model.VideoDetail
 import com.aiyifan.app.core.model.VideoSummary
 import com.aiyifan.app.core.model.WatchHistory
@@ -12,6 +13,14 @@ import com.aiyifan.app.core.model.WatchHistory
 interface CatalogRepository {
     suspend fun getShortDramaPage(page: Int, size: Int = 30): HomeVideoPage =
         throw UnsupportedOperationException("Short drama is unavailable")
+
+    suspend fun getShortDramaCategories(): List<ShortDramaCategory> = emptyList()
+
+    suspend fun getShortDramaPage(category: ShortDramaCategory, page: Int, size: Int = 30): HomeVideoPage =
+        getShortDramaPage(page, size)
+
+    suspend fun refreshShortDramaPage(category: ShortDramaCategory, size: Int = 30): HomeVideoPage =
+        getShortDramaPage(category, 1, size)
 
     suspend fun refreshShortDramaPage(size: Int = 30): HomeVideoPage = getShortDramaPage(1, size)
 
