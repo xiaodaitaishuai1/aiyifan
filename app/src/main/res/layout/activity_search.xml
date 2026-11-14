@@ -37,7 +37,7 @@
 
         <FrameLayout android:id="@+id/resultsContainer" android:layout_width="match_parent" android:layout_height="match_parent" android:visibility="gone">
 
-            <androidx.recyclerview.widget.RecyclerView android:id="@+id/resultRecycler" android:layout_width="match_parent" android:layout_height="match_parent" android:clipToPadding="false" android:padding="@dimen/dp_12" />
+            <androidx.recyclerview.widget.RecyclerView android:id="@+id/resultRecycler" android:layout_width="match_parent" android:layout_height="match_parent" android:clipToPadding="false" android:paddingStart="@dimen/dp_16" android:paddingTop="@dimen/dp_12" android:paddingEnd="@dimen/dp_16" android:paddingBottom="@dimen/dp_16" />
 
             <TextView android:id="@+id/searchStatus" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:gravity="center" android:padding="@dimen/dp_16" android:textColor="@color/text_secondary" android:textSize="@dimen/sp_13" />
         </FrameLayout>

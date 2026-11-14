@@ -18,9 +18,9 @@ class ThemePolishContractTest {
     }
 
     @Test
-    fun `primary and outline buttons have eight dp rounded corners`() {
-        assertEquals("@dimen/dp_8", cornerRadius("bg_button_primary"))
-        assertEquals("@dimen/dp_8", cornerRadius("bg_button_outline"))
+    fun `primary and outline buttons have twelve dp rounded corners`() {
+        assertEquals("@dimen/dp_12", cornerRadius("bg_button_primary"))
+        assertEquals("@dimen/dp_12", cornerRadius("bg_button_outline"))
     }
 
     @Test

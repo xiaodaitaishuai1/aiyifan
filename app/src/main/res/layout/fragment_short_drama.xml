@@ -11,14 +11,14 @@
         <LinearLayout android:id="@+id/dramaCategoryContainer" android:layout_width="wrap_content"
             android:layout_height="wrap_content" android:orientation="horizontal"
             android:paddingStart="@dimen/dp_12" android:paddingEnd="@dimen/dp_12"
-            android:paddingBottom="@dimen/dp_8" android:paddingTop="@dimen/dp_4" />
+            android:paddingBottom="@dimen/dp_10" android:paddingTop="@dimen/dp_6" />
     </HorizontalScrollView>
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/dramaRefresh" android:layout_width="match_parent"
         android:layout_height="@dimen/dp_0" android:layout_weight="1">
         <androidx.recyclerview.widget.RecyclerView android:id="@+id/dramaRecycler"
             android:layout_width="match_parent" android:layout_height="match_parent"
-            android:clipToPadding="false" android:padding="@dimen/dp_6" />
+            android:clipToPadding="false" android:padding="@dimen/dp_10" />
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
     <TextView android:id="@+id/dramaStatus" android:layout_width="match_parent"
         android:layout_height="wrap_content" android:minHeight="@dimen/dp_48"

@@ -19,25 +19,25 @@ class ThemeResourceContractTest {
     }
 
     @Test
-    fun `night palette uses pure black for primary surfaces`() {
+    fun `night palette uses layered dark surfaces`() {
         val nightColors = colorValues("values-night")
 
-        assertEquals("#000000", nightColors.getValue("primary"))
-        assertEquals("#000000", nightColors.getValue("page_bg"))
-        assertEquals("#000000", nightColors.getValue("surface"))
+        assertEquals("#15181D", nightColors.getValue("primary"))
+        assertEquals("#0B0D10", nightColors.getValue("page_bg"))
+        assertEquals("#15181D", nightColors.getValue("surface"))
     }
 
     @Test
-    fun `night palette uses a subdued accent for selected controls`() {
-        assertEquals("#B55A24", colorValues("values-night").getValue("accent"))
+    fun `night palette uses a warm accent for selected controls`() {
+        assertEquals("#FF8A3D", colorValues("values-night").getValue("accent"))
     }
 
     @Test
-    fun `night palette uses softened primary and secondary text`() {
+    fun `night palette uses high contrast primary and secondary text`() {
         val nightColors = colorValues("values-night")
 
-        assertEquals("#C8CDD4", nightColors.getValue("text_primary"))
-        assertEquals("#8D949D", nightColors.getValue("text_secondary"))
+        assertEquals("#F2F4F7", nightColors.getValue("text_primary"))
+        assertEquals("#A0A7B2", nightColors.getValue("text_secondary"))
     }
 
     private fun colorNames(directory: String): Set<String> =

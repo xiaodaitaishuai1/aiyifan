@@ -6,7 +6,7 @@
     android:layout_marginBottom="@dimen/dp_12"
     android:background="@drawable/bg_surface"
     android:orientation="horizontal"
-    android:padding="@dimen/dp_10">
+    android:padding="@dimen/dp_12">
 
     <FrameLayout
         android:layout_width="@dimen/dp_120"

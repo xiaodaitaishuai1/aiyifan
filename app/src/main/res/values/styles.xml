@@ -2,7 +2,7 @@
 <resources>
     <style name="ShapeAppearance.Aiyifan.Rounded" parent="">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">@dimen/dp_8</item>
+        <item name="cornerSize">@dimen/dp_12</item>
     </style>
 
     <style name="ThemeOverlay.Aiyifan.AlertDialog" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
@@ -21,7 +21,7 @@
 
     <style name="MineActionRow">
         <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">68dp</item>
+        <item name="android:layout_height">64dp</item>
         <item name="android:gravity">center_vertical</item>
         <item name="android:orientation">horizontal</item>
         <item name="android:paddingStart">12dp</item>
