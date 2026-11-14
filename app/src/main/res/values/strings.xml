@@ -25,6 +25,8 @@
     <string name="video_play_count">播放 %1$d</string>
     <string name="video_director">导演：%1$s</string>
     <string name="video_cast">主演：%1$s</string>
+    <string name="video_synopsis_expand">展开剧情简介</string>
+    <string name="video_synopsis_collapse">收起剧情简介</string>
     <string name="video_favorite">收藏</string>
     <string name="video_favorited">已收藏</string>
     <string name="video_favorite_added">已加入收藏</string>

@@ -35,7 +35,9 @@
 
                 <TextView android:id="@+id/meta" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/dp_8" android:textColor="@color/text_secondary" android:textSize="@dimen/sp_13" />
 
-                <TextView android:id="@+id/intro" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/dp_12" android:textColor="@color/text_secondary" android:textSize="@dimen/sp_14" />
+                <TextView android:id="@+id/credits" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/dp_12" android:textColor="@color/text_secondary" android:textSize="@dimen/sp_14" />
+
+                <com.aiyifan.app.feature.video.ExpandableSynopsisView android:id="@+id/intro" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/dp_4" />
 
                 <LinearLayout android:layout_width="match_parent" android:layout_height="@dimen/dp_48" android:layout_marginTop="@dimen/dp_12" android:gravity="center_vertical" android:orientation="horizontal">
 

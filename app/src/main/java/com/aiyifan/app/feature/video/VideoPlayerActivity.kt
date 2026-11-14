@@ -232,11 +232,12 @@ class VideoPlayerActivity : AppCompatActivity() {
             detail.updateMsg,
             getString(R.string.video_play_count, detail.playCount),
         ).joinToString(" / ")
-        binding.intro.text = listOfNotNull(
+        binding.credits.text = listOfNotNull(
             detail.director?.takeIf(String::isNotBlank)?.let { getString(R.string.video_director, it) },
             detail.actor?.takeIf(String::isNotBlank)?.let { getString(R.string.video_cast, it) },
-            detail.introduce?.takeIf(String::isNotBlank),
         ).joinToString("\n")
+        binding.credits.isVisible = binding.credits.text.isNotBlank()
+        binding.intro.setSynopsis(detail.introduce.orEmpty())
         binding.favoriteButton.setText(
             if (AppGraph.catalogRepository.isFavorite(detail.mediaKey)) R.string.video_favorited else R.string.video_favorite,
         )
